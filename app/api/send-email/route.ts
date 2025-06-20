@@ -1,15 +1,15 @@
 // Tôi là An Kun
+import nodemailer from 'nodemailer'; // @ts-ignore: No type definitions for 'nodemailer'
 import { NextResponse } from "next/server";
-import nodemailer from 'nodemailer';
 import type { EmailDetails } from "@/lib/email";
 
 // Lấy thông tin SMTP từ biến môi trường (an toàn hơn)
 // Bạn cần thiết lập các biến này trong môi trường Vercel của bạn
-const SMTP_HOST = process.env.SMTP_HOST || "smtp.mail.me.com";
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587", 10);
-const SMTP_USER = process.env.SMTP_USER || "admin@ankun.dev";
-const SMTP_PASS = process.env.SMTP_PASS || "grsa-aaxz-midn-pjta"; // Lấy từ Security.md
-const SMTP_FROM = process.env.SMTP_FROM || "ankunstudio@ankun.dev"; // Email người gửi mặc định
+const SMTP_HOST = process.env.SMTP_HOST ?? "smtp.mail.me.com";
+const SMTP_PORT = parseInt(process.env.SMTP_PORT ?? "587", 10);
+const SMTP_USER = process.env.SMTP_USER ?? "admin@ankun.dev";
+const SMTP_PASS = process.env.SMTP_PASS ?? "grsa-aaxz-midn-pjta"; // Lấy từ Security.md
+const SMTP_FROM = process.env.SMTP_FROM ?? "ankunstudio@ankun.dev"; // Email người gửi mặc định
 
 export async function POST(request: Request) {
   try {
@@ -49,6 +49,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, message: `Email đã được gửi thành công đến ${emailDetails.to}.` });
   } catch (error: any) {
     console.error("API Error sending email:", error);
-    return NextResponse.json({ success: false, message: "Lỗi gửi email từ server.", error: error.message || error.toString() }, { status: 500 });
+    return NextResponse.json({ success: false, message: "Lỗi gửi email từ server.", error: error.message ?? error.toString() }, { status: 500 });
   }
 }

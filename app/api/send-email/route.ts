@@ -1,4 +1,4 @@
-// File: c:\Users\admin\aksstudio\app\api\send-email\route.ts
+// Tôi là An Kun
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import type { EmailDetails } from "@/lib/email";

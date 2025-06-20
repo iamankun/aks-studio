@@ -168,7 +168,7 @@ footer {
   z-index: -1;
 }
 
-/* Text gradient and animation classes */
+/* Hiệu ứng chữ màu trộn và hoạt ảnh */
 .text-gradient {
   @apply text-transparent bg-clip-text;
 }

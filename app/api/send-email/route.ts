@@ -1,6 +1,6 @@
 // Tôi là An Kun
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import nodemailer from 'nodemailer';
 import type { EmailDetails } from "@/lib/email";
 
 // Lấy thông tin SMTP từ biến môi trường (an toàn hơn)

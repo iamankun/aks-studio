@@ -235,9 +235,29 @@ footer {
 
 /* Collapsible sidebar toggle */
 .sidebar-toggle {
-  @apply bg-purple-600 hover: bg-purple-700 text-white rounded-full p-2 fixed top-5 left-5 z-50 shadow-lg;
+  background-color: #9333ea;
+  /* bg-purple-600 */
+  color: #fff;
+  /* text-white */
+  border-radius: 9999px;
+  /* rounded-full */
+  padding: 0.5rem;
+  /* p-2 */
+  position: fixed;
+  top: 1.25rem;
+  /* top-5 */
+  left: 1.25rem;
+  /* left-5 */
+  z-index: 50;
+  box-shadow: 0 10px 15px -3px rgba(76, 29, 149, 0.1), 0 4px 6px -4px rgba(76, 29, 149, 0.1);
+  /* shadow-lg */
   animation: pulse 2s infinite;
   display: none;
+}
+
+.sidebar-toggle:hover {
+  background-color: #7e22ce;
+  /* bg-purple-700 */
 }
 
 @media (max-width: 768px) {

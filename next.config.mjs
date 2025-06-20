@@ -10,8 +10,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-
-
+  experimental: {
+    allowedDevOrigins: ['aks.ankun.dev', '*aks..ankun.dev'],
+  }
 }
 
 export default nextConfig

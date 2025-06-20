@@ -6,7 +6,7 @@ import { neon } from '@neondatabase/serverless'
 import { format } from "date-fns"
 import { createClient } from '@supabase/supabase-js'
 
-export function cn(...inputs: ClassValue[]) {
+export function cn(...inputs: ClassValue[]) { // This function was already exported
   return twMerge(clsx(inputs))
 }
 
@@ -14,13 +14,13 @@ export function generateISRC(user: User, lastCounter: number): { isrc: string; n
   // Tôi là An Kun
   const newCounter = lastCounter + 1
   const paddedCounter = newCounter.toString().padStart(5, "0")
-  // Sử dụng prefix từ user.isrc_code_prefix nếu có
-  const prefix = user.isrc_code_prefix || "VNA2P"
+  // Sử dụng prefix từ user.isrcCodeprefix nếu có
+  const prefix = user.isrcCodePrefix || "VNA2P"
   const isrc = `${prefix}${new Date().getFullYear()}${paddedCounter}`
   return { isrc, newCounter }
 }
 
-export function getStatusColor(status: string): string {
+export function getStatusColor(status: string): string { // This function was already exported
   switch (status.toLowerCase()) {
     case "pending":
       return "bg-yellow-500"
@@ -39,7 +39,7 @@ export function getStatusColor(status: string): string {
   }
 }
 
-export function getMinimumReleaseDate(): string {
+export function getMinimumReleaseDate(): string { // This function was already exported
   const today = new Date()
   // Add 2 days for review process
   today.setDate(today.getDate() + 2)
@@ -76,7 +76,7 @@ export async function validateImageFile(file: File): Promise<{ valid: boolean; e
   })
 }
 
-export async function validateAudioFile(file: File): Promise<{ valid: boolean; errors: string[] }> {
+export async function validateAudioFile(file: File): Promise<{ valid: boolean; errors: string[] }> { // This function was already exported
   const errors: string[] = []
 
   // Check file type
@@ -90,4 +90,14 @@ export async function validateAudioFile(file: File): Promise<{ valid: boolean; e
   }
 
   return { valid: errors.length === 0, errors }
+}
+
+// Add export to formatFileSize function
+export function formatFileSize(bytes: number, decimalPoint?: number): string {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024; // Or 1000 for SI units
+  const dm = decimalPoint || 2;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }

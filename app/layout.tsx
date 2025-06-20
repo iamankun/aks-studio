@@ -1,3 +1,4 @@
+// Tôi là An Kun
 import "./globals.css"
 import type React from "react"
 import type { Metadata } from "next"
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
-  generator: "v0.dev",
+  generator: "ankun.dev",
 }
 
 export default function RootLayout({
@@ -28,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="vi" className={`${dosis.variable}`} suppressHydrationWarning> {/* You set lang="vi" and apply the Dosis variable class */}
+    <html lang="vi" suppressHydrationWarning>
       <body className="font-dosis">
         {children}
         {/* <ClientWrapper>{children}</ClientWrapper> */}

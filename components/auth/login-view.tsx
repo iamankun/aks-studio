@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertModal } from "@/components/modals/alert-modal"
 import type { User } from "@/types/user"
-import { users_db, loadUsersFromLocalStorage, loginUser } from "@/lib/data"
+import { loginUser } from "@/lib/data"
 import { Disc3, Shield } from 'lucide-react';
 import { useSystemStatus } from "@/components/system-status-provider"
 
@@ -26,21 +26,13 @@ export default function LoginView({ onLogin, onShowRegister }: LoginViewProps) {
   const [modalType, setModalType] = useState<"success" | "error">("error")
   const { status } = useSystemStatus()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Thử đăng nhập với database thực trước
-    const foundUser = await loginUser(username, password)
+    // Hàm loginUser đã xử lý việc tìm người dùng trong localStorage
+    const foundUser = loginUser(username, password)
     if (foundUser) {
       onLogin(foundUser)
-      return
-    }
-
-    // Nếu không có, fallback localStorage (demo)
-    loadUsersFromLocalStorage()
-    const localUser = users_db.find((user) => user.username === username && user.password === password)
-    if (localUser) {
-      onLogin(localUser)
     } else {
       setModalTitle("Đăng nhập thất bại")
       setModalMessage(["Sai tên đăng nhập hoặc mật khẩu."])

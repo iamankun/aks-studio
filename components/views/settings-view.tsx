@@ -164,10 +164,6 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
     showModal(result.success ? "Test SMTP Thành Công" : "Test SMTP Thất Bại", [result.message], result.success ? "success" : "error")
   }
 
-      {statusType === "connected" ? "Kết nối" : statusType === "checking" ? "Đang kiểm tra..." : "Chưa kết nối"}
-    </span>
-  )
-  
   // Helper function to show modal (can be moved to a context or prop if needed more globally)
   const showModal = (title: string, messages: string[], type: "error" | "success" = "error") => {
     const event = new CustomEvent('showGlobalNotification', {
@@ -267,7 +263,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                     alt="App Logo"
                     className="h-8 w-8 rounded object-cover"
                     onError={(e) => {
-                      ;(e.target as HTMLImageElement).src = "https://placehold.co/32x32/8b5cf6/FFFFFF?text=AK"
+                      ; (e.target as HTMLImageElement).src = "https://placehold.co/32x32/8b5cf6/FFFFFF?text=AK"
                     }}
                   />
                   <div>
@@ -716,5 +712,9 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
         </TabsContent>
       </Tabs>
     </div>
+  )
+}
+      </Tabs >
+    </div >
   )
 }

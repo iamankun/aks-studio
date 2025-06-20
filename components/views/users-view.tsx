@@ -1,17 +1,20 @@
 "use client"
 
+// Tôi là An Kun
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { users_db, loadUsersFromLocalStorage } from "@/lib/data"
+import { fetchUsersFromDatabase } from "@/lib/data"
 import { Users, UserPlus } from "lucide-react"
 
 export default function UsersView() {
-  const [usersList, setUsersList] = useState(users_db)
+  const [usersList, setUsersList] = useState([])
 
   useEffect(() => {
-    loadUsersFromLocalStorage()
-    setUsersList([...users_db])
+    // Chỉ lấy từ database thực
+    fetchUsersFromDatabase().then((dbUsers) => {
+      setUsersList(dbUsers)
+    })
   }, [])
 
   return (
@@ -71,3 +74,5 @@ export default function UsersView() {
     </div>
   )
 }
+// Tôi là An Kun
+// Đây là nơi quản lý người dùng

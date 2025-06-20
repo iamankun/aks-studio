@@ -1,16 +1,16 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { SubmissionDetailModal } from "@/components/modals/submission-detail-modal"
+import { fetchSubmissionsFromDatabase } from "@/lib/data"
 import type { User } from "@/types/user"
 import type { Submission } from "@/types/submission"
 import { getStatusColor } from "@/lib/utils"
 import { Eye, Download, Play, Pause, Volume2, FileText, Music } from "lucide-react"
 
 interface SubmissionsViewProps {
-  submissions: Submission[]
   currentUser: User
   viewType: string
   onUpdateStatus: (submissionId: string, newStatus: string) => void
@@ -18,15 +18,25 @@ interface SubmissionsViewProps {
 }
 
 export default function SubmissionsView({
-  submissions,
   currentUser,
   viewType,
   onUpdateStatus,
   showModal,
 }: SubmissionsViewProps) {
+  const [submissions, setSubmissions] = useState<Submission[]>([])
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchSubmissionsFromDatabase()
+      .then((dbSubs) => {
+        setSubmissions(dbSubs);
+      })
+      .catch(error => {
+        showModal("Lỗi tải Submissions", ["Không thể tải danh sách Submissions từ database."], "error");
+      });
+  }, [])
 
   const displaySubmissions =
     viewType === "mySubmissions"

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -23,6 +23,7 @@ import {
   CheckCircle,
   Download,
 } from "lucide-react"
+import { sendEmail, type EmailDetails, type SmtpSettings } from "@/lib/email" // Import SmtpSettings
 
 interface EmailTemplate {
   id: string
@@ -66,18 +67,32 @@ export function EmailCenterView({ showModal }: EmailCenterViewProps) {
     htmlContent: "",
     type: "text" as "html" | "text",
   })
+  
+  // Key for SMTP settings in localStorage, consistent with lib/email.ts and SettingsView.tsx
+  const SMTP_LOCALSTORAGE_KEY = "emailSettings_v2"; 
 
-  const [smtpSettings, setSmtpSettings] = useState({
-    server: "smtp.mail.me.com",
-    port: "587",
-    username: "ankunstudio@ankun.dev",
-    password: "grsa-aaxz-midn-pjta",
-    connected: true,
-  })
+  const [smtpSettings, setSmtpSettings] = useState<SmtpSettings>({
+    smtpServer: "", // Initialize with empty or default values
+    smtpPort: "587",
+    smtpUsername: "",
+    smtpPassword: "", // Password should ideally not be stored directly or be optional in display
+    connected: false, // Assume not connected until verified or loaded from storage
+  });
 
   useEffect(() => {
     loadTemplates()
     loadEmailMessages()
+
+    // Load SMTP settings from localStorage
+    const savedSmtpSettings = localStorage.getItem(SMTP_LOCALSTORAGE_KEY);
+    if (savedSmtpSettings) {
+      try {
+        setSmtpSettings(JSON.parse(savedSmtpSettings) as SmtpSettings);
+      } catch (error) {
+        console.error("EmailCenterView: Failed to parse SMTP settings from localStorage", error);
+      }
+    }
+
     // Auto-sync emails every 30 seconds
     const interval = setInterval(syncEmails, 30000)
     return () => clearInterval(interval)
@@ -265,41 +280,41 @@ Trân trọng,
     showModal("Test email", [testContent], "success")
   }
 
-  const handleSendEmail = () => {
+  const handleSendEmail = async () => {
     if (!emailForm.to || !emailForm.subject || !emailForm.content) {
       showModal("Lỗi gửi email", ["Vui lòng điền đầy đủ thông tin"], "error")
       return
     }
 
-    // Simulate sending email via SMTP
-    const newMessage: EmailMessage = {
-      id: `msg_${Date.now()}`,
+    const emailDetails: EmailDetails = {
       from: emailForm.from,
       to: emailForm.to,
+      cc: emailForm.cc,
+      bcc: emailForm.bcc,
       subject: emailForm.subject,
-      content: emailForm.content,
-      date: new Date().toLocaleString("vi-VN"),
-      read: true,
-      type: "sent",
+      textBody: emailForm.type === "text" ? emailForm.content : "Vui lòng xem nội dung HTML.", // Cần cơ chế convert HTML to text
+      htmlBody: emailForm.type === "html" ? emailForm.htmlContent : undefined,
     }
 
-    const updatedMessages = [newMessage, ...emailMessages]
-    setEmailMessages(updatedMessages)
-    localStorage.setItem("emailMessages_v2", JSON.stringify(updatedMessages))
+    const result = await sendEmail(emailDetails)
 
-    showModal("Gửi email thành công", [`Đã gửi email đến: ${emailForm.to}`, `Chủ đề: ${emailForm.subject}`], "success")
-
-    // Reset form
-    setEmailForm({
-      from: "ankunstudio@ankun.dev",
-      to: "",
-      cc: "",
-      bcc: "",
-      subject: "",
-      content: "",
-      htmlContent: "",
-      type: "text",
-    })
+    if (result.success) {
+      const newMessage: EmailMessage = {
+        id: `msg_${Date.now()}`,
+        ...emailDetails,
+        content: emailForm.content, // Lưu nội dung gốc để hiển thị
+        date: new Date().toLocaleString("vi-VN"),
+        read: true,
+        type: "sent",
+      }
+      const updatedMessages = [newMessage, ...emailMessages]
+      setEmailMessages(updatedMessages)
+      localStorage.setItem("emailMessages_v2", JSON.stringify(updatedMessages))
+      showModal("Gửi email thành công", [result.message], "success")
+      setEmailForm({ from: "ankunstudio@ankun.dev", to: "", cc: "", bcc: "", subject: "", content: "", htmlContent: "", type: "text" })
+    } else {
+      showModal("Lỗi gửi email", [result.message], "error")
+    }
   }
 
   const copyTemplateVariables = (template: EmailTemplate) => {
@@ -511,7 +526,7 @@ Trân trọng,
               <div className="flex space-x-2">
                 <Button onClick={handleSendEmail} className="bg-blue-600 hover:bg-blue-700 font-dosis-medium">
                   <Send className="mr-2 h-4 w-4" />
-                  Gửi email
+                  Gửi
                 </Button>
                 <Button
                   variant="outline"
@@ -773,8 +788,8 @@ Trân trọng,
                 <div>
                   <Label className="font-dosis-medium">SMTP Server</Label>
                   <Input
-                    value={smtpSettings.server}
-                    onChange={(e) => setSmtpSettings({ ...smtpSettings, server: e.target.value })}
+                    value={smtpSettings.smtpServer}
+                    onChange={(e) => setSmtpSettings({ ...smtpSettings, smtpServer: e.target.value })}
                     placeholder="smtp.mail.me.com"
                     className="font-dosis"
                   />
@@ -782,8 +797,8 @@ Trân trọng,
                 <div>
                   <Label className="font-dosis-medium">Port</Label>
                   <Input
-                    value={smtpSettings.port}
-                    onChange={(e) => setSmtpSettings({ ...smtpSettings, port: e.target.value })}
+                    value={smtpSettings.smtpPort}
+                    onChange={(e) => setSmtpSettings({ ...smtpSettings, smtpPort: e.target.value })}
                     placeholder="587"
                     className="font-dosis"
                   />
@@ -791,8 +806,8 @@ Trân trọng,
                 <div>
                   <Label className="font-dosis-medium">Username</Label>
                   <Input
-                    value={smtpSettings.username}
-                    onChange={(e) => setSmtpSettings({ ...smtpSettings, username: e.target.value })}
+                    value={smtpSettings.smtpUsername}
+                    onChange={(e) => setSmtpSettings({ ...smtpSettings, smtpUsername: e.target.value })}
                     placeholder="ankunstudio@ankun.dev"
                     className="font-dosis"
                   />
@@ -801,8 +816,8 @@ Trân trọng,
                   <Label className="font-dosis-medium">Password</Label>
                   <Input
                     type="password"
-                    value={smtpSettings.password}
-                    onChange={(e) => setSmtpSettings({ ...smtpSettings, password: e.target.value })}
+                    value={smtpSettings.smtpPassword || ""} // Handle undefined password
+                    onChange={(e) => setSmtpSettings({ ...smtpSettings, smtpPassword: e.target.value })}
                     placeholder="grsa-aaxz-midn-pjta"
                     className="font-dosis"
                   />
@@ -810,15 +825,21 @@ Trân trọng,
               </div>
 
               <div className="flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5 text-green-400" />
-                <span className="text-green-400 font-dosis">Đã kết nối thành công đến SMTP server</span>
+                {smtpSettings.connected ? (
+                  <>
+                    <CheckCircle className="h-5 w-5 text-green-400" />
+                    <span className="text-green-400 font-dosis">Đã kết nối (theo cài đặt đã lưu)</span>
+                  </>
+                ) : (
+                  <span className="text-yellow-400 font-dosis">Chưa kết nối hoặc chưa lưu cài đặt.</span>
+                )}
               </div>
 
               <div className="flex space-x-2">
                 <Button
                   onClick={() => {
-                    localStorage.setItem("smtpSettings_v2", JSON.stringify(smtpSettings))
-                    showModal("Lưu thành công", ["Đã lưu cài đặt SMTP"], "success")
+                    localStorage.setItem(SMTP_LOCALSTORAGE_KEY, JSON.stringify({ ...smtpSettings, connected: false })) // Reset connected status on save, require re-test
+                    showModal("Lưu thành công", ["Đã lưu cài đặt SMTP. Vui lòng test lại kết nối."], "success")
                   }}
                   className="bg-green-600 hover:bg-green-700 font-dosis-medium"
                 >
@@ -827,7 +848,22 @@ Trân trọng,
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => showModal("Test thành công", ["Kết nối SMTP hoạt động bình thường"], "success")}
+                  onClick={async () => {
+                    if (!smtpSettings.smtpUsername) {
+                        showModal("Lỗi Test SMTP", ["Vui lòng nhập Username SMTP."], "error");
+                        return;
+                    }
+                    // Sử dụng hàm sendEmail để test, gửi email test đến chính nó
+                    const testEmailDetails: EmailDetails = {
+                      from: smtpSettings.smtpUsername, 
+                      to: smtpSettings.smtpUsername,   
+                      subject: `Test Email - Email Center - ${new Date().toISOString()}`,
+                      textBody: `Đây là email test từ Trung tâm Email.\nCấu hình SMTP của bạn hoạt động bình thường!`,
+                    };
+                    const result = await sendEmail(testEmailDetails);
+                    setSmtpSettings({...smtpSettings, connected: result.success }); // Cập nhật trạng thái connected
+                    showModal(result.success ? "Test SMTP Thành Công" : "Test SMTP Thất Bại", [result.message], result.success ? "success" : "error");
+                  }}
                   className="font-dosis-medium"
                 >
                   <TestTube className="mr-2 h-4 w-4" />

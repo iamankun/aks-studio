@@ -1,3 +1,4 @@
+// Tôi là An Kun
 "use client"
 
 import type React from "react"
@@ -9,11 +10,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
-  users_db,
-  saveUsersToLocalStorage,
-  saveSubmissionsToLocalStorage,
-  loadUsersFromLocalStorage,
-  loadSubmissionsFromLocalStorage,
+  fetchUsersFromDatabase,
+  fetchSubmissionsFromDatabase,
+  saveUsersToDatabase,
+  saveSubmissionsToDatabase,
+  registerUser,
 } from "@/lib/data"
 import type { User } from "@/types/user"
 import type { Submission } from "@/types/submission"
@@ -48,21 +49,28 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
     loadData()
   }, [])
 
-  const loadData = () => {
-    loadUsersFromLocalStorage()
-    setUsers([...users_db])
-    setSubmissionsList(loadSubmissionsFromLocalStorage())
+  const loadData = async () => {
+    // Tôi là An Kun
+    const dbUsers = await fetchUsersFromDatabase()
+    setUsers(dbUsers)
+    const dbSubs = await fetchSubmissionsFromDatabase()
+    setSubmissionsList(dbSubs)
   }
 
-  const saveData = () => {
-    saveUsersToLocalStorage()
-    saveSubmissionsToLocalStorage(submissionsList)
-    showModal("Lưu thành công", ["Đã lưu toàn bộ dữ liệu vào localStorage"], "success")
+  const saveData = async () => {
+    // Tôi là An Kun
+    const okUsers = await saveUsersToDatabase(users)
+    const okSubs = await saveSubmissionsToDatabase(submissionsList)
+    if (okUsers && okSubs) {
+      showModal("Lưu thành công", ["Đã lưu toàn bộ dữ liệu vào database"], "success")
+    } else {
+      showModal("Lỗi", ["Không thể lưu dữ liệu vào database"], "error")
+    }
   }
 
   const exportData = () => {
     const data = {
-      users: users_db,
+      users: users,
       submissions: submissionsList,
       exportDate: new Date().toISOString(),
       version: "1.0.0-beta",
@@ -91,13 +99,10 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
         const data = JSON.parse(e.target?.result as string)
 
         if (data.users && data.submissions) {
-          users_db.length = 0
-          users_db.push(...data.users)
-          setUsers([...users_db])
+          users.length = 0
+          users.push(...data.users)
+          setUsers([...users])
           setSubmissionsList(data.submissions)
-
-          saveUsersToLocalStorage()
-          saveSubmissionsToLocalStorage(data.submissions)
 
           showModal("Nhập dữ liệu", ["Đã khôi phục dữ liệu thành công"], "success")
         } else {
@@ -111,11 +116,10 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
   }
 
   const handleUpdateUser = (user: User) => {
-    const index = users_db.findIndex((u) => u.username === user.username)
+    const index = users.findIndex((u) => u.username === user.username)
     if (index !== -1) {
-      users_db[index] = user
-      setUsers([...users_db])
-      saveUsersToLocalStorage()
+      users[index] = user
+      setUsers([...users])
       setEditingUser(null)
       showModal("Cập nhật thành công", [`Đã cập nhật thông tin ${user.fullName || user.username}`], "success")
     }
@@ -128,23 +132,22 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
     }
 
     if (confirm(`Bạn có chắc muốn xóa người dùng ${username}?`)) {
-      const index = users_db.findIndex((u) => u.username === username)
+      const index = users.findIndex((u) => u.username === username)
       if (index !== -1) {
-        users_db.splice(index, 1)
-        setUsers([...users_db])
-        saveUsersToLocalStorage()
+        users.splice(index, 1)
+        setUsers([...users])
         showModal("Xóa thành công", [`Đã xóa người dùng ${username}`], "success")
       }
     }
   }
 
-  const handleCreateUser = () => {
+  const handleCreateUser = async () => {
     if (!newUser.username || !newUser.password || !newUser.role) {
       showModal("Lỗi tạo user", ["Vui lòng điền đầy đủ thông tin bắt buộc"], "error")
       return
     }
 
-    if (users_db.find((u) => u.username === newUser.username)) {
+    if (users.find((u) => u.username === newUser.username)) {
       showModal("Lỗi tạo user", ["Tên đăng nhập đã tồn tại"], "error")
       return
     }
@@ -154,22 +157,25 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
       username: newUser.username,
       password: newUser.password,
       role: newUser.role as "Label Manager" | "Artist",
-      fullName: newUser.fullName || "",
+      full_name: newUser.fullName || "",
       email: newUser.email || "",
       avatar:
         newUser.avatar ||
         `https://placehold.co/100x100/7c3aed/FFFFFF?text=${newUser.username?.substring(0, 2).toUpperCase()}`,
       bio: newUser.bio || "",
-      socialLinks: newUser.socialLinks || {},
-      isrcCodePrefix: newUser.isrcCodePrefix || "Demo",
-      createdAt: new Date().toISOString(),
+      social_links: newUser.socialLinks || {},
+      isrc_code_prefix: newUser.isrcCodePrefix || "Demo",
+      created_at: new Date().toISOString(),
     }
-
-    users_db.push(user)
-    setUsers([...users_db])
-    saveUsersToLocalStorage()
-    setNewUser({})
-    showModal("Tạo thành công", [`Đã tạo người dùng ${user.username}`], "success")
+    // Thử đăng ký vào database thực
+    const ok = await registerUser(user)
+    if (ok) {
+      setUsers([...users, user])
+      showModal("Tạo thành công", [`Đã tạo người dùng ${user.username}`], "success")
+      setNewUser({})
+      return
+    }
+    showModal("Lỗi", ["Không thể tạo user trên database"], "error")
   }
 
   const downloadSubmissionFile = (submission: Submission, type: "audio" | "image") => {
@@ -177,7 +183,7 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
     // For demo, we'll show a message
     showModal(
       "Tải xuống",
-      [`Đang tải ${type === "audio" ? "file nhạc" : "ảnh bìa"} của "${submission.songTitle}"`],
+      [`Đang tải ${type === "audio" ? "File Audio" : "Art Cover"} của "${submission.songTitle}"`],
       "success",
     )
   }
@@ -220,10 +226,10 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
                 </span>
                 {currentUser.role === "Label Manager" && (
                   <Button
-                    onClick={() => setNewUser({ role: "Nghệ sĩ" })}
+                    onClick={() => setNewUser({ role: "Artist" })} // Sửa "Nghệ sĩ" thành "Artist"
                     className="bg-green-600 hover:bg-green-700 font-dosis-medium"
                   >
-                    <Plus className="mr-2 h-4 w-4" />
+                    <Plus className="mr-2 h-4 w-4"/>
                     Thêm user
                   </Button>
                 )}
@@ -262,14 +268,14 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
                         <Select
                           value={newUser.role}
                           onValueChange={(value) =>
-                            setNewUser({ ...newUser, role: value as "Label Manager" | "Nghệ sĩ" })
+                            setNewUser({ ...newUser, role: value as "Label Manager" | "Artist" })
                           }
                         >
                           <SelectTrigger className="font-dosis">
                             <SelectValue placeholder="Chọn vai trò" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Nghệ sĩ" className="font-dosis">
+                            <SelectItem value="Artist" className="font-dosis">
                               Nghệ sĩ
                             </SelectItem>
                             <SelectItem value="Label Manager" className="font-dosis">
@@ -293,7 +299,7 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
                           type="email"
                           value={newUser.email || ""}
                           onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                          placeholder="email@example.com"
+                          placeholder="email@ankun.dev"
                           className="font-dosis"
                         />
                       </div>
@@ -301,8 +307,8 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
                         <Label className="font-dosis-medium">ISRC Prefix</Label>
                         <Input
                           value={newUser.isrcCodePrefix || ""}
-                          onChange={(e) => setNewUser({ ...newUser, isrcCodePrefix: e.target.value.toUpperCase() })}
-                          placeholder="DEMO"
+                          onChange={(e) => setNewUser({ ...newUser, isrcCodePrefix: e.target.value.toUpperCase()})}
+                          placeholder="Demo"
                           maxLength={5}
                           className="font-dosis"
                         />
@@ -324,35 +330,35 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
               {/* Users List */}
               <div className="space-y-4">
                 {users.map((user) => (
-                  <Card key={user.username} className="bg-gray-700 border-gray-600">
+                  <Card key={user.username || user.id} className="bg-gray-700 border-gray-600">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
                           <img
                             src={
                               user.avatar ||
-                              `https://placehold.co/50x50/8b5cf6/FFFFFF?text=${user.username.substring(0, 1).toUpperCase() || "/placeholder.svg"}`
+                              `https://placehold.co/50x50/8b5cf6/FFFFFF?text=${(user.username || "U").substring(0, 1).toUpperCase()}`
                             }
-                            alt={user.username}
+                            alt={user.username || "user"}
                             className="w-12 h-12 rounded-full object-cover"
                           />
                           <div>
-                            <h3 className="font-dosis-semibold text-white">{user.fullName || user.username}</h3>
+                            <h3 className="font-dosis-semibold text-white">{user.full_name || user.username || "No name"}</h3>
                             <p className="text-gray-400 font-dosis">
-                              @{user.username} - {user.role}
+                              @{user.username || "unknown"} - {user.role || "N/A"}
                             </p>
-                            <p className="text-gray-500 text-sm font-dosis">{user.email}</p>
+                            <p className="text-gray-500 text-sm font-dosis">{user.email || ""}</p>
                           </div>
                         </div>
                         <div className="flex space-x-2">
                           {canEditUser(user) && (
                             <Button variant="outline" size="sm" onClick={() => setEditingUser(user)}>
-                              <Edit className="h-4 w-4" />
+                              <Edit className="h-4 w-4"/>
                             </Button>
                           )}
                           {currentUser.role === "Label Manager" && user.username !== "admin" && (
                             <Button variant="destructive" size="sm" onClick={() => handleDeleteUser(user.username)}>
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4"/>
                             </Button>
                           )}
                         </div>
@@ -387,10 +393,10 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
                             className="w-12 h-12 rounded object-cover"
                           />
                           <div>
-                            <h3 className="font-dosis-semibold text-white">{submission.songTitle}</h3>
-                            <p className="text-gray-400 font-dosis">{submission.artistName}</p>
+                            <h3 className="font-dosis-semibold text-white">{submission.songTitle || "No title"}</h3>
+                            <p className="text-gray-400 font-dosis">{submission.artistName || "No artist"}</p>
                             <p className="text-gray-500 text-sm font-dosis">
-                              ID: {submission.id} | ISRC: {submission.isrc}
+                              ID: {submission.id || "N/A"} | ISRC: {submission.isrc || "N/A"}
                             </p>
                           </div>
                         </div>
@@ -401,7 +407,7 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
                             onClick={() => downloadSubmissionFile(submission, "audio")}
                             className="font-dosis-medium"
                           >
-                            <FileDown className="h-4 w-4 mr-1" />
+                            <FileDown className="h-4 w-4 mr-1"/>
                             Audio
                           </Button>
                           <Button
@@ -410,15 +416,15 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
                             onClick={() => downloadSubmissionFile(submission, "image")}
                             className="font-dosis-medium"
                           >
-                            <FileDown className="h-4 w-4 mr-1" />
+                            <FileDown className="h-4 w-4 mr-1"/>
                             Ảnh
                           </Button>
                           <div className="text-right">
-                            <p className="text-sm text-gray-400 font-dosis">{submission.submissionDate}</p>
+                            <p className="text-sm text-gray-400 font-dosis">{submission.submissionDate || ""}</p>
                             <span
-                              className={`px-2 py-1 rounded text-xs font-dosis-medium ${getStatusColor(submission.status)}`}
+                              className={`px-2 py-1 rounded text-xs font-dosis-medium ${getStatusColor(submission.status || "")}`}
                             >
-                              {submission.status}
+                              {submission.status || "N/A"}
                             </span>
                           </div>
                         </div>
@@ -436,7 +442,7 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
               <CardTitle className="flex items-center font-dosis-semibold">
-                <Search className="mr-2" />
+                <Search className="mr-2"/>
                 Tìm kiếm ISRC
               </CardTitle>
             </CardHeader>
@@ -457,36 +463,36 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
               <CardTitle className="flex items-center font-dosis-semibold">
-                <Database className="mr-2" />
-                Quản lý database
+                <Database className="mr-2"/>
+                Quản lý Database
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Button onClick={saveData} className="bg-blue-600 hover:bg-blue-700 font-dosis-medium">
-                  <Save className="mr-2 h-4 w-4" />
+                  <Save className="mr-2 h-4 w-4"/>
                   Lưu dữ liệu
                 </Button>
 
                 <Button onClick={exportData} className="bg-green-600 hover:bg-green-700 font-dosis-medium">
-                  <Download className="mr-2 h-4 w-4" />
-                  Xuất backup
+                  <Download className="mr-2 h-4 w-4"/>
+                  Export Backup
                 </Button>
 
                 <div>
-                  <input type="file" accept=".json" onChange={importData} className="hidden" id="import-file" />
+                  <input type="file" accept=".json" onChange={importData} className="hidden" id="import-file"/>
                   <Button
                     onClick={() => document.getElementById("import-file")?.click()}
-                    className="bg-orange-600 hover:bg-orange-700 w-full font-dosis-medium"
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Nhập backup
+                    className="bg-orange-600 hover:bg-orange-700 w-full font-dosis-medium">
+                  
+                    <Upload className="mr-2 h-4 w-4"/>
+                    Import backup
                   </Button>
                 </div>
               </div>
 
               <div className="bg-gray-700 p-4 rounded-lg">
-                <h4 className="font-dosis-semibold mb-2">Thống kê database</h4>
+                <h4 className="font-dosis-semibold mb-2">Thống kê dữ liệu</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-400 font-dosis">Tổng người dùng:</span>
@@ -497,15 +503,15 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
                     <span className="ml-2 text-white font-dosis-semibold">{submissionsList.length}</span>
                   </div>
                   <div>
-                    <span className="text-gray-400 font-dosis">Label managers:</span>
+                    <span className="text-gray-400 font-dosis">Label Managers:</span>
                     <span className="ml-2 text-white font-dosis-semibold">
                       {users.filter((u) => u.role === "Label Manager").length}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-400 font-dosis">Nghệ sĩ:</span>
+                    <span className="text-gray-400 font-dosis">Artist:</span>
                     <span className="ml-2 text-white font-dosis-semibold">
-                      {users.filter((u) => u.role === "Nghệ sĩ").length}
+                      {users.filter((u) => u.role === "Artist").length}
                     </span>
                   </div>
                 </div>
@@ -517,6 +523,3 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
     </div>
   )
 }
-
-// Default export for compatibility
-export default AdminPanelView

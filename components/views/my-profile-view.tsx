@@ -1,3 +1,4 @@
+// Tôi là An Kun
 "use client"
 
 import type React from "react"
@@ -9,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import type { User } from "@/types/user"
-import { users_db, saveUsersToLocalStorage } from "@/lib/data"
+import { users_db, saveUsersToLocalStorage, saveUsersToDatabase } from "@/lib/data"
 import { UserCircle, Copy, Sparkles } from "lucide-react"
 
 interface MyProfileViewProps {
@@ -105,7 +106,7 @@ export default function MyProfileView({ currentUser, showModal }: MyProfileViewP
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const userIndex = users_db.findIndex((u) => u.username === currentUser.username)
@@ -117,11 +118,18 @@ export default function MyProfileView({ currentUser, showModal }: MyProfileViewP
     // Update user data
     users_db[userIndex] = {
       ...users_db[userIndex],
-      fullName: formData.fullName,
+      full_name: formData.fullName,
       email: formData.email,
       bio: formData.bio,
       avatar: avatarFile ? avatarPreview : users_db[userIndex].avatar,
-      socialLinks: formData.socialLinks,
+      social_links: formData.socialLinks,
+    }
+
+    const ok = await saveUsersToDatabase([...users_db])
+    if (ok) {
+      showModal("Thành công", ["Nghệ sĩ đã được cập nhật trên database!"], "success")
+    } else {
+      showModal("Lỗi", ["Không thể cập nhật nghệ sĩ trên database!"], "error")
     }
 
     // Update current user in session
@@ -130,8 +138,6 @@ export default function MyProfileView({ currentUser, showModal }: MyProfileViewP
 
     // Save to localStorage
     saveUsersToLocalStorage()
-
-    showModal("Thành công", ["Nghệ sĩ đã được cập nhật!"], "success")
   }
 
   return (

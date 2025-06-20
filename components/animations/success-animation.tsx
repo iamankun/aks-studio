@@ -104,7 +104,7 @@ export function SuccessAnimation({ artistName, songTitle, onClose }: SuccessAnim
             <Music className="h-16 w-16 text-green-500 animate-bounce" />
           </div>
           <h2 className="text-3xl font-dosis-bold text-gradient-purple mb-4">
-            Cảm ơn {artistName} đã đồng hành cùng âm nhạc!
+            Cảm ơn {artistName} đã đồng hành cùng Giai Điệu Gen Z!
           </h2>
           <p className="text-xl text-gray-300 mb-3">
             Bản phát hành <span className="text-gradient-blue">{songTitle}</span> đã gửi đi!

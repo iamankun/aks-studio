@@ -1,8 +1,8 @@
 export interface User {
   id: string
   username: string
-  password: string
-  role: "Quản lý nhãn" | "Nghệ sĩ"
+  passwordHash?: string // Hoặc password_hash tùy theo quy ước đặt tên của bạn
+  role: "Label Manager" | "Artist"
   fullName: string
   email: string
   avatar?: string

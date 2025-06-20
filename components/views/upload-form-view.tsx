@@ -31,15 +31,15 @@ import {
   FileText,
   Mail,
 } from "lucide-react"
+import { supabase } from '@/lib/supabase/client'; // Import client duy nhất
 import { generateISRC, validateImageFile, validateAudioFile, getMinimumReleaseDate } from "@/lib/utils"
 
+export default function UploadFormView({ currentUser, onSubmissionAdded, showModal }: UploadFormViewProps) {
 interface UploadFormViewProps {
   currentUser: User
   onSubmissionAdded: (submission: Submission) => void
   showModal: (title: string, messages: string[], type?: "error" | "success") => void
 }
-
-export default function UploadFormView({ currentUser, onSubmissionAdded, showModal }: UploadFormViewProps) {
   // Form state
   const [fullName, setFullName] = useState(currentUser.fullName || "")
   const [artistName, setArtistName] = useState(currentUser.role === "Artist" ? currentUser.username : "")
@@ -353,7 +353,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
       imageFile: imageFile ? imageFile.name : "Uploaded Image",
       imageUrl: imagePreviewUrl,
       audioFilesCount: audioTracks.length,
-      submissionDate: new Date().toLocaleDateString("vi-VN"),
+      submissionDate: new Date().toISOString(),
       status: "Đã nhận, đang chờ duyệt",
       mainCategory,
       subCategory,

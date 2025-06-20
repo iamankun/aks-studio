@@ -1,17 +1,11 @@
-"use client"
-
-import type React from "react"
+// Tôi là An Kun
+import React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertModal } from "@/components/modals/alert-modal"
-import type { User } from "@/types/user"
-import { users_db, saveUsersToLocalStorage } from "@/lib/data"
 import { Disc3 } from "lucide-react"
-import { neon } from '@neondatabase/serverless';
-import { createClient } from '@supabase/supabase-js'
-
 
 interface RegistrationViewProps {
   onRegistrationSuccess: () => void
@@ -28,7 +22,7 @@ export default function RegistrationView({ onRegistrationSuccess, onShowLogin }:
   const [modalTitle, setModalTitle] = useState("")
   const [modalType, setModalType] = useState<"success" | "error">("error")
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     // Validation
@@ -40,41 +34,43 @@ export default function RegistrationView({ onRegistrationSuccess, onShowLogin }:
       return
     }
 
-    if (users_db.find((user) => user.username === username)) {
+    // Gửi dữ liệu đăng ký đến API endpoint
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, email, password }), // Chỉ gửi password dạng text
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+      setModalTitle("Đăng ký thành công")
+        setModalMessage([result.message || "Tài khoản đã được tạo thành công!"])
+      setModalType("success")
+      setIsModalOpen(true)
+      setUsername("")
+      setPassword("")
+      setConfirmPassword("")
+      setEmail("")
+      setTimeout(() => {
+        onRegistrationSuccess()
+      }, 2000)
+      return
+      } else {
+        setModalTitle("Lỗi đăng ký")
+        setModalMessage([result.message || "Không thể tạo tài khoản."])
+        setModalType("error")
+        setIsModalOpen(true)
+      }
+    } catch (error) {
       setModalTitle("Lỗi đăng ký")
-      setModalMessage(["Tên đăng nhập đã tồn tại."])
+      setModalMessage(["Đã xảy ra lỗi kết nối. Vui lòng thử lại."])
       setModalType("error")
       setIsModalOpen(true)
-      return
     }
-
-    // Create new user
-    const newUser: User = {
-      id: Date.now().toString(),
-      username,
-      password,
-      email,
-      role: "user",
-      createdAt: new Date().toISOString(),
-    }
-
-    users_db.push(newUser)
-    saveUsersToLocalStorage()
-
-    setModalTitle("Đăng ký thành công")
-    setModalMessage(["Tài khoản đã được tạo thành công!"])
-    setModalType("success")
-    setIsModalOpen(true)
-
-    // Reset form
-    setUsername("")
-    setPassword("")
-    setConfirmPassword("")
-    setEmail("")
-
-    setTimeout(() => {
-      onRegistrationSuccess()
-    }, 2000)
   }
 
   return (
@@ -83,7 +79,7 @@ export default function RegistrationView({ onRegistrationSuccess, onShowLogin }:
         <CardContent className="p-8 md:p-12">
           <div className="text-center mb-8">
             <Disc3 className="h-12 w-12 text-purple-500 mx-auto mb-4" />
-            <h2 className="text-3xl font-bold text-white">AKs Studio Dashboard || Register</h2>
+            <h2 className="text-3xl font-bold text-white">Register || An Kun Studio Digital Music Distribution</h2>
             <p className="text-gray-400 mt-2">Tạo tài khoản mới để quản lý âm nhạc.</p>
           </div>
 
@@ -172,3 +168,4 @@ export default function RegistrationView({ onRegistrationSuccess, onShowLogin }:
     </div>
   )
 }
+// Tôi là An Kun

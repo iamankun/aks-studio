@@ -1,3 +1,4 @@
+// Tôi là An Kun
 "use client"
 
 import type React from "react"
@@ -7,11 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertModal } from "@/components/modals/alert-modal"
 import type { User } from "@/types/user"
-import { users_db, loadUsersFromLocalStorage } from "@/lib/data"
-import { Disc3, Shield } from "lucide-react"
+import { users_db, loadUsersFromLocalStorage, loginUser } from "@/lib/data"
+import { Disc3, Shield } from 'lucide-react';
 import { useSystemStatus } from "@/components/system-status-provider"
-import { neon } from '@neondatabase/serverless';
-import { createClient } from '@supabase/supabase-js'
 
 interface LoginViewProps {
   onLogin: (user: User) => void
@@ -27,19 +26,24 @@ export default function LoginView({ onLogin, onShowRegister }: LoginViewProps) {
   const [modalType, setModalType] = useState<"success" | "error">("error")
   const { status } = useSystemStatus()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Load users from localStorage first
-    loadUsersFromLocalStorage()
-
-    const foundUser = users_db.find((user) => user.username === username && user.password === password)
-
+    // Thử đăng nhập với database thực trước
+    const foundUser = await loginUser(username, password)
     if (foundUser) {
       onLogin(foundUser)
+      return
+    }
+
+    // Nếu không có, fallback localStorage (demo)
+    loadUsersFromLocalStorage()
+    const localUser = users_db.find((user) => user.username === username && user.password === password)
+    if (localUser) {
+      onLogin(localUser)
     } else {
       setModalTitle("Đăng nhập thất bại")
-      setModalMessage(["Sai tên đăng nhập hoặc mật khẩu.", "Tài khoản demo: admin/admin hoặc artist/123456"])
+      setModalMessage(["Sai tên đăng nhập hoặc mật khẩu."])
       setIsModalOpen(true)
       setPassword("")
     }
@@ -53,10 +57,10 @@ export default function LoginView({ onLogin, onShowRegister }: LoginViewProps) {
             <div className="flex items-center justify-center mb-4">
               <Disc3 className="h-12 w-12 text-purple-500 mr-2" />
               {status.isDemo && (
-                <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-dosis-bold">BETA</span>
+                <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-dosis-bold">Beta</span>
               )}
             </div>
-            <h2 className="text-3xl font-dosis-bold text-white">[tenapp] Dashboard</h2>
+            <h2 className="text-3xl font-dosis-bold text-white">Dashboard | Digital Music Distribution</h2>
             <p className="text-gray-400 mt-2 font-dosis">Đăng nhập để quản lý âm nhạc của bạn.</p>
 
             {status.isDemo && (
@@ -95,7 +99,7 @@ export default function LoginView({ onLogin, onShowRegister }: LoginViewProps) {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="pl-10 font-dosis"
-                  placeholder="admin hoặc artist"
+                  placeholder="Username"
                 />
               </div>
             </div>
@@ -125,7 +129,7 @@ export default function LoginView({ onLogin, onShowRegister }: LoginViewProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 font-dosis"
-                  placeholder="admin hoặc 123456"
+                  placeholder="Password"
                 />
               </div>
             </div>
@@ -144,8 +148,8 @@ export default function LoginView({ onLogin, onShowRegister }: LoginViewProps) {
             <div className="mt-4 p-3 bg-gray-700/50 rounded-lg">
               <p className="text-xs text-gray-400 mb-2 font-dosis">📋 Tài khoản demo:</p>
               <div className="text-xs space-y-1 font-dosis">
-                <p className="text-green-400">• Label Manager: admin / admin</p>
-                <p className="text-blue-400">• Nghệ sĩ: artist / 123456</p>
+                <p className="text-green-400">• Hình như bạn chưa có tài khoản</p>
+                <p className="text-blue-400">• Vui lòng đăng ký hoặc liên hệ quản trị nếu tài khoản có vấn đề</p>
               </div>
             </div>
 

@@ -1,7 +1,9 @@
+// Tôi là An Kun
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import type { User } from "@/types/user"
-import { neon } from '@neondatabase/serverless';
+import { neon } from '@neondatabase/serverless'
+import { format } from "date-fns"
 import { createClient } from '@supabase/supabase-js'
 
 export function cn(...inputs: ClassValue[]) {
@@ -9,9 +11,12 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function generateISRC(user: User, lastCounter: number): { isrc: string; newCounter: number } {
+  // Tôi là An Kun
   const newCounter = lastCounter + 1
   const paddedCounter = newCounter.toString().padStart(5, "0")
-  const isrc = `VNA2P${new Date().getFullYear()}${paddedCounter}`
+  // Sử dụng prefix từ user.isrc_code_prefix nếu có
+  const prefix = user.isrc_code_prefix || "VNA2P"
+  const isrc = `${prefix}${new Date().getFullYear()}${paddedCounter}`
   return { isrc, newCounter }
 }
 

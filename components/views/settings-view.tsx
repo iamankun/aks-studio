@@ -7,9 +7,11 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { StatusIndicator } from "@/components/status-indicator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Settings, Mail, Save, Image, Globe, Database, Palette, HelpCircle } from "lucide-react"
+import { sendEmail, type EmailDetails } from "@/lib/email"
 import { useSystemStatus } from "@/components/system-status-provider"
 import type { User } from "@/types/user"
 
@@ -109,13 +111,13 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
 
   const handleSaveEmailSettings = () => {
     localStorage.setItem("emailSettings_v2", JSON.stringify(emailSettings))
-    alert("Đã lưu cài đặt SMTP!")
+    showModal("Lưu thành công", ["Đã lưu cài đặt SMTP!"], "success")
     checkAllSystems()
   }
 
   const handleSaveAppSettings = () => {
     localStorage.setItem("appSettings_v2", JSON.stringify(appSettings))
-    alert("Đã lưu cài đặt ứng dụng!")
+    showModal("Lưu thành công", ["Đã lưu cài đặt ứng dụng!"], "success")
     // Update favicon
     const favicon = document.querySelector("link[rel*='icon']") as HTMLLinkElement
     if (favicon) {
@@ -128,41 +130,55 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
   const handleSaveBackgroundSettings = () => {
     localStorage.setItem("backgroundSettings_v2", JSON.stringify(backgroundSettings))
     window.dispatchEvent(new CustomEvent("backgroundUpdate", { detail: backgroundSettings }))
-    alert("Đã lưu cài đặt background!")
+    showModal("Lưu thành công", ["Đã lưu cài đặt background!"], "success")
   }
 
   const handleSaveFooterSettings = () => {
     localStorage.setItem("footerSettings_v2", JSON.stringify(footerSettings))
     window.dispatchEvent(new CustomEvent("footerUpdate", { detail: footerSettings }))
-    alert("Đã lưu cài đặt footer!")
+    showModal("Lưu thành công", ["Đã lưu cài đặt footer!"], "success")
   }
 
   const handleSaveDatabaseSettings = () => {
     localStorage.setItem("databaseSettings_v2", JSON.stringify(databaseSettings))
-    alert("Đã lưu cài đặt database!")
+    showModal("Lưu thành công", ["Đã lưu cài đặt database!"], "success")
     checkAllSystems()
   }
 
-  const handleTestSMTP = () => {
-    alert("Đang test kết nối SMTP...")
-    setTimeout(() => {
-      alert("Kết nối SMTP thành công! Email test đã được gửi.")
-    }, 1500)
+  const handleTestSMTP = async () => {
+    if (!emailSettings.smtpServer || !emailSettings.smtpUsername || !emailSettings.smtpPassword) {
+      showModal("Lỗi Test SMTP", ["Vui lòng điền đầy đủ thông tin cấu hình SMTP trước khi test."], "error")
+      return
+    }
+    // Lưu cài đặt hiện tại trước khi test để đảm bảo sendEmail đọc được
+    localStorage.setItem("emailSettings_v2", JSON.stringify(emailSettings))
+
+    const testEmailDetails: EmailDetails = {
+      from: emailSettings.smtpUsername, // Gửi từ chính email cấu hình
+      to: emailSettings.smtpUsername,   // Gửi đến chính email cấu hình để test
+      subject: `Test Email - ${appSettings.appName} - ${new Date().toISOString()}`,
+      textBody: `Đây là email test từ hệ thống ${appSettings.appName}.\nCấu hình SMTP của bạn hoạt động bình thường!`,
+      htmlBody: `<p>Đây là email test từ hệ thống <strong>${appSettings.appName}</strong>.</p><p>Cấu hình SMTP của bạn hoạt động bình thường!</p>`,
+    }
+    const result = await sendEmail(testEmailDetails)
+    showModal(result.success ? "Test SMTP Thành Công" : "Test SMTP Thất Bại", [result.message], result.success ? "success" : "error")
   }
 
-  const StatusIndicator = ({ status: statusType }: { status: string }) => (
-    <span
-      className={`px-2 py-1 rounded text-sm ${
-        statusType === "connected"
-          ? "bg-green-600 text-white"
-          : statusType === "checking"
-            ? "bg-yellow-600 text-white"
-            : "bg-red-600 text-white"
-      }`}
-    >
       {statusType === "connected" ? "Kết nối" : statusType === "checking" ? "Đang kiểm tra..." : "Chưa kết nối"}
     </span>
   )
+  
+  // Helper function to show modal (can be moved to a context or prop if needed more globally)
+  const showModal = (title: string, messages: string[], type: "error" | "success" = "error") => {
+    const event = new CustomEvent('showGlobalNotification', {
+      detail: {
+        title,
+        message: messages.join(' '),
+        type,
+      }
+    });
+    window.dispatchEvent(event);
+  };
 
   return (
     <div className="p-2 md:p-6">

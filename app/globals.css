@@ -1,0 +1,326 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-dosis), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+      Arial, sans-serif;
+  }
+}
+
+/* Dosis font classes */
+.font-dosis {
+  font-family: var(--font-dosis), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  letter-spacing: 0.025em;
+}
+
+.font-dosis-light {
+  font-weight: 300;
+  letter-spacing: 0.05em;
+}
+
+.font-dosis-medium {
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+
+.font-dosis-semibold {
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}
+
+.font-dosis-bold {
+  font-weight: 700;
+  letter-spacing: 0.025em;
+}
+
+.font-dosis-extrabold {
+  font-weight: 800;
+  letter-spacing: 0.025em;
+}
+
+/* Fix footer color */
+footer {
+  @apply bg-gray-900 text-gray-300;
+}
+
+.status-badge {
+  @apply px-2 py-1 rounded text-xs font-medium;
+}
+
+/* Music note animations */
+.music-note {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  user-select: none;
+  font-weight: bold;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
+}
+
+/* Animation for sidebar */
+.sidebar-collapse-animation {
+  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .mobile-preview-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 50;
+  }
+}
+
+.preview-sticky {
+  position: sticky;
+  top: 20px;
+}
+
+/* Background video styling */
+.bg-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
+/* Text gradient and animation classes */
+.text-gradient {
+  @apply text-transparent bg-clip-text;
+}
+
+.text-gradient-purple {
+  @apply text-gradient bg-gradient-to-r from-purple-400 via-pink-500 to-red-500;
+}
+
+.text-gradient-blue {
+  @apply text-gradient bg-gradient-to-r from-blue-400 via-cyan-500 to-purple-500;
+}
+
+.text-gradient-green {
+  @apply text-gradient bg-gradient-to-r from-green-400 via-teal-500 to-blue-500;
+}
+
+.text-gradient-gold {
+  @apply text-gradient bg-gradient-to-r from-yellow-300 via-amber-500 to-yellow-600;
+}
+
+/* Text animations */
+.text-animation-pulse {
+  animation: text-pulse 2s infinite;
+}
+
+.text-animation-wave {
+  animation: text-wave 3s infinite;
+}
+
+.text-animation-sparkle {
+  position: relative;
+}
+
+.text-animation-sparkle::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: text-sparkle 2s infinite;
+}
+
+/* Album preview animations */
+.album-disc {
+  transition: transform 0.5s ease;
+}
+
+.album-disc.spinning {
+  animation: disc-spin 2s linear infinite;
+}
+
+.album-notes {
+  position: absolute;
+  z-index: 10;
+  animation: note-float 2s ease-in infinite;
+  opacity: 0;
+}
+
+/* Collapsible sidebar toggle */
+.sidebar-toggle {
+  @apply bg-purple-600 hover:bg-purple-700 text-white rounded-full p-2 fixed top-5 left-5 z-50 shadow-lg;
+  animation: pulse 2s infinite;
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sidebar-toggle {
+    display: flex;
+  }
+}
+
+@keyframes disc-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes note-float {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) translateX(calc(50px - 100px * var(--direction, 1)))
+      rotate(calc(45deg * var(--rotation, 1)));
+    opacity: 0;
+  }
+}
+
+@keyframes text-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes text-wave {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes text-sparkle {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(139, 92, 246, 0);
+  }
+}
+
+/* Album digital transformation animation */
+.digital-transform {
+  animation: digital-transform 2s forwards;
+}
+
+@keyframes digital-transform {
+  0% {
+    filter: blur(0);
+    transform: scale(1);
+  }
+  50% {
+    filter: blur(10px);
+    transform: scale(1.2);
+  }
+  100% {
+    filter: blur(0);
+    transform: scale(1) translateY(-100px);
+    opacity: 0;
+  }
+}

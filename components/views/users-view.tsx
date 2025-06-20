@@ -2,20 +2,28 @@
 
 // Tôi là An Kun
 import { useState, useEffect } from "react"
+import type { User } from "@/types/user"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { fetchUsersFromDatabase } from "@/lib/data"
+import { fetchUsersFromClient } from "@/lib/data" // Đổi tên hàm fetch
 import { Users, UserPlus } from "lucide-react"
 
 export default function UsersView() {
-  const [usersList, setUsersList] = useState([])
+  const [usersList, setUsersList] = useState<User[]>([])
+  const [isClient, setIsClient] = useState(false) // State để kiểm tra client-side
 
   useEffect(() => {
-    // Chỉ lấy từ database thực
-    fetchUsersFromDatabase().then((dbUsers) => {
+    // Chỉ chạy sau khi component đã được mount trên client
+    setIsClient(true)
+    fetchUsersFromClient().then((dbUsers) => {
       setUsersList(dbUsers)
     })
   }, [])
+
+  if (!isClient) {
+    // Render một placeholder hoặc không gì cả trên server để tránh hydration error
+    return null
+  }
 
   return (
     <div className="p-2 md:p-6">
@@ -38,8 +46,8 @@ export default function UsersView() {
           <div className="mt-6">
             <h4 className="text-lg font-semibold text-gray-200 mb-4">Danh sách người dùng hiện tại:</h4>
             <div className="space-y-3">
-              {usersList.map((user, index) => (
-                <div key={index} className="flex items-center space-x-4 p-3 bg-gray-700 rounded-lg">
+              {usersList.map((user: User) => (
+                <div key={user.id} className="flex items-center space-x-4 p-3 bg-gray-700 rounded-lg">
                   <img
                     src={
                       user.avatar ||
@@ -58,9 +66,8 @@ export default function UsersView() {
                   </div>
                   <div className="text-right">
                     <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        user.role === "Label Manager" ? "bg-purple-500 text-white" : "bg-green-500 text-white"
-                      }`}
+                      className={`px-2 py-1 rounded-full text-xs ${user.role === "Label Manager" ? "bg-purple-500 text-white" : "bg-green-500 text-white"
+                        }`}
                     >
                       {user.role}
                     </span>

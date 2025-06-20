@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { SubmissionDetailModal } from "@/components/modals/submission-detail-modal"
-import { fetchSubmissionsFromDatabase } from "@/lib/data"
+import { fetchSubmissionsFromClient } from "@/lib/data"
 import type { User } from "@/types/user"
 import type { Submission } from "@/types/submission"
 import { getStatusColor } from "@/lib/utils"
@@ -29,7 +29,7 @@ export default function SubmissionsView({
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchSubmissionsFromDatabase()
+    fetchSubmissionsFromClient()
       .then((dbSubs) => {
         setSubmissions(dbSubs);
       })

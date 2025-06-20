@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import type { User } from "@/types/user"
-import { users_db, saveUsersToLocalStorage, saveUsersToDatabase } from "@/lib/data"
+import { loadUsersFromLocalStorage, saveUsersToLocalStorage } from "@/lib/data"
 import { UserCircle, Copy, Sparkles } from "lucide-react"
 
 interface MyProfileViewProps {
@@ -109,35 +109,36 @@ export default function MyProfileView({ currentUser, showModal }: MyProfileViewP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const userIndex = users_db.findIndex((u) => u.username === currentUser.username)
+    // 1. Tải danh sách người dùng hiện tại từ localStorage
+    const currentUsers = loadUsersFromLocalStorage()
+
+    const userIndex = currentUsers.findIndex((u) => u.username === currentUser.username)
     if (userIndex === -1) {
       showModal("Lỗi Cập Nhật", ["Không tìm thấy người dùng."])
       return
     }
 
-    // Update user data
-    users_db[userIndex] = {
-      ...users_db[userIndex],
+    // 2. Tạo đối tượng người dùng đã cập nhật
+    const updatedUser = {
+      ...currentUsers[userIndex],
       full_name: formData.fullName,
       email: formData.email,
       bio: formData.bio,
-      avatar: avatarFile ? avatarPreview : users_db[userIndex].avatar,
+      avatar: avatarFile ? avatarPreview : currentUsers[userIndex].avatar,
       social_links: formData.socialLinks,
     }
 
-    const ok = await saveUsersToDatabase([...users_db])
-    if (ok) {
-      showModal("Thành công", ["Nghệ sĩ đã được cập nhật trên database!"], "success")
-    } else {
-      showModal("Lỗi", ["Không thể cập nhật nghệ sĩ trên database!"], "error")
-    }
+    // 3. Cập nhật mảng người dùng
+    currentUsers[userIndex] = updatedUser
 
-    // Update current user in session
-    const updatedUser = users_db[userIndex]
+    // 4. Lưu lại vào localStorage
+    // Trong một ứng dụng thực tế, bạn sẽ gọi một API để lưu vào database ở đây.
+    // Ví dụ: const response = await fetch('/api/users/update', { method: 'POST', body: JSON.stringify(updatedUser) });
+    saveUsersToLocalStorage(currentUsers)
+
+    // 5. Cập nhật session và thông báo
     sessionStorage.setItem("currentUser", JSON.stringify(updatedUser))
-
-    // Save to localStorage
-    saveUsersToLocalStorage()
+    showModal("Thành công", ["Hồ sơ của bạn đã được cập nhật!"], "success")
   }
 
   return (

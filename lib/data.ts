@@ -1,10 +1,10 @@
 // Trong file: lib/data.ts (ví dụ)
 import type { User } from "@/types/user";
 import type { Submission } from "@/types/submission";
-import { sendEmail, type EmailDetails } from "@/lib/email"; // Import hàm sendEmail
+import { sendEmail, type EmailDetails } from "@/lib/email";
 import { neon, neonConfig } from "@neondatabase/serverless";
 
-const USERS_STORAGE_KEY = "users_v2"; // Key nhất quán để lưu trữ người dùng
+const USERS_STORAGE_KEY = "users_v2";
 const SUBMISSIONS_STORAGE_KEY = "submissions_v3"; // Key cho submissions
 
 // ... (các hàm khác như fetchUsersFromDatabase, saveUsersToDatabase, loginUser)
@@ -13,8 +13,6 @@ const SUBMISSIONS_STORAGE_KEY = "submissions_v3"; // Key cho submissions
 export const loadUsersFromLocalStorage = (): User[] => {
   if (typeof window !== "undefined") {
     const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
-    // Cung cấp một mảng người dùng mặc định nếu không có gì trong localStorage
-    // hoặc nếu dữ liệu không hợp lệ. Điều này giúp AdminPanelView có dữ liệu ban đầu.
     const defaultAdminUser: User = { id: "admin-001", username: "admin", password: "admin", email: "admin@example.com", role: "Label Manager", fullName: "Admin User", createdAt: new Date().toISOString() };
     const defaultArtistUser: User = { id: "artist-001", username: "artist", password: "123", email: "artist@example.com", role: "Artist", fullName: "Artist User", createdAt: new Date().toISOString() };
     return savedUsers ? JSON.parse(savedUsers) : [defaultAdminUser, defaultArtistUser];
@@ -30,8 +28,12 @@ export const saveUsersToLocalStorage = (users: User[]): void => {
 };
 
 // Các hàm này giờ sẽ sử dụng localStorage helpers
-export const fetchUsersFromDatabase = (): Promise<User[]> => Promise.resolve(loadUsersFromLocalStorage());
-export const saveUsersToDatabase = (users: User[]): void => saveUsersToLocalStorage(users);
+// Đổi tên để rõ ràng: đây là các hàm cho localStorage, không phải database
+export const fetchUsersFromClient = (): Promise<User[]> => Promise.resolve(loadUsersFromLocalStorage());
+
+// Hàm này sẽ được thay thế bằng một API call thực sự để lưu vào DB
+// Tạm thời giữ lại để các component khác không bị lỗi import
+export const saveUsersToDatabase_DEPRECATED = (users: User[]): void => saveUsersToLocalStorage(users);
 
 // Hàm tải submissions từ localStorage
 export const loadSubmissionsFromLocalStorage = (): Submission[] => {
@@ -50,9 +52,10 @@ export const saveSubmissionsToLocalStorage = (submissions: Submission[]): void =
 };
 
 // Hàm fetch submissions (sử dụng localStorage helper)
-export const fetchSubmissionsFromDatabase = (): Promise<Submission[]> => Promise.resolve(loadSubmissionsFromLocalStorage());
+// Đổi tên để rõ ràng
+export const fetchSubmissionsFromClient = (): Promise<Submission[]> => Promise.resolve(loadSubmissionsFromLocalStorage());
 // Hàm save submissions (sử dụng localStorage helper)
-export const saveSubmissionsToDatabase = (submissions: Submission[]): void => saveSubmissionsToLocalStorage(submissions);
+export const saveSubmissionsToClient = (submissions: Submission[]): void => saveSubmissionsToLocalStorage(submissions);
 
 export async function registerUser(newUser: User): Promise<boolean> {
   const dbUrl = process.env.aksstudio_POSTGRES_URL || process.env.DATABASE_URL;
@@ -114,25 +117,19 @@ export function loginUser(username: string, password_input: string): User | null
   return null;
 }
 
-// Export mảng users_db để các module khác có thể truy cập nếu cần
-// Lưu ý: Việc thay đổi trực tiếp mảng này sẽ không tự động lưu vào localStorage
-// Nên sử dụng saveUsersToLocalStorage hoặc saveUsersToDatabase để đảm bảo tính nhất quán.
-export let users_db: User[] = loadUsersFromLocalStorage();
-
-
 // Hàm đảm bảo người dùng admin mặc định tồn tại
 export async function ensureDefaultAdminUser(): Promise<void> {
   const adminUsername = "admin";
   const adminRole = "Label Manager";
-  const defaultAdminUser: User = { 
+  const defaultAdminUser: User = {
     id: "admin-001", // ID này có thể cần được tạo tự động bởi DB
-    username: adminUsername, 
+    username: adminUsername,
     // Trong thực tế, password nên được hash trước khi lưu vào DB
-    password: "admin", 
+    password: "admin",
     email: "admin@example.com", // Sử dụng email từ SMTP_USER nếu muốn: "admin@ankun.dev"
-    role: adminRole, 
-    fullName: "Admin User", 
-    createdAt: new Date().toISOString() 
+    role: adminRole,
+    fullName: "Admin User",
+    createdAt: new Date().toISOString()
   };
 
   // Kết nối database
@@ -144,8 +141,7 @@ export async function ensureDefaultAdminUser(): Promise<void> {
     let localUsers = loadUsersFromLocalStorage();
     if (!localUsers.some(user => user.username === adminUsername && user.role === adminRole)) {
       localUsers.push(defaultAdminUser);
-      saveUsersToLocalStorage(localUsers);
-      users_db = localUsers;
+      saveUsersToLocalStorage(localUsers); // Chỉ lưu vào localStorage
       console.log("Default admin user created and saved to localStorage (DB not configured).");
     }
     return;
@@ -174,14 +170,12 @@ export async function ensureDefaultAdminUser(): Promise<void> {
     // Nếu admin chưa có trong localStorage (ví dụ, sau khi DB được tạo lần đầu)
     // hoặc nếu muốn đồng bộ từ DB xuống (logic phức tạp hơn, hiện tại chỉ thêm nếu chưa có)
     const adminFromDbOrDefaults = { ...defaultAdminUser }; // Giả sử lấy từ DB hoặc dùng default
-    
-    // Kiểm tra lại để tránh trùng lặp nếu loadUsersFromLocalStorage đã có default
+
     const adminExistsInLocal = localUsers.some(u => u.username === adminUsername && u.role === adminRole);
     if (!adminExistsInLocal) {
-        localUsers.push(adminFromDbOrDefaults);
-        saveUsersToLocalStorage(localUsers);
-        users_db = localUsers; // Cập nhật lại biến users_db đã export
-        console.log("Default admin user ensured in localStorage.");
+      localUsers.push(adminFromDbOrDefaults);
+      saveUsersToLocalStorage(localUsers);
+      console.log("Default admin user ensured in localStorage.");
     }
   }
 }

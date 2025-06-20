@@ -1,5 +1,5 @@
 // Tôi là An Kun
-import nodemailer from 'nodemailer'; // @ts-ignore: No type definitions for 'nodemailer'
+import nodemailer from 'nodemailer';
 import { NextResponse } from "next/server";
 import type { EmailDetails } from "@/lib/email";
 

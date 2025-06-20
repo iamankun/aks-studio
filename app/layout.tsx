@@ -8,7 +8,7 @@ import { Analytics } from "@vercel/analytics/next"
 
 // Initialize the Dosis font with proper subsets
 const dosis = Dosis({
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext", "vietnamese"], // Added vietnamese and latin-ext for broader character support
   weight: ["300", "400", "500", "600", "700", "800"],
   display: "swap",
   variable: "--font-dosis", // This creates the CSS variable for Dosis
@@ -16,7 +16,7 @@ const dosis = Dosis({
 
 export const metadata: Metadata = {
   title: "Dashboard - Digital Music Distribution",
-  description: "Nền tảng quản lý và phát hành âm nhạc chuyên nghiệp",
+  description: "Nền tảng quản lý và phát hành âm nhạc dành cho giới trẻ",
   icons: {
     icon: "/favicon.ico",
   },
@@ -30,10 +30,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body className="font-dosis">
-        {children}
-        {/* <ClientWrapper>{children}</ClientWrapper> */}
-        {/* <Analytics /> */}
+      <body className={dosis.variable}>
+        <ClientWrapper>{children}</ClientWrapper>
+        <Analytics />
       </body>
     </html>
   )

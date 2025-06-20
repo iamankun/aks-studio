@@ -714,7 +714,3 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
     </div>
   )
 }
-      </Tabs >
-    </div >
-  )
-}

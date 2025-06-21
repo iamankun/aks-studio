@@ -9,4 +9,10 @@ export interface UploadFormViewProps {
 
 export default function UploadFormView({ currentUser, onSubmissionAdded, showModal }: UploadFormViewProps) {
     // ...existing code...
+    return (
+        <div>
+            {/* Nội dung form upload sẽ ở đây */}
+            {/* Tôi là An Kun */}
+        </div>
+    )
 }

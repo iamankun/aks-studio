@@ -5,8 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 importers:
-
-  .:
     dependencies:
       '@hookform/resolvers':
         specifier: ^3.10.0

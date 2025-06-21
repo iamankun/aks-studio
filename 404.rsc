@@ -60,7 +60,7 @@
 body {
   width: 1920;
   margin: 0px;
-  background: linear-gradient(90deg, rgba(47,54,64,1) 23%, rgba(24,27,32,1) 100%);
+  background: linear-gradient(90deg, rgba(47, 54, 64, 0.168) 23%, rgba(24, 27, 32, 0.157) 100%);
 }
 
 .moon {

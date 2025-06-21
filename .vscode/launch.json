@@ -6,4 +6,10 @@
         "request": "launch",
         "command": "pnpm run build",
         "cwd": "${workspaceFolder}"
+<<<<<<< HEAD
     }
+=======
+    }
+]
+}
+>>>>>>> 37781608305ac91b69022358485c6adec67358c7

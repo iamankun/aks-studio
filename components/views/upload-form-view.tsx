@@ -30,31 +30,38 @@ import {
   Trash2,
   FileText,
   Mail,
-
 } from "lucide-react";
 import { generateISRC, validateImageFile, validateAudioFile, getMinimumReleaseDate } from "@/lib/utils";
 
+// Định nghĩa các kiểu dữ liệu cụ thể cho các trường trong form
+// Điều này giúp TypeScript hiểu rõ các giá trị hợp lệ và tránh lỗi "string is not assignable"
+type ArtistRole = "singer" | "composer" | "singersongwriter" | "rapper" | "producer" | "singer-songwriter" | "instrumentalist"
+type MainCategory = "pop" | "singer-songwriter" | "hiphoprap" | "edm" | "rnb" | "ballad" | "acoustic" | "indie" | "other_main"
+type SubCategory = "official" | "cover" | "vpop" | "lofi" | "chill" | "trap" | "house" | "alternative" | "folk" | "other_sub"
+type ReleaseType = "single" | "ep" | "lp" | "album"
+type YesNo = "yes" | "no"
+
 interface UploadFormViewProps {
   currentUser: User;
-  onSubmissionAdded: (submission: Submission) => void;
-  showModal: (title: string, messages: string[], type?: "error" | "success") => void;
+  onSubmissionAddedAction: (submission: Submission) => void;
+  showModalAction: (title: string, messages: string[], type?: "error" | "success") => void;
 }
-export default function UploadFormView({ currentUser, onSubmissionAdded, showModal }: UploadFormViewProps) {
+export default function UploadFormView({ currentUser, onSubmissionAddedAction, showModalAction }: UploadFormViewProps) {
   // Form state
   const [fullName, setFullName] = useState(currentUser.fullName || "")
   const [artistName, setArtistName] = useState(currentUser.role === "Artist" ? currentUser.username : "")
-  const [artistRole, setArtistRole] = useState("")
+  const [artistRole, setArtistRole] = useState<ArtistRole | "">("")
   const [songTitle, setSongTitle] = useState("")
-  const [mainCategory, setMainCategory] = useState("")
-  const [subCategory, setSubCategory] = useState("")
-  const [releaseType, setReleaseType] = useState("")
+  const [mainCategory, setMainCategory] = useState<MainCategory | "">("")
+  const [subCategory, setSubCategory] = useState<SubCategory | "">("")
+  const [releaseType, setReleaseType] = useState<ReleaseType | "">("")
   const [albumName, setAlbumName] = useState("")
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [audioTracks, setAudioTracks] = useState<{ file: File; info: TrackInfo; id: string }[]>([])
-  const [isCopyrightOwner, setIsCopyrightOwner] = useState<string>("")
-  const [hasBeenReleased, setHasBeenReleased] = useState<string>("")
+  const [isCopyrightOwner, setIsCopyrightOwner] = useState<YesNo | "">("")
+  const [hasBeenReleased, setHasBeenReleased] = useState<YesNo | "">("")
   const [platforms, setPlatforms] = useState<string[]>([])
-  const [hasLyrics, setHasLyrics] = useState<string>("")
+  const [hasLyrics, setHasLyrics] = useState<YesNo | "">("")
   const [lyrics, setLyrics] = useState("")
   const [userEmail, setUserEmail] = useState(currentUser.email || "")
   const [notes, setNotes] = useState("")
@@ -98,7 +105,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
 
     const validation = await validateImageFile(file)
     if (!validation.valid) {
-      showModal("Ảnh bìa chưa giòn!", validation.errors)
+      showModalAction("Ảnh bìa chưa giòn!", validation.errors)
       e.target.value = ""
       setImageFile(null)
       return
@@ -121,14 +128,14 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
     // Validate audio file
     const validation = await validateAudioFile(file)
     if (!validation.valid) {
-      showModal("File nhạc chưa chuẩn bạn êi!", validation.errors)
+      showModalAction("File nhạc chưa chuẩn bạn êi!", validation.errors)
       e.target.value = ""
       return
     }
 
     // Check release type limits
     if (releaseType === "single" && audioTracks.length >= 2) {
-      showModal("Thông báo", ["Đã giữ lại 2 track đầu tiên cho định dạng Single."], "success")
+      showModalAction("Thông báo", ["Đã giữ lại 2 track đầu tiên cho định dạng Single."], "success")
       e.target.value = ""
       return
     }
@@ -217,9 +224,9 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
         if (track.id === trackId) {
           return {
             ...track,
-            info: {
+            info: { // Ensure the role is a valid AdditionalArtistRole
               ...track.info,
-              additionalArtists: [...track.info.additionalArtists, { name: "", fullName: "", role: "", percentage: 0 }],
+              additionalArtists: [...track.info.additionalArtists, { name: "", fullName: "", role: "featuring", percentage: 0 }],
             },
           }
         }
@@ -271,7 +278,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
     // If changing to single and more than 2 tracks, keep only first 2
     if (value === "single" && audioTracks.length > 2) {
       setAudioTracks(audioTracks.slice(0, 2))
-      showModal("Thông Báo", ["Đã giữ lại 2 track đầu tiên cho định dạng Single."], "success")
+      showModalAction("Thông Báo", ["Đã giữ lại 2 track đầu tiên cho định dạng Single."], "success")
     }
 
     // Set default album name based on release type
@@ -332,7 +339,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
 
     const errors = validateForm()
     if (errors.length > 0) {
-      showModal("Ối Dời! Thiếu Vài Thứ Nè:", errors)
+      showModalAction("Ối Dời! Thiếu Vài Thứ Nè:", errors)
       return
     }
 
@@ -354,32 +361,32 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
       imageUrl: imagePreviewUrl,
       audioFilesCount: audioTracks.length,
       submissionDate: new Date().toISOString(),
-      status: "Đã nhận, đang chờ duyệt",
-      mainCategory,
-      subCategory,
-      releaseType,
-      isCopyrightOwner,
-      hasBeenReleased,
-      platforms: hasBeenReleased === "yes" ? platforms : [],
-      hasLyrics,
-      lyrics: hasLyrics === "yes" ? lyrics : "",
-      notes,
-      fullName,
-      artistRole,
-      trackInfos: audioTracks.map((track) => track.info),
-      releaseDate,
+      status: "Đã nhận, đang chờ duyệt", // This status is a string, not a specific type from SubmissionStatus
+      'MainCategory': mainCategory,
+      'SubCategory': subCategory as SubCategory,
+      'ReleaseType': releaseType as ReleaseType,
+      'IsCopyrightOwner': isCopyrightOwner as YesNo,
+      'HasBeenReleased': hasBeenReleased as YesNo,
+      'Platform': hasBeenReleased === "yes" ? platforms : [],
+      'HasLyrics': hasLyrics as YesNo,
+      'Lyrics': (hasLyrics as YesNo) === "yes" ? lyrics : "",
+      'Notes': notes,
+      'FullName': fullName,
+      'ArtistRole': artistRole as ArtistRole,
+      'TrackInfos': audioTracks.map((track) => track.info),
+      'ReleaseDate': releaseDate,
     }
 
     // Add submission
-    onSubmissionAdded(submissionData)
+    onSubmissionAddedAction(submissionData)
 
     // Reset form
     resetForm()
   }
 
   const resetForm = () => {
-    setFullName(currentUser.fullName || "")
-    setArtistName(currentUser.role === "Nghệ sĩ" ? currentUser.username : "")
+    setFullName(currentUser.fullName ?? "")
+    setArtistName(currentUser.role === "Artist" ? currentUser.username : "")
     setArtistRole("")
     setSongTitle("")
     setMainCategory("")
@@ -402,38 +409,38 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
     if (imageInput) imageInput.value = ""
   }
 
-  const PreviewCard = () => (
+  const PreviewCard = ()(
     <Card className="bg-gray-800 bg-opacity-60 backdrop-blur-md border border-gray-700">
       <CardContent className="p-6 md:p-8">
         <h3 className="text-xl font-semibold text-gray-200 mb-4 flex items-center">
           <Eye className="mr-3 text-sky-400" />
-          Xem Trước Bản Phát Hành
+          Xem trước bản phát hành
         </h3>
         <div className="space-y-4">
           <div>
             <span className="text-sm font-medium text-gray-400">Tên bài hát:</span>
-            <p className="font-dosis-bold text-gray-200">{songTitle || "-"}</p>
+            <p className="font-dosis-bold text-gray-200">{songTitle ?? "-"}</p>
           </div>
           <div>
             <span className="text-sm font-medium text-gray-400">Album:</span>
             <p className="font-dosis-medium text-gray-200">
-              {albumName ? albumName : releaseType === "single" ? `${songTitle || "-"} - Single` : "-"}
+              {albumName ?? (releaseType === "single" ? `${songTitle ?? "-"} - Single` : "-")}
             </p>
           </div>
           <div>
             <span className="text-sm font-medium text-gray-400">Nghệ sĩ:</span>
-            <p className="text-gray-100 font-semibold">{artistName || "-"}</p>
+            <p className="text-gray-100 font-semibold">{artistName ?? "-"}</p>
           </div>
           <div>
             <span className="text-sm font-medium text-gray-400">Định dạng:</span>
             <p className="text-gray-100 font-semibold">
-              {releaseType || "-"} ({audioTracks.length} track)
+              {releaseType ?? "-"} ({audioTracks.length} track)
             </p>
           </div>
           <div>
             <span className="text-sm font-medium text-gray-400">Ảnh bìa:</span>
             <img
-              src={imagePreviewUrl || "/placeholder.svg"}
+              src={imagePreviewUrl ?? "/placeholder.svg"}
               alt="Xem trước ảnh bìa"
               className="mt-2 rounded-lg w-full max-w-xs mx-auto aspect-square object-cover border-2 border-gray-700"
             />
@@ -445,7 +452,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                 <div key={track.id} className="flex items-center justify-between p-2 bg-gray-700 rounded mb-2">
                   <div>
                     <p className="text-xs text-gray-300 font-medium">
-                      {index + 1}. {track.info.songTitle || track.info.fileName}
+                      {index + 1}. {track.info.songTitle ?? track.info.fileName}
                     </p>
                     <p className="text-xs text-gray-400">{track.info.artistName}</p>
                     {track.info.additionalArtists && track.info.additionalArtists.length > 0 && (
@@ -546,7 +553,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                         <Label htmlFor="artistRole" className="text-gray-300">
                           Vai trò chính<span className="text-red-500 font-bold ml-0.5">*</span>
                         </Label>
-                        <Select value={artistRole} onValueChange={setArtistRole}>
+                        <Select value={artistRole} onValueChange={(value) => setArtistRole(value as ArtistRole)}>
                           <SelectTrigger className="rounded-xl mt-1">
                             <SelectValue placeholder="Chọn vai trò..." />
                           </SelectTrigger>
@@ -937,20 +944,20 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                         <Label className="text-sm font-medium text-gray-300 mb-3 block">
                           Bản quyền của bạn?<span className="text-red-500 font-bold ml-0.5">*</span>
                         </Label>
-                        <RadioGroup value={isCopyrightOwner} onValueChange={setIsCopyrightOwner}>
+                        <RadioGroup value={isCopyrightOwner} onValueChange={(value: YesNo) => setIsCopyrightOwner(value)}>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="yes" id="copyright-yes" />
                             <Label htmlFor="copyright-yes" className="text-gray-300">
-                              Chính chủ! Xác nhận quyền sở hữu. Vậy tức là bạn đã đồng ý với tất cả điều khoản của {appSettings.appName}).
-                              Và quyền riêng tư bảo mật của {appSettings.appName} sẽ được áp dụng tại <br />
+                              Chính chủ! Xác nhận quyền sở hữu. Vậy tức là bạn đã đồng ý với tất cả điều khoản của chúng mình.
+                              Và quyền riêng tư bảo mật của chúng mình sẽ được áp dụng tại <br />
                               <a href="https://ankun.dev/privacy-policy" className="text-purple-400 hover:underline">Quyền riêng tư và bảo mật</a> - <a href="https://ankun.dev/terms-and-conditions" className="text-purple-400 hover:underline">Điều khoản dịch vụ</a>
                             </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="no" id="copyright-no" />
                             <Label htmlFor="copyright-no" className="text-gray-300">
-                              Không phải chính chủ! Tuy nhiên nếu bạn có giấy phép hợp lệ. Chúng tôi vẫn hỗ trợ bạn phát hành tại {appSettings.appName}). Và bạn cũng đã đồng ý với tất cả điều khoản của {appSettings.appName}).
-                              Và quyền riêng tư bảo mật của {appSettings.appName} sẽ được áp dụng tại <br />
+                              Không phải chính chủ! Tuy nhiên nếu bạn có giấy phép hợp lệ. Chúng tôi vẫn hỗ trợ bạn phát hành tại chúng mình. Và bạn cũng đã đồng ý với tất cả điều khoản của chúng mình.
+                              Và quyền riêng tư bảo mật của chúng mình sẽ được áp dụng tại <br />
                               <a href="https://ankun.dev/privacy-policy" className="text-purple-400 hover:underline">Quyền riêng tư và bảo mật</a> - <a href="https://ankun.dev/terms-and-conditions" className="text-purple-400 hover:underline">Điều khoản dịch vụ</a>
                             </Label>
                           </div>
@@ -971,7 +978,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="no" id="released-no" />
                             <Label htmlFor="released-no" className="text-gray-300">
-                              Chưa, đây là lần đầu (Đứa con tinh thần của bạn sẽ được ra mắt trên hệ thống phân phối của {appSettings.appName}) chỉ 2 ngày sau khi gửi form này)
+                              Chưa, đây là lần đầu (Đứa con tinh thần của bạn sẽ được ra mắt trên hệ thống phân phối của chúng mình chỉ 2 ngày sau khi gửi form này)
                             </Label>
                           </div>
                         </RadioGroup>
@@ -1132,7 +1139,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                         type="button"
                         variant="outline"
                         onClick={() =>
-                          showModal("Test Success", ["This is a success notification with sound!"], "success")
+                          showModalAction("Test Success", ["This is a success notification with sound!"], "success")
                         }
                         className="text-xs"
                       >
@@ -1141,7 +1148,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => showModal("Test Error", ["This is an error notification with sound!"], "error")}
+                        onClick={() => showModalAction("Test Error", ["This is an error notification with sound!"], "error")}
                         className="text-xs"
                       >
                         ❌ Error
@@ -1149,7 +1156,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => showModal("Test Info", ["This is an info notification!"], "success")}
+                        onClick={() => showModalAction("Test Info", ["This is an info notification!"], "success")}
                         className="text-xs"
                       >
                         ℹ️ Info
@@ -1157,7 +1164,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => showModal("Test Warning", ["This is a warning notification!"], "error")}
+                        onClick={() => showModalAction("Test Warning", ["This is a warning notification!"], "error")}
                         className="text-xs"
                       >
                         ⚠️ Warning
@@ -1206,9 +1213,6 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
           </div>
         </div>
       )}
-
-      {/* Hidden audio element for preview */}
-      <audio ref={audioRef} />
     </div>
-  )
-}
+  );
+};

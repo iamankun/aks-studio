@@ -409,7 +409,7 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
     if (imageInput) imageInput.value = ""
   }
 
-  const PreviewCard = ()(
+  const PreviewCard = (() => (
     <Card className="bg-gray-800 bg-opacity-60 backdrop-blur-md border border-gray-700">
       <CardContent className="p-6 md:p-8">
         <h3 className="text-xl font-semibold text-gray-200 mb-4 flex items-center">

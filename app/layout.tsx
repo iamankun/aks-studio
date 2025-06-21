@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import { ClientWrapper } from "@/components/client-wrapper"
 import { Dosis } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { Suspense } from "react"
 // Initialize the Dosis font with proper subsets
 const dosis = Dosis({
   subsets: ["latin", "latin-ext", "vietnamese"], // Added vietnamese and latin-ext for broader character support
@@ -28,7 +29,9 @@ export default function RootLayout({
   return (
     <html lang="vi" className={dosis.variable} suppressHydrationWarning>
       <body className="font-sans">
-        <ClientWrapper>{children}</ClientWrapper>
+        <ClientWrapper>
+          <Suspense fallback={<div>Đang tải...</div>}>{children}</Suspense>
+        </ClientWrapper>
         <Analytics />
       </body>
     </html>

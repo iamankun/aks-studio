@@ -67,9 +67,9 @@ export function EmailCenterView({ showModal }: EmailCenterViewProps) {
     htmlContent: "",
     type: "text" as "html" | "text",
   })
-  
+
   // Key for SMTP settings in localStorage, consistent with lib/email.ts and SettingsView.tsx
-  const SMTP_LOCALSTORAGE_KEY = "emailSettings_v2"; 
+  const SMTP_LOCALSTORAGE_KEY = "emailSettings_v2";
 
   const [smtpSettings, setSmtpSettings] = useState<SmtpSettings>({
     smtpServer: "", // Initialize with empty or default values
@@ -332,16 +332,16 @@ Trân trọng,
   const unreadCount = emailMessages.filter((msg) => !msg.read && msg.type === "received").length
 
   return (
-    <div className="p-6 font-dosis">
-      <h2 className="text-3xl font-dosis-bold text-white mb-6 flex items-center">
+    <div className="p-6 font-sans">
+      <h2 className="text-3xl font-bold text-white mb-6 flex items-center">
         <Mail className="mr-3 text-purple-400" />
         Trung tâm email
         {syncStatus === "Connected" && <CheckCircle className="ml-2 h-5 w-5 text-green-400" />}
       </h2>
 
       <Tabs defaultValue="inbox" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="inbox" className="relative font-dosis-medium">
+        <TabsList className="grid w-full grid-cols-5 font-medium">
+          <TabsTrigger value="inbox" className="relative">
             Hộp thư
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -349,16 +349,16 @@ Trân trọng,
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="compose" className="font-dosis-medium">
+          <TabsTrigger value="compose">
             Soạn email
           </TabsTrigger>
-          <TabsTrigger value="templates" className="font-dosis-medium">
+          <TabsTrigger value="templates">
             Mẫu email
           </TabsTrigger>
-          <TabsTrigger value="settings" className="font-dosis-medium">
+          <TabsTrigger value="settings">
             Cài đặt SMTP
           </TabsTrigger>
-          <TabsTrigger value="sync" className="font-dosis-medium">
+          <TabsTrigger value="sync">
             Đồng bộ
           </TabsTrigger>
         </TabsList>
@@ -367,7 +367,7 @@ Trân trọng,
         <TabsContent value="inbox" className="space-y-6">
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
-              <CardTitle className="flex items-center justify-between font-dosis-semibold">
+              <CardTitle className="flex items-center justify-between font-semibold">
                 <span className="flex items-center">
                   <Inbox className="mr-2" />
                   Hộp thư đến ({emailMessages.length})
@@ -376,7 +376,7 @@ Trân trọng,
                   onClick={syncEmails}
                   variant="outline"
                   disabled={syncStatus === "Syncing..."}
-                  className="font-dosis-medium"
+                  className="font-medium"
                 >
                   <Sync className="mr-2 h-4 w-4" />
                   {syncStatus === "Syncing..." ? "Đang đồng bộ..." : "Đồng bộ"}
@@ -388,9 +388,8 @@ Trân trọng,
                 {emailMessages.map((message) => (
                   <Card
                     key={message.id}
-                    className={`cursor-pointer transition-colors ${
-                      message.read ? "bg-gray-700" : "bg-blue-900/30"
-                    } border-gray-600 hover:bg-gray-600`}
+                    className={`cursor-pointer transition-colors ${message.read ? "bg-gray-700" : "bg-blue-900/30"
+                      } border-gray-600 hover:bg-gray-600`}
                     onClick={() => markAsRead(message.id)}
                   >
                     <CardContent className="p-4">
@@ -398,9 +397,8 @@ Trân trọng,
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-1">
                             <span
-                              className={`px-2 py-1 rounded text-xs font-dosis-medium ${
-                                message.type === "sent" ? "bg-green-600" : "bg-blue-600"
-                              }`}
+                              className={`px-2 py-1 rounded text-xs font-dosis-medium ${message.type === "sent" ? "bg-green-600" : "bg-blue-600"
+                                }`}
                             >
                               {message.type === "sent" ? "Đã gửi" : "Nhận"}
                             </span>
@@ -408,14 +406,14 @@ Trân trọng,
                               <span className="w-2 h-2 bg-red-500 rounded-full"></span>
                             )}
                           </div>
-                          <h4 className="font-dosis-semibold text-white">{message.subject}</h4>
-                          <p className="text-gray-400 text-sm font-dosis">
+                          <h4 className="font-semibold text-white">{message.subject}</h4>
+                          <p className="text-gray-400 text-sm font-sans">
                             {message.type === "sent" ? `Đến: ${message.to}` : `Từ: ${message.from}`}
                           </p>
-                          <p className="text-gray-500 text-sm mt-1 line-clamp-2 font-dosis">{message.content}</p>
+                          <p className="text-gray-500 text-sm mt-1 line-clamp-2 font-sans">{message.content}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-gray-500 font-dosis">{message.date}</p>
+                          <p className="text-xs text-gray-500 font-sans">{message.date}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -423,14 +421,14 @@ Trân trọng,
                 ))}
               </div>
 
-              <div className="mt-4 text-center text-gray-500 text-sm font-dosis">Lần đồng bộ cuối: {lastSync}</div>
+              <div className="mt-4 text-center text-gray-500 text-sm font-sans">Lần đồng bộ cuối: {lastSync}</div>
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Compose Email */}
         <TabsContent value="compose" className="space-y-6">
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-gray-800 border-gray-700 font-sans">
             <CardHeader>
               <CardTitle className="flex items-center font-dosis-semibold">
                 <Send className="mr-2" />
@@ -440,50 +438,50 @@ Trân trọng,
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-dosis-medium">Từ (From)</Label>
+                  <Label className="font-medium">Từ (From)</Label>
                   <Input
                     value={emailForm.from}
                     onChange={(e) => setEmailForm({ ...emailForm, from: e.target.value })}
                     placeholder="ankunstudio@ankun.dev"
-                    className="font-dosis"
+                    className="font-sans"
                   />
                 </div>
                 <div>
-                  <Label className="font-dosis-medium">Đến (To) *</Label>
+                  <Label className="font-medium">Đến (To) *</Label>
                   <Input
                     value={emailForm.to}
                     onChange={(e) => setEmailForm({ ...emailForm, to: e.target.value })}
                     placeholder="ankun.n.m@gmail.com"
-                    className="font-dosis"
+                    className="font-sans"
                   />
                 </div>
                 <div>
-                  <Label className="font-dosis-medium">CC</Label>
+                  <Label className="font-medium">CC</Label>
                   <Input
                     value={emailForm.cc}
                     onChange={(e) => setEmailForm({ ...emailForm, cc: e.target.value })}
                     placeholder="cc@domain.com"
-                    className="font-dosis"
+                    className="font-sans"
                   />
                 </div>
                 <div>
-                  <Label className="font-dosis-medium">BCC</Label>
+                  <Label className="font-medium">BCC</Label>
                   <Input
                     value={emailForm.bcc}
                     onChange={(e) => setEmailForm({ ...emailForm, bcc: e.target.value })}
                     placeholder="bcc@domain.com"
-                    className="font-dosis"
+                    className="font-sans"
                   />
                 </div>
               </div>
 
               <div>
-                <Label className="font-dosis-medium">Chủ đề (Subject) *</Label>
+                <Label className="font-medium">Chủ đề (Subject) *</Label>
                 <Input
                   value={emailForm.subject}
                   onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
                   placeholder="Chủ đề email..."
-                  className="font-dosis"
+                  className="font-sans"
                 />
               </div>
 
@@ -493,14 +491,14 @@ Trân trọng,
                   value={emailForm.type}
                   onValueChange={(value) => setEmailForm({ ...emailForm, type: value as "html" | "text" })}
                 >
-                  <SelectTrigger className="w-48 font-dosis">
+                  <SelectTrigger className="w-48 font-sans">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="text" className="font-dosis">
+                    <SelectItem value="text" className="font-sans">
                       Văn bản thuần
                     </SelectItem>
-                    <SelectItem value="html" className="font-dosis">
+                    <SelectItem value="html" className="font-sans">
                       HTML
                     </SelectItem>
                   </SelectContent>
@@ -508,7 +506,7 @@ Trân trọng,
               </div>
 
               <div>
-                <Label className="font-dosis-medium">Nội dung email *</Label>
+                <Label className="font-medium">Nội dung email *</Label>
                 <RichTextEditor
                   value={emailForm.content}
                   onChange={(content, html) =>
@@ -524,7 +522,7 @@ Trân trọng,
               </div>
 
               <div className="flex space-x-2">
-                <Button onClick={handleSendEmail} className="bg-blue-600 hover:bg-blue-700 font-dosis-medium">
+                <Button onClick={handleSendEmail} className="bg-blue-600 hover:bg-blue-700 font-medium">
                   <Send className="mr-2 h-4 w-4" />
                   Gửi
                 </Button>
@@ -542,7 +540,7 @@ Trân trọng,
                       type: "text",
                     })
                   }
-                  className="font-dosis-medium"
+                  className="font-medium"
                 >
                   Xóa form
                 </Button>
@@ -555,7 +553,7 @@ Trân trọng,
         <TabsContent value="templates" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Templates List */}
-            <Card className="bg-gray-800 border-gray-700">
+            <Card className="bg-gray-800 border-gray-700 font-sans">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between font-dosis-semibold">
                   <span className="flex items-center">
@@ -565,7 +563,7 @@ Trân trọng,
                   <Button
                     onClick={handleCreateTemplate}
                     size="sm"
-                    className="bg-green-600 hover:bg-green-700 font-dosis-medium"
+                    className="bg-green-600 hover:bg-green-700 font-medium"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -575,15 +573,14 @@ Trân trọng,
                 {templates.map((template) => (
                   <div
                     key={template.id}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors email-template-card ${
-                      selectedTemplate?.id === template.id ? "bg-purple-600" : "bg-gray-700 hover:bg-gray-600"
-                    }`}
+                    className={`p-3 rounded-lg cursor-pointer transition-colors email-template-card ${selectedTemplate?.id === template.id ? "bg-purple-600" : "bg-gray-700 hover:bg-gray-600"
+                      }`}
                     onClick={() => setSelectedTemplate(template)}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between font-sans">
                       <div>
-                        <h4 className="font-dosis-semibold text-white">{template.name}</h4>
-                        <p className="text-xs text-gray-400 font-dosis">{template.type.toUpperCase()}</p>
+                        <h4 className="font-semibold text-white">{template.name}</h4>
+                        <p className="text-xs text-gray-400">{template.type.toUpperCase()}</p>
                       </div>
                       <div className="flex space-x-1">
                         <Button
@@ -594,7 +591,7 @@ Trân trọng,
                             setSelectedTemplate(template)
                             setIsEditing(true)
                           }}
-                          className="h-8 w-8 p-0"
+                          className="h-8 w-8 p-0 font-sans"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -605,7 +602,7 @@ Trân trọng,
                             e.stopPropagation()
                             handleDeleteTemplate(template.id)
                           }}
-                          className="h-8 w-8 p-0 text-red-400 hover:text-red-300"
+                          className="h-8 w-8 p-0 text-red-400 hover:text-red-300 font-sans"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -619,38 +616,38 @@ Trân trọng,
             {/* Template Editor */}
             <div className="lg:col-span-2">
               {selectedTemplate ? (
-                <Card className="bg-gray-800 border-gray-700">
+                <Card className="bg-gray-800 border-gray-700 font-sans">
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between font-dosis-semibold">
                       <span>{isEditing ? "Chỉnh sửa" : "Xem"} mẫu email</span>
                       <div className="flex space-x-2">
                         <Button
                           onClick={() => copyTemplateVariables(selectedTemplate)}
-                          variant="outline"
+                          variant="outline" // Removed font-dosis-medium
                           size="sm"
-                          className="font-dosis-medium"
+                          className="font-medium"
                         >
                           <Copy className="mr-2 h-4 w-4" />
                           Copy biến
                         </Button>
-                        <Button onClick={handleTestEmail} variant="outline" size="sm" className="font-dosis-medium">
+                        <Button onClick={handleTestEmail} variant="outline" size="sm" className="font-medium">
                           <TestTube className="mr-2 h-4 w-4" />
                           Test
                         </Button>
                         {isEditing ? (
                           <>
                             <Button
-                              onClick={handleSaveTemplate}
-                              className="bg-green-600 hover:bg-green-700 font-dosis-medium"
+                              onClick={handleSaveTemplate} // Removed font-dosis-medium
+                              className="bg-green-600 hover:bg-green-700 font-medium"
                             >
                               Lưu
                             </Button>
-                            <Button variant="outline" onClick={() => setIsEditing(false)} className="font-dosis-medium">
+                            <Button variant="outline" onClick={() => setIsEditing(false)} className="font-medium">
                               Hủy
                             </Button>
                           </>
-                        ) : (
-                          <Button variant="outline" onClick={() => setIsEditing(true)} className="font-dosis-medium">
+                        ) : ( // Removed font-dosis-medium
+                          <Button variant="outline" onClick={() => setIsEditing(true)} className="font-medium">
                             <Edit className="mr-2 h-4 w-4" />
                             Sửa
                           </Button>
@@ -660,28 +657,28 @@ Trân trọng,
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label className="font-dosis-medium">Tên mẫu</Label>
+                      <Label className="font-medium">Tên mẫu</Label>
                       <Input
                         value={selectedTemplate.name}
                         onChange={(e) => setSelectedTemplate({ ...selectedTemplate, name: e.target.value })}
                         disabled={!isEditing}
-                        className="font-dosis"
+                        className="font-sans"
                       />
                     </div>
 
                     <div>
-                      <Label className="font-dosis-medium">Chủ đề email</Label>
+                      <Label className="font-medium">Chủ đề email</Label>
                       <Input
                         value={selectedTemplate.subject}
                         onChange={(e) => setSelectedTemplate({ ...selectedTemplate, subject: e.target.value })}
                         disabled={!isEditing}
                         placeholder="Chủ đề email..."
-                        className="font-dosis"
+                        className="font-sans"
                       />
                     </div>
 
                     <div>
-                      <Label className="font-dosis-medium">Loại nội dung</Label>
+                      <Label className="font-medium">Loại nội dung</Label>
                       <Select
                         value={selectedTemplate.type}
                         onValueChange={(value) =>
@@ -689,14 +686,14 @@ Trân trọng,
                         }
                         disabled={!isEditing}
                       >
-                        <SelectTrigger className="font-dosis">
+                        <SelectTrigger className="font-sans">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="text" className="font-dosis">
+                          <SelectItem value="text" className="font-sans">
                             Văn bản thuần
                           </SelectItem>
-                          <SelectItem value="html" className="font-dosis">
+                          <SelectItem value="html" className="font-sans">
                             HTML
                           </SelectItem>
                         </SelectContent>
@@ -704,7 +701,7 @@ Trân trọng,
                     </div>
 
                     <div>
-                      <Label className="font-dosis-medium">Nội dung email</Label>
+                      <Label className="font-medium">Nội dung email</Label>
                       {isEditing ? (
                         <RichTextEditor
                           value={selectedTemplate.content}
@@ -723,7 +720,7 @@ Trân trọng,
                           {selectedTemplate.type === "html" ? (
                             <div dangerouslySetInnerHTML={{ __html: selectedTemplate.content }} />
                           ) : (
-                            <pre className="whitespace-pre-wrap text-sm font-dosis">{selectedTemplate.content}</pre>
+                            <pre className="whitespace-pre-wrap text-sm font-sans">{selectedTemplate.content}</pre>
                           )}
                         </div>
                       )}
@@ -747,7 +744,7 @@ Trân trọng,
                         ].map((variable) => (
                           <span
                             key={variable}
-                            className="px-2 py-1 bg-purple-600 text-white text-xs rounded cursor-pointer hover:bg-purple-700 font-dosis"
+                            className="px-2 py-1 bg-purple-600 text-white text-xs rounded cursor-pointer hover:bg-purple-700 font-sans"
                             onClick={() => {
                               if (isEditing) {
                                 const newContent = selectedTemplate.content + `[${variable}]`
@@ -765,8 +762,8 @@ Trân trọng,
               ) : (
                 <Card className="bg-gray-800 border-gray-700">
                   <CardContent className="p-8 text-center">
-                    <FileText className="mx-auto h-12 w-12 text-gray-500 mb-4" />
-                    <p className="text-gray-400 font-dosis">Chọn một mẫu email để xem hoặc chỉnh sửa</p>
+                    <FileText className="mx-auto h-12 w-12 text-gray-500 mb-4 font-sans" />
+                    <p className="text-gray-400 font-sans">Chọn một mẫu email để xem hoặc chỉnh sửa</p>
                   </CardContent>
                 </Card>
               )}
@@ -776,7 +773,7 @@ Trân trọng,
 
         {/* SMTP Settings */}
         <TabsContent value="settings" className="space-y-6">
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-gray-800 border-gray-700 font-sans">
             <CardHeader>
               <CardTitle className="flex items-center font-dosis-semibold">
                 <Settings className="mr-2" />
@@ -850,18 +847,18 @@ Trân trọng,
                   variant="outline"
                   onClick={async () => {
                     if (!smtpSettings.smtpUsername) {
-                        showModal("Lỗi Test SMTP", ["Vui lòng nhập Username SMTP."], "error");
-                        return;
+                      showModal("Lỗi Test SMTP", ["Vui lòng nhập Username SMTP."], "error");
+                      return;
                     }
                     // Sử dụng hàm sendEmail để test, gửi email test đến chính nó
                     const testEmailDetails: EmailDetails = {
-                      from: smtpSettings.smtpUsername, 
-                      to: smtpSettings.smtpUsername,   
+                      from: smtpSettings.smtpUsername,
+                      to: smtpSettings.smtpUsername,
                       subject: `Test Email - Email Center - ${new Date().toISOString()}`,
                       textBody: `Đây là email test từ Trung tâm Email.\nCấu hình SMTP của bạn hoạt động bình thường!`,
                     };
                     const result = await sendEmail(testEmailDetails);
-                    setSmtpSettings({...smtpSettings, connected: result.success }); // Cập nhật trạng thái connected
+                    setSmtpSettings({ ...smtpSettings, connected: result.success }); // Cập nhật trạng thái connected
                     showModal(result.success ? "Test SMTP Thành Công" : "Test SMTP Thất Bại", [result.message], result.success ? "success" : "error");
                   }}
                   className="font-dosis-medium"
@@ -897,9 +894,8 @@ Trân trọng,
                     <div className="flex justify-between items-center p-3 bg-gray-700 rounded">
                       <span className="font-dosis">Email Sync</span>
                       <span
-                        className={`px-2 py-1 rounded text-sm font-dosis-medium ${
-                          syncStatus === "Connected" ? "bg-green-600 text-white" : "bg-yellow-600 text-white"
-                        }`}
+                        className={`px-2 py-1 rounded text-sm font-dosis-medium ${syncStatus === "Connected" ? "bg-green-600 text-white" : "bg-yellow-600 text-white"
+                          }`}
                       >
                         {syncStatus}
                       </span>

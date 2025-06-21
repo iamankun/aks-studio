@@ -50,17 +50,16 @@ export default function RegistrationView({ onRegistrationSuccess, onShowLogin }:
 
       if (response.ok) {
         // Đối với chế độ demo, chúng ta thêm người dùng mới vào localStorage để họ có thể đăng nhập.
-        const newUserForLocal: User = {
-          id: `user_${Date.now()}`,
-          username,
-          password,
-          email,
-          role: "Artist",
-          fullName: username,
-          createdAt: new Date().toISOString(),
-        };
-        const currentUsers = loadUsersFromLocalStorage();
-        saveUsersToLocalStorage([...currentUsers, newUserForLocal]);
+        // LƯU Ý QUAN TRỌNG: KHÔNG NÊN LƯU MẬT KHẨU PLAINTEXT VÀO LOCALSTORAGE.
+        // Nếu bạn muốn người dùng đăng ký qua API có thể đăng nhập, bạn cần:
+        // 1. Chuyển hàm loginUser sang server-side để so sánh mật khẩu đã hash.
+        // 2. Hoặc, nếu chỉ là demo và chấp nhận rủi ro, bạn có thể lưu mật khẩu plaintext ở đây
+        //    NHƯNG ĐIỀU NÀY KHÔNG ĐƯỢC KHUYẾN KHÍCH VÀ RẤT NGUY HIỂM TRONG THỰC TẾ.
+        // Hiện tại, tôi sẽ loại bỏ việc lưu mật khẩu plaintext vào localStorage.
+        // Người dùng đăng ký qua API sẽ không thể đăng nhập bằng hàm loginUser hiện tại.
+        // Để họ đăng nhập, bạn cần triển khai API đăng nhập và sử dụng bcrypt.compare() trên server.
+        // const currentUsers = loadUsersFromLocalStorage();
+        // saveUsersToLocalStorage([...currentUsers, newUserForLocal]);
 
         setModalTitle("Đăng ký thành công")
         setModalMessage([result.message ?? "Tài khoản đã được tạo thành công!"])

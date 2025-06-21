@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server"
 import { registerUser } from "@/lib/server-actions"
 import type { User } from "@/types/user"
-import { bcrypt } from "bcryptjs"
+import bcrypt from "bcrypt"
 import type { NextRequest } from "next/server"
 export async function POST(request: Request) {
     try {

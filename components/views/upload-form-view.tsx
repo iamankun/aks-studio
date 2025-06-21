@@ -273,7 +273,7 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
   }
 
   const handleReleaseTypeChange = (value: string) => {
-    setReleaseType(value)
+    setReleaseType(value as "" | ReleaseType) // Tôi là An Kun
 
     // If changing to single and more than 2 tracks, keep only first 2
     if (value === "single" && audioTracks.length > 2) {

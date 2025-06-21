@@ -273,7 +273,7 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
   }
 
   const handleReleaseTypeChange = (value: string) => {
-    setReleaseType(value as ReleaseType) // Tôi là An Kun
+    setReleaseType(value)
 
     // If changing to single and more than 2 tracks, keep only first 2
     if (value === "single" && audioTracks.length > 2) {
@@ -362,8 +362,8 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
       audioFilesCount: audioTracks.length,
       submissionDate: new Date().toISOString(),
       status: "Đã nhận, đang chờ duyệt", // This status is a string, not a specific type from SubmissionStatus
-      mainCategory: mainCategory as import("@/types/submission").MainCategory, // Tôi là An Kun
-      subCategory: subCategory as import("@/types/submission").SubCategory || undefined, // Tôi là An Kun
+      mainCategory: mainCategory as MainCategory,
+      subCategory: subCategory || undefined,
       releaseType: releaseType as ReleaseType,
       isCopyrightOwner: isCopyrightOwner as YesNo,
       hasBeenReleased: hasBeenReleased as YesNo,
@@ -372,7 +372,7 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
       lyrics: hasLyrics === "yes" ? lyrics : undefined,
       notes: notes || undefined,
       fullName: fullName,
-      artistRole: artistRole as import("@/types/submission").ArtistPrimaryRole, // Tôi là An Kun
+      artistRole: artistRole as ArtistRole,
       trackInfos: audioTracks.map((track) => track.info),
       releaseDate: releaseDate,
       additionalArtists: [], // Field is required by Submission type

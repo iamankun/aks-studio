@@ -19,7 +19,7 @@ export async function POST(request: Request) {
         const newUser: User = {
             id: `user_${Date.now()}`, // Lưu ý: Trong ứng dụng thực tế, nên dùng UUID
             username,
-            password: hashedPassword,
+            passwordHash: hashedPassword,
             email,
             role: "Artist", // Vai trò mặc định cho người dùng mới
             fullName: username, // Mặc định tên đầy đủ là tên đăng nhập

@@ -30,16 +30,16 @@ import {
   Trash2,
   FileText,
   Mail,
-} from "lucide-react"
-import { supabase } from '@/lib/supabase/client'; // Import client duy nhất
-import { generateISRC, validateImageFile, validateAudioFile, getMinimumReleaseDate } from "@/lib/utils"
 
-export default function UploadFormView({ currentUser, onSubmissionAdded, showModal }: UploadFormViewProps) {
+} from "lucide-react";
+import { generateISRC, validateImageFile, validateAudioFile, getMinimumReleaseDate } from "@/lib/utils";
+
 interface UploadFormViewProps {
-  currentUser: User
-  onSubmissionAdded: (submission: Submission) => void
-  showModal: (title: string, messages: string[], type?: "error" | "success") => void
+  currentUser: User;
+  onSubmissionAdded: (submission: Submission) => void;
+  showModal: (title: string, messages: string[], type?: "error" | "success") => void;
 }
+export default function UploadFormView({ currentUser, onSubmissionAdded, showModal }: UploadFormViewProps) {
   // Form state
   const [fullName, setFullName] = useState(currentUser.fullName || "")
   const [artistName, setArtistName] = useState(currentUser.role === "Artist" ? currentUser.username : "")

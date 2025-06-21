@@ -21,21 +21,21 @@ interface MyProfileViewProps {
 export default function MyProfileView({ currentUser, showModal }: MyProfileViewProps) {
   const [formData, setFormData] = useState({
     username: currentUser.username,
-    fullName: currentUser.fullName || "",
-    email: currentUser.email || "",
-    bio: currentUser.bio ?? "",
+    fullName: currentUser.fullName,
+    email: currentUser.email,
+    bio: currentUser.bio,
     socialLinks: {
-      facebook: currentUser.socialLinks?.facebook ?? "",
-      youtube: currentUser.socialLinks?.youtube ?? "",
-      spotify: currentUser.socialLinks?.spotify ?? "",
-      appleMusic: currentUser.socialLinks?.appleMusic ?? "",
-      tiktok: currentUser.socialLinks?.tiktok ?? "",
-      instagram: currentUser.socialLinks?.instagram ?? "",
+      facebook: currentUser.socialLinks?.facebook,
+      youtube: currentUser.socialLinks?.youtube,
+      spotify: currentUser.socialLinks?.spotify,
+      appleMusic: currentUser.socialLinks?.appleMusic,
+      tiktok: currentUser.socialLinks?.tiktok,
+      instagram: currentUser.socialLinks?.instagram,
     },
   })
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState(
-    currentUser.avatar ?? "https://placehold.co/150x150/1f2937/4b5563?text=Avatar",
+    currentUser.avatar "https://placehold.co/150x150/1f2937/4b5563?text=Avatar",
   )
 
   const handleInputChange = (field: string, value: string) => {
@@ -121,11 +121,11 @@ export default function MyProfileView({ currentUser, showModal }: MyProfileViewP
     // 2. Tạo đối tượng người dùng đã cập nhật
     const updatedUser = {
       ...currentUsers[userIndex],
-      full_name: formData.fullName,
+      fullName: formData.fullName, // Hoặc đổi thành full_name nếu type User yêu cầu
       email: formData.email,
       bio: formData.bio,
       avatar: avatarFile ? avatarPreview : currentUsers[userIndex].avatar,
-      social_links: formData.socialLinks,
+      socialLinks: formData.socialLinks, // Hoặc đổi thành social_links
     }
 
     // 3. Cập nhật mảng người dùng

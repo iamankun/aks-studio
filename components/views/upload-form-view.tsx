@@ -362,17 +362,17 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
       audioFilesCount: audioTracks.length,
       submissionDate: new Date().toISOString(),
       status: "Đã nhận, đang chờ duyệt", // This status is a string, not a specific type from SubmissionStatus
-      mainCategory: mainCategory as unknown as import("@/types/submission").MainCategory, // TODO: Đảm bảo mainCategory là literal hợp lệ. Tôi là An Kun
-      subCategory: subCategory || undefined,
+      mainCategory: mainCategory as import("@/types/submission").MainCategory, // Tôi là An Kun
+      subCategory: subCategory as import("@/types/submission").SubCategory || undefined, // Tôi là An Kun
       releaseType: releaseType as ReleaseType,
       isCopyrightOwner: isCopyrightOwner as YesNo,
       hasBeenReleased: hasBeenReleased as YesNo,
-      platforms: hasBeenReleased === "yes" ? platforms : [],
+      platforms: hasBeenReleased === "yes" ? (platforms as import("@/types/submission").Platform[]) : [],
       hasLyrics: hasLyrics as YesNo,
       lyrics: hasLyrics === "yes" ? lyrics : undefined,
       notes: notes || undefined,
       fullName: fullName,
-      artistRole: artistRole as ArtistRole,
+      artistRole: artistRole as import("@/types/submission").ArtistPrimaryRole, // Tôi là An Kun
       trackInfos: audioTracks.map((track) => track.info),
       releaseDate: releaseDate,
       additionalArtists: [], // Field is required by Submission type
@@ -617,7 +617,7 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
                           <Label htmlFor="mainCategory" className="text-gray-300">
                             Thể Loại Chính<span className="text-red-500 font-bold ml-0.5">*</span>
                           </Label>
-                          <Select value={mainCategory} onValueChange={setMainCategory}>
+                          <Select value={mainCategory} onValueChange={(value) => setMainCategory(value as "" | MainCategory)}>
                             <SelectTrigger className="rounded-xl mt-1">
                               <SelectValue placeholder="Chọn thể loại..." />
                             </SelectTrigger>
@@ -639,7 +639,7 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
                           <Label htmlFor="subCategory" className="text-gray-300">
                             Thể loại phụ:
                           </Label>
-                          <Select value={subCategory} onValueChange={setSubCategory}>
+                          <Select value={subCategory} onValueChange={(value) => setSubCategory(value as "" | SubCategory)}>
                             <SelectTrigger className="rounded-xl mt-1">
                               <SelectValue placeholder="Chọn thể loại..." />
                             </SelectTrigger>
@@ -944,7 +944,7 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
                         <Label className="text-sm font-medium text-gray-300 mb-3 block">
                           Bản quyền của bạn?<span className="text-red-500 font-bold ml-0.5">*</span>
                         </Label>
-                        <RadioGroup value={isCopyrightOwner} onValueChange={(value: YesNo) => setIsCopyrightOwner(value)}>
+                        <RadioGroup value={isCopyrightOwner} onValueChange={(value) => setIsCopyrightOwner(value as "" | YesNo)}>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="yes" id="copyright-yes" />
                             <Label htmlFor="copyright-yes" className="text-gray-300">
@@ -968,7 +968,7 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
                         <Label className="text-sm font-medium text-gray-300 mb-3 block">
                           Đã từng phát hành?<span className="text-red-500 font-bold ml-0.5">*</span>
                         </Label>
-                        <RadioGroup value={hasBeenReleased} onValueChange={setHasBeenReleased}>
+                        <RadioGroup value={hasBeenReleased} onValueChange={(value) => setHasBeenReleased(value as "" | YesNo)}>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="yes" id="released-yes" />
                             <Label htmlFor="released-yes" className="text-gray-300">
@@ -1027,7 +1027,7 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
                         <Label className="text-sm font-medium text-gray-300 mb-3 block">
                           Bài này có lời không?<span className="text-red-500 font-bold ml-0.5">*</span>
                         </Label>
-                        <RadioGroup value={hasLyrics} onValueChange={setHasLyrics}>
+                        <RadioGroup value={hasLyrics} onValueChange={(value) => setHasLyrics(value as "" | YesNo)}>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="yes" id="lyrics-yes" />
                             <Label htmlFor="lyrics-yes" className="text-gray-300">

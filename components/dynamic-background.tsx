@@ -53,40 +53,36 @@ export function DynamicBackground() {
 
         // Lắng nghe sự kiện cập nhật background từ trang Settings
         const handleBackgroundUpdate = (event: CustomEvent<BackgroundSettings>) => setSettings(event.detail)
-
-    }
-
         window.addEventListener("backgroundUpdate", handleBackgroundUpdate as EventListener)
+        return () => window.removeEventListener("backgroundUpdate", handleBackgroundUpdate as EventListener)
+    }, [])
 
-    return () => window.removeEventListener("backgroundUpdate", handleBackgroundUpdate)
-}, [])
+    // Memoize giá trị videoId để tránh tính toán lại không cần thiết
+    const videoId = useMemo(() => {
+        if (!settings) return null
+        return settings.randomVideo ? getRandomVideoId(settings.videoList) : getYouTubeId(settings.videoUrl)
+    }, [settings?.randomVideo, settings?.videoUrl, settings?.videoList])
 
-// Memoize giá trị videoId để tránh tính toán lại không cần thiết
-const videoId = useMemo(() => {
-    if (!settings) return null
-    return settings.randomVideo ? getRandomVideoId(settings.videoList) : getYouTubeId(settings.videoUrl)
-}, [settings?.randomVideo, settings?.videoUrl, settings?.videoList])
-
-if (!settings) {
-    // Render một background tĩnh mặc định trong khi chờ settings được tải.
-    return <div className="fixed inset-0 -z-10" style={{ background: DEFAULT_BACKGROUND_SETTINGS.gradient }} />
-}
-return (
-    <div className="fixed inset-0 -z-10">
-        {settings.type === "video" && videoId ? (
-            <div className="absolute inset-0 overflow-hidden">
-                <iframe
-                    className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&autohide=1&modestbranding=1&iv_load_policy=3`}
-                    frameBorder="0"
-                    allow="autoplay; encrypted-media"
-                    title="YouTube Background Video"
-                ></iframe>
-            </div>
-        ) : (
-            <div className="absolute inset-0" style={{ background: settings.gradient }}></div>
-        )}
-        <div className="absolute inset-0 bg-black" style={{ opacity: 1 - settings.opacity }}></div>
-    </div>
-)
+    if (!settings) {
+        // Render một background tĩnh mặc định trong khi chờ settings được tải.
+        return <div className="fixed inset-0 -z-10" style={{ background: DEFAULT_BACKGROUND_SETTINGS.gradient }} />
+    }
+    return (
+        <div className="fixed inset-0 -z-10">
+            {settings.type === "video" && videoId ? (
+                <div className="absolute inset-0 overflow-hidden">
+                    <iframe
+                        className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&autohide=1&modestbranding=1&iv_load_policy=3`}
+                        frameBorder="0"
+                        allow="autoplay; encrypted-media"
+                        title="YouTube Background Video"
+                    ></iframe>
+                </div>
+            ) : (
+                <div className="absolute inset-0" style={{ background: settings.gradient }}></div>
+            )}
+            <div className="absolute inset-0 bg-black" style={{ opacity: 1 - settings.opacity }}></div>
+        </div>
+    )
 }

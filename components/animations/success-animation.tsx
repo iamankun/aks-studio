@@ -111,7 +111,7 @@ export function SuccessAnimation({ artistName, songTitle, onClose }: SuccessAnim
           </p>
           <p className="text-lg text-green-400 animate-pulse">Đang chờ kiểm duyệt...</p>
 
-          <Button {/* Changed font-dosis-medium to font-medium */}
+          <Button
             onClick={onClose}
             className="mt-8 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-full px-6"
           >

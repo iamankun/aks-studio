@@ -362,7 +362,7 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
       audioFilesCount: audioTracks.length,
       submissionDate: new Date().toISOString(),
       status: "Đã nhận, đang chờ duyệt", // This status is a string, not a specific type from SubmissionStatus
-      mainCategory: mainCategory as MainCategory,
+      mainCategory: mainCategory as MainCategory, // Tôi là An Kun
       subCategory: subCategory || undefined,
       releaseType: releaseType as ReleaseType,
       isCopyrightOwner: isCopyrightOwner as YesNo,

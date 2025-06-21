@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { fetchSubmissionsFromClient, saveSubmissionsToClient } from "@/lib/data"
 import type { User } from "@/types/user"
+import AksData from "@/app/data" // Import the AksData component
 import type { Submission } from "@/types/submission"
 import {
     Users,
@@ -216,46 +217,7 @@ export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) 
                 {/* Database Management */}
                 {isLabelManager && (
                     <TabsContent value="data-management" className="space-y-6">
-                        <Card className="bg-gray-800 border-gray-700">
-                            <CardHeader>
-                                <CardTitle className="flex items-center font-dosis-semibold">
-                                    <Database className="mr-2" />
-                                    Quản lý thư mục
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <Button onClick={saveData} className="bg-blue-600 hover:bg-blue-700 font-dosis-medium">
-                                        <Save className="mr-2 h-4 w-4" />
-                                        Lưu dữ liệu bài hát
-                                    </Button>
-
-                                    <Button onClick={exportData} className="bg-green-600 hover:bg-green-700 font-dosis-medium">
-                                        <Download className="mr-2 h-4 w-4" />
-                                        Export Backup bài hát
-                                    </Button>
-
-                                    <div>
-                                        <input type="file" accept=".json" onChange={importData} className="hidden" id="import-file" />
-                                        <Button
-                                            onClick={() => document.getElementById("import-file")?.click()}
-                                            className="bg-orange-600 hover:bg-orange-700 w-full font-dosis-medium">
-                                            <Upload className="mr-2 h-4 w-4" />
-                                            Import backup bài hát
-                                        </Button>
-                                    </div>
-                                </div>
-                                <div className="bg-gray-700 p-4 rounded-lg">
-                                    <h4 className="font-dosis-semibold mb-2">Thống kê dữ liệu</h4>
-                                    <div className="text-sm">
-                                        <div>
-                                            <span className="text-gray-400 font-dosis">Tổng bài hát:</span>
-                                            <span className="ml-2 text-white font-dosis-semibold">{submissionsList.length}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <AksData currentUser={currentUser} />
                     </TabsContent>
                 )}
             </Tabs>

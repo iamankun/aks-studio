@@ -79,8 +79,8 @@ export default function SubmissionsView({ submissions, currentUser, viewType, on
   ]
 
   const totalSubmissions = submissions.length
-  const approvedSubmissions = submissions.filter((sub) => sub.status === "hoan_thanh_phat_hanh").length // Tôi là An Kun
-  const pendingSubmissions = submissions.filter((sub) => sub.status === "da_nhan_cho_duyet").length // Tôi là An Kun
+  const approvedSubmissions = submissions.filter((sub) => sub.status === "approved").length // Tôi là An Kun
+  const pendingSubmissions = submissions.filter((sub) => sub.status === "pending").length // Tôi là An Kun
 
   return (
     <div className="p-6">

@@ -29,7 +29,7 @@ export const createClient = (cookieStore: ReturnType<typeof cookies>) => {
             // user sessions.
           }
         }
-      },
-    },
-  );
-};
+      }
+    }
+  )
+}

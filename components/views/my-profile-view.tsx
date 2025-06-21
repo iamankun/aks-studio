@@ -35,7 +35,7 @@ export default function MyProfileView({ currentUser, showModal }: MyProfileViewP
   })
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState(
-    currentUser.avatar "https://placehold.co/150x150/1f2937/4b5563?text=Avatar",
+    currentUser.avatar ?? "/public/face.png"
   )
 
   const handleInputChange = (field: string, value: string) => {
@@ -247,7 +247,7 @@ export default function MyProfileView({ currentUser, showModal }: MyProfileViewP
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => handleCopyLink(link, platform)}
+                        onClick={() => handleCopyLink(link ?? '', platform)}
                         className="rounded-xl rounded-l-none border-l-0 px-3"
                       >
                         <Copy className="h-4 w-4" />

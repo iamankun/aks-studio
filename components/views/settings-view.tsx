@@ -30,10 +30,10 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
   })
 
   const [appSettings, setAppSettings] = useState({
-    appName: { appSettings.appName },
-    logoUrl: { appSettings.logoUrl },
-    homeUrl: { appSettings.homeUrl },
-    version: { appSettings.version },
+    appName: "AKs Studio",
+    logoUrl: "/face.png",
+    homeUrl: "/",
+    version: "1.0.0",
   })
 
   const [backgroundSettings, setBackgroundSettings] = useState({
@@ -57,10 +57,10 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
   })
 
   const [footerSettings, setFooterSettings] = useState({
-    companyName: { appSettings.appName },
-    version: { appSettings.version },
-    logoUrl: { appSettings.logoUrl },
-    websiteUrl: { appSettings.homeUrl },
+    companyName: `${appSettings.appName}`,
+    version: `${appSettings.version}`,
+    logoUrl: `${appSettings.logoUrl}`,
+    websiteUrl: `${appSettings.homeUrl}`,
     description: "Digital Music Distribution",
   })
 
@@ -259,11 +259,11 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                 <h4 className="text-sm font-semibold mb-2">Xem trước:</h4>
                 <div className="flex items-center space-x-4">
                   <img
-                    src={appSettings.logoUrl || "/public/face.png"}
+                    src={appSettings.logoUrl || "/face.png"}
                     alt="App Logo"
                     className="h-8 w-8 rounded object-cover"
                     onError={(e) => {
-                      ; (e.target as HTMLImageElement).src = appSettings.logoUrl || "/public/face.png"
+                      ; (e.target as HTMLImageElement).src = appSettings.logoUrl || "/face.png"
                     }}
                   />
                   <div>

@@ -1,7 +1,6 @@
 "use client"
 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
-import { SystemStatusProvider } from "@/components/system-status-provider";
 
 export interface SystemStatusValues {
   smtp: 'checking' | 'connected' | 'disconnected';

@@ -52,7 +52,7 @@ export default function Home() {
                 <RegistrationView onRegistrationSuccess={handleRegistration} onShowLogin={() => setCurrentView("login")} />
             )}
 
-            {currentView === "main" && currentUser && <MainAppView currentUser={currentUser} onLogout={handleLogout} />}
+            {currentView === "main" && currentUser && <MainAppView currentUser={currentUser} onLogoutAction={handleLogout} />}
         </main>
     )
 }

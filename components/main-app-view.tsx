@@ -106,7 +106,9 @@ export default function MainAppView({ currentUser, onLogout }: MainAppViewProps)
   }
 
   const handleUpdateStatus = (submissionId: string, newStatus: string) => {
-    const updatedSubmissions = submissions.map((sub) => (sub.id === submissionId ? { ...sub, status: newStatus } : sub))
+    const updatedSubmissions = submissions.map((sub) =>
+      sub.id === submissionId ? { ...sub, status: newStatus as SubmissionStatus } : sub
+    )
     setSubmissions(updatedSubmissions)
     // saveSubmissionsToLocalStorage(updatedSubmissions) // Không lưu vào localStorage nữa
     // Tương tự, cần API để cập nhật status trong DB.

@@ -482,7 +482,7 @@ export default function aksdata({ currentUser }: AksDataProps) {
                       <TableCell>
                         {file.type === "folder" ? `${file.items} item${file.items !== 1 ? "s" : ""}` : file.size}
                       </TableCell>
-                      <TableCell>{formatDate(file.modified)}</TableCell>
+                      <TableCell>{file.modified ? formatDate(file.modified, "PPp") : "—"}</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -897,7 +897,7 @@ export default function aksdata({ currentUser }: AksDataProps) {
               <Badge variant="outline" className="mr-2">
                 {activeFile?.size || "Unknown size"}
               </Badge>
-              <Badge variant="outline">{formatDate(activeFile?.modified || new Date())}</Badge>
+              <Badge variant="outline">{formatDate(activeFile?.modified || new Date(), "PPp")}</Badge>
             </div>
 
             <Button onClick={() => setPreviewModalOpen(false)}>Close</Button>

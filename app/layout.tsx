@@ -14,14 +14,13 @@ const dosis = Dosis({
 })
 
 export const metadata: Metadata = {
-  title: "Dashboard - Digital Music Distribution",
+  title: `${appSettings.appName} - Dashboard`,
   description: "Nền tảng quản lý và phát hành âm nhạc dành cho giới trẻ",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/public/face.png",
   },
   generator: "ankun.dev",
 }
-
 export default function RootLayout({
   children,
 }: Readonly<{

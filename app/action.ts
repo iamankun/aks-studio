@@ -14,19 +14,16 @@ interface SongInputData {
 
 // Sử dụng biến môi trường đúng cho aksstudio
 export async function getData() {
-    // Tôi là An Kun
-    const sql = neon(process.env.DATABASE_URL || process.env.aksstudio_POSTGRES_URL!, { // Ưu tiên DATABASE_URL chuẩn
-        disableWarningInBrowsers: true
-    })
-    const data = await sql`SELECT 1`
-    return data
+  // Tôi là An Kun
+  const sql = neon(process.env.DATABASE_URL || process.env.aksstudio_POSTGRES_URL!, { // Ưu tiên DATABASE_URL chuẩn
+    disableWarningInBrowsers: true
+  })
+  const data = await sql`SELECT 1`
+  return data
 }
 
 export async function postData(data: SongInputData) {
   // Tôi là An Kun
-  // Xử lý lưu data vào database ở đây (tùy logic của bạn)
-  // ...
 
-  // Đảm bảo luôn có user admin mặc định
   await ensureDefaultAdminUser()
 }

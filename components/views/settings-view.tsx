@@ -30,15 +30,15 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
   })
 
   const [appSettings, setAppSettings] = useState({
-    appName: "AKs Studio",
-    logoUrl: "/favicon.ico",
-    homeUrl: "/",
-    version: "1.2.0-beta",
+    appName: { appSettings.appName },
+    logoUrl: { appSettings.logoUrl },
+    homeUrl: { appSettings.homeUrl },
+    version: { appSettings.version },
   })
 
   const [backgroundSettings, setBackgroundSettings] = useState({
     type: "gradient",
-    gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    gradient: "linear-gradient(135deg,rgba(102, 126, 234, 0.14) 0%,rgba(118, 75, 162, 0.17) 100%)",
     videoUrl: "",
     opacity: 0.3,
     randomVideo: true,
@@ -57,10 +57,10 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
   })
 
   const [footerSettings, setFooterSettings] = useState({
-    companyName: "AKs Studio",
-    version: "1.2.0-beta",
-    logoUrl: "/favicon.ico",
-    websiteUrl: "/",
+    companyName: { appSettings.appName },
+    version: { appSettings.version },
+    logoUrl: { appSettings.logoUrl },
+    websiteUrl: { appSettings.homeUrl },
     description: "Digital Music Distribution",
   })
 
@@ -198,12 +198,12 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
 
       <Tabs defaultValue="app" className="space-y-6">
         <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="app">Ứng dụng</TabsTrigger>
+          <TabsTrigger value="app">Name App</TabsTrigger>
           <TabsTrigger value="smtp">SMTP</TabsTrigger>
           <TabsTrigger value="database">Database</TabsTrigger>
           <TabsTrigger value="background">Background</TabsTrigger>
           <TabsTrigger value="footer">Footer</TabsTrigger>
-          <TabsTrigger value="guide">Hướng dẫn</TabsTrigger>
+          <TabsTrigger value="guide">Guide</TabsTrigger>
         </TabsList>
 
         {/* App Settings */}
@@ -222,7 +222,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                   <Input
                     value={appSettings.appName}
                     onChange={(e) => setAppSettings({ ...appSettings, appName: e.target.value })}
-                    placeholder="[tenapp]"
+                    placeholder="[Điều chỉnh tên trong ứng dụng]"
                     className="mt-1"
                   />
                 </div>
@@ -231,7 +231,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                   <Input
                     value={appSettings.version}
                     onChange={(e) => setAppSettings({ ...appSettings, version: e.target.value })}
-                    placeholder="1.0.0-beta"
+                    placeholder={appSettings.version}
                     className="mt-1"
                   />
                 </div>
@@ -240,7 +240,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                   <Input
                     value={appSettings.logoUrl}
                     onChange={(e) => setAppSettings({ ...appSettings, logoUrl: e.target.value })}
-                    placeholder="/favicon.ico"
+                    placeholder={appSettings.logoUrl}
                     className="mt-1"
                   />
                 </div>
@@ -249,7 +249,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                   <Input
                     value={appSettings.homeUrl}
                     onChange={(e) => setAppSettings({ ...appSettings, homeUrl: e.target.value })}
-                    placeholder="/"
+                    placeholder={appSettings.homeUrl}
                     className="mt-1"
                   />
                 </div>
@@ -259,11 +259,11 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                 <h4 className="text-sm font-semibold mb-2">Xem trước:</h4>
                 <div className="flex items-center space-x-4">
                   <img
-                    src={appSettings.logoUrl || "/placeholder.svg"}
+                    src={appSettings.logoUrl || "/public/face.png"}
                     alt="App Logo"
                     className="h-8 w-8 rounded object-cover"
                     onError={(e) => {
-                      ; (e.target as HTMLImageElement).src = "https://placehold.co/32x32/8b5cf6/FFFFFF?text=AK"
+                      ; (e.target as HTMLImageElement).src = appSettings.logoUrl || "/public/face.png"
                     }}
                   />
                   <div>
@@ -290,22 +290,22 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Mail className="mr-2" />
-                Cài đặt SMTP Email
+                Cài đặt hộp thư SMTP || {appSettings.appName}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label>Máy chủ SMTP</Label>
+                  <Label>SMTP</Label>
                   <Input
                     value={emailSettings.smtpServer}
                     onChange={(e) => setEmailSettings({ ...emailSettings, smtpServer: e.target.value })}
-                    placeholder="smtp.gmail.com"
+                    placeholder="smtp.domain.com"
                     className="mt-1"
                   />
                 </div>
                 <div>
-                  <Label>Cổng SMTP</Label>
+                  <Label>Port</Label>
                   <Input
                     value={emailSettings.smtpPort}
                     onChange={(e) => setEmailSettings({ ...emailSettings, smtpPort: e.target.value })}
@@ -314,21 +314,21 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                   />
                 </div>
                 <div>
-                  <Label>Email đăng nhập</Label>
+                  <Label>Account</Label>
                   <Input
                     value={emailSettings.smtpUsername}
                     onChange={(e) => setEmailSettings({ ...emailSettings, smtpUsername: e.target.value })}
-                    placeholder="your-email@gmail.com"
+                    placeholder="admin@domain.com"
                     className="mt-1"
                   />
                 </div>
                 <div>
-                  <Label>Mật khẩu ứng dụng</Label>
+                  <Label>Password</Label>
                   <Input
                     type="password"
                     value={emailSettings.smtpPassword}
                     onChange={(e) => setEmailSettings({ ...emailSettings, smtpPassword: e.target.value })}
-                    placeholder="App Password"
+                    placeholder="Điền mật khẩu được cấp cho ứng dụng"
                     className="mt-1"
                   />
                 </div>
@@ -356,13 +356,13 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Database className="mr-2" />
-                Cài đặt Database
+                Database
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label>Database Host</Label>
+                  <Label>Host</Label>
                   <Input
                     value={databaseSettings.host}
                     onChange={(e) => setDatabaseSettings({ ...databaseSettings, host: e.target.value })}
@@ -371,11 +371,11 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                   />
                 </div>
                 <div>
-                  <Label>Database Name</Label>
+                  <Label>Database_Name</Label>
                   <Input
                     value={databaseSettings.database}
                     onChange={(e) => setDatabaseSettings({ ...databaseSettings, database: e.target.value })}
-                    placeholder="music_hub"
+                    placeholder="music_db"
                     className="mt-1"
                   />
                 </div>
@@ -384,7 +384,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                   <Input
                     value={databaseSettings.username}
                     onChange={(e) => setDatabaseSettings({ ...databaseSettings, username: e.target.value })}
-                    placeholder="db_user"
+                    placeholder="user"
                     className="mt-1"
                   />
                 </div>
@@ -405,7 +405,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                   checked={databaseSettings.connected}
                   onCheckedChange={(checked) => setDatabaseSettings({ ...databaseSettings, connected: checked })}
                 />
-                <Label>Kích hoạt kết nối Database</Label>
+                <Label>Kích hoạt</Label>
               </div>
 
               <Button
@@ -413,7 +413,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                 className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-full"
               >
                 <Save className="h-4 w-4 mr-2" />
-                Lưu cài đặt Database
+                Lưu cài đặt
               </Button>
             </CardContent>
           </Card>
@@ -451,7 +451,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                   <Textarea
                     value={backgroundSettings.gradient}
                     onChange={(e) => setBackgroundSettings({ ...backgroundSettings, gradient: e.target.value })}
-                    placeholder="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                    placeholder="linear-gradient(135deg,rgba(102, 126, 234, 0.19) 0%,rgba(118, 75, 162, 0.2) 100%)"
                     className="mt-1"
                     rows={3}
                   />
@@ -542,7 +542,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                   <Input
                     value={footerSettings.companyName}
                     onChange={(e) => setFooterSettings({ ...footerSettings, companyName: e.target.value })}
-                    placeholder="[tenapp]"
+                    placeholder={appSettings.appName}
                     className="mt-1"
                   />
                 </div>
@@ -560,7 +560,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                   <Input
                     value={footerSettings.logoUrl}
                     onChange={(e) => setFooterSettings({ ...footerSettings, logoUrl: e.target.value })}
-                    placeholder="/favicon.ico"
+                    placeholder={appSettings.logoUrl}
                     className="mt-1"
                   />
                 </div>
@@ -569,7 +569,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                   <Input
                     value={footerSettings.websiteUrl}
                     onChange={(e) => setFooterSettings({ ...footerSettings, websiteUrl: e.target.value })}
-                    placeholder="/"
+                    placeholder={appSettings.homeUrl}
                     className="mt-1"
                   />
                 </div>
@@ -590,7 +590,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                 className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-full"
               >
                 <Save className="h-4 w-4 mr-2" />
-                Lưu cài đặt Footer
+                Lưu cài đặt
               </Button>
             </CardContent>
           </Card>

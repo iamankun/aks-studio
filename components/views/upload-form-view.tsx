@@ -62,7 +62,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
   const [formActiveTab, setFormActiveTab] = useState("info")
 
   // Preview state
-  const [imagePreviewUrl, setImagePreviewUrl] = useState("https://placehold.co/300x300/1f2937/4b5563?text=Ảnh+Bìa")
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("/public/face.png")
   const [showPreview, setShowPreview] = useState(false)
   const [playingTrack, setPlayingTrack] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -92,13 +92,13 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
     const file = e.target.files?.[0]
     if (!file) {
       setImageFile(null)
-      setImagePreviewUrl("https://placehold.co/300x300/1f2937/4b5563?text=Ảnh+Bìa")
+      setImagePreviewUrl("public/dianhac.jpg")
       return
     }
 
     const validation = await validateImageFile(file)
     if (!validation.valid) {
-      showModal("Ảnh bìa chưa chuẩn!", validation.errors)
+      showModal("Ảnh bìa chưa giòn!", validation.errors)
       e.target.value = ""
       setImageFile(null)
       return
@@ -121,14 +121,14 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
     // Validate audio file
     const validation = await validateAudioFile(file)
     if (!validation.valid) {
-      showModal("File nhạc chưa đúng!", validation.errors)
+      showModal("File nhạc chưa chuẩn bạn êi!", validation.errors)
       e.target.value = ""
       return
     }
 
     // Check release type limits
     if (releaseType === "single" && audioTracks.length >= 2) {
-      showModal("Thông Báo", ["Đã giữ lại 2 track đầu tiên cho định dạng Single."], "success")
+      showModal("Thông báo", ["Đã giữ lại 2 track đầu tiên cho định dạng Single."], "success")
       e.target.value = ""
       return
     }
@@ -387,7 +387,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
     setReleaseType("")
     setAlbumName("")
     setImageFile(null)
-    setImagePreviewUrl("https://placehold.co/300x300/1f2937/4b5563?text=Ảnh+Bìa")
+    setImagePreviewUrl("/public/dianhac.jpg")
     setAudioTracks([])
     setIsCopyrightOwner("")
     setHasBeenReleased("")
@@ -482,7 +482,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
             <div className="text-center mb-8">
               <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 mb-3">
                 <Rocket className="inline-block mr-2" />
-                Đăng Nhạc Chất Lượng Cao!
+                Gửi nhạc chờ sóng  - Nhanh té ghế chỉ 2 ngày
               </h2>
               <p className="text-gray-400">Điền form zui zẻ này để nhạc bạn lên sóng nha.</p>
             </div>
@@ -491,19 +491,19 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="info" className="flex items-center gap-2">
                   <UserIcon className="h-4 w-4" />
-                  <span className="hidden sm:inline text-gray-200">Thông Tin</span>
+                  <span className="hidden sm:inline text-black-200">Thông tin</span>
                 </TabsTrigger>
                 <TabsTrigger value="tracks" className="flex items-center gap-2">
                   <Disc3 className="h-4 w-4" />
-                  <span className="hidden sm:inline text-gray-200">Tracks</span>
+                  <span className="hidden sm:inline text-black-200">Tracks</span>
                 </TabsTrigger>
                 <TabsTrigger value="details" className="flex items-center gap-2">
                   <Copyright className="h-4 w-4" />
-                  <span className="hidden sm:inline text-gray-200">Bản Quyền</span>
+                  <span className="hidden sm:inline text-black-200">Bản quyền</span>
                 </TabsTrigger>
                 <TabsTrigger value="release" className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span className="hidden sm:inline text-gray-200">Phát Hành</span>
+                  <span className="hidden sm:inline text-black-200">Phát hành</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -518,7 +518,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="fullName" className="text-gray-300">
-                          Họ Tên Đầy Đủ (Người Gửi)<span className="text-red-500 font-bold ml-0.5">*</span>
+                          Họ tên đầy đủ (Người gửi)<span className="text-red-500 font-bold ml-0.5">*</span>
                         </Label>
                         <Input
                           id="fullName"
@@ -552,9 +552,10 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="singer">Ca sĩ</SelectItem>
+                            <SelectItem value="composer">Nhạc sĩ</SelectItem>
+                            <SelectItem value="singersongwriter">Singer-Songwriter</SelectItem>
                             <SelectItem value="rapper">Rapper</SelectItem>
                             <SelectItem value="producer">Producer</SelectItem>
-                            <SelectItem value="composer">Nhạc sĩ</SelectItem>
                             <SelectItem value="songwriter">Người viết lời</SelectItem>
                             <SelectItem value="instrumentalist">Nhạc công</SelectItem>
                           </SelectContent>
@@ -572,13 +573,13 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="songTitle" className="text-gray-300">
-                          Tên Bài Hát<span className="text-red-500 font-bold ml-0.5">*</span>
+                          Tên bài hát<span className="text-red-500 font-bold ml-0.5">*</span>
                         </Label>
                         <Input
                           id="songTitle"
                           value={songTitle}
                           onChange={(e) => setSongTitle(e.target.value)}
-                          placeholder="Ví dụ: Giai Điệu Gen Z"
+                          placeholder="Ví dụ: Giai điệu Gen Z"
                           className="rounded-xl mt-1"
                         />
                       </div>
@@ -592,7 +593,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                           value={albumName}
                           onChange={(e) => setAlbumName(e.target.value)}
                           placeholder={
-                            releaseType === "single" ? "Tự động: [Tên bài hát] - Single" : "Ví dụ: My First Album"
+                            releaseType === "single" ? "Tự động: [Tên bài hát] - Single" : "Ví dụ: Giai điệu Gen Z - Single"
                           }
                           className="rounded-xl mt-1"
                           disabled={releaseType === "single"}
@@ -615,8 +616,8 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="pop">Pop</SelectItem>
-                              <SelectItem value="rock">Rock</SelectItem>
-                              <SelectItem value="hiphop">Hip Hop / Rap</SelectItem>
+                              <SelectItem value="singersongwriter">Singer-Songwriter</SelectItem>
+                              <SelectItem value="hiphoprap">Hip Hop / Rap</SelectItem>
                               <SelectItem value="edm">EDM</SelectItem>
                               <SelectItem value="rnb">R&B / Soul</SelectItem>
                               <SelectItem value="ballad">Ballad</SelectItem>
@@ -629,15 +630,18 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
 
                         <div>
                           <Label htmlFor="subCategory" className="text-gray-300">
-                            Thể Loại Phụ:
+                            Thể loại phụ:
                           </Label>
                           <Select value={subCategory} onValueChange={setSubCategory}>
                             <SelectTrigger className="rounded-xl mt-1">
                               <SelectValue placeholder="Chọn thể loại..." />
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="official">Official</SelectItem>
+                              <SelectItem value="cover">Cover</SelectItem>
+                              <SelectItem value="vpop">V-Pop</SelectItem>
                               <SelectItem value="lofi">Lofi</SelectItem>
-                              <SelectItem value="chillhop">Chillhop</SelectItem>
+                              <SelectItem value="chill">Chill</SelectItem>
                               <SelectItem value="trap">Trap</SelectItem>
                               <SelectItem value="house">House</SelectItem>
                               <SelectItem value="alternative">Alternative</SelectItem>
@@ -671,12 +675,12 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                   <div className="border-t border-gray-700 pt-6">
                     <h3 className="text-xl font-semibold text-purple-400 mb-4 flex items-center">
                       <UploadIcon className="mr-3" />
-                      3. Tải Lên Ảnh Bìa
+                      3. Tải lên ảnh bìa
                     </h3>
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="imageFile" className="text-gray-300">
-                          Ảnh Bìa (Vuông)<span className="text-red-500 font-bold ml-0.5">*</span>
+                          Ảnh bìa (Vuông)<span className="text-red-500 font-bold ml-0.5">*</span>
                         </Label>
                         <Input
                           id="imageFile"
@@ -721,7 +725,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                       {audioTracks.length > 0 && (
                         <div className="space-y-4 mt-6">
                           <h4 className="text-lg font-semibold text-purple-300">
-                            Danh Sách Track ({audioTracks.length})
+                            Danh sách ({audioTracks.length})
                           </h4>
                           {audioTracks.map((track, index) => (
                             <Card key={track.id} className="bg-gray-700 border-gray-600">
@@ -761,7 +765,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                   <div>
                                     <Label className="text-gray-300">
-                                      Tên Bài Hát<span className="text-red-500">*</span>
+                                      Tên bài hát<span className="text-red-500">*</span>
                                     </Label>
                                     <Input
                                       value={track.info.songTitle}
@@ -772,7 +776,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                                   </div>
                                   <div>
                                     <Label className="text-gray-300">
-                                      Tên Nghệ Sĩ<span className="text-red-500">*</span>
+                                      Tên nghệ sĩ<span className="text-red-500">*</span>
                                     </Label>
                                     <Input
                                       value={track.info.artistName}
@@ -783,7 +787,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                                   </div>
                                   <div>
                                     <Label className="text-gray-300">
-                                      Tên Thật Nghệ Sĩ<span className="text-red-500">*</span>
+                                      Tên thật nghệ sĩ<span className="text-red-500">*</span>
                                     </Label>
                                     <Input
                                       value={track.info.artistFullName}
@@ -798,7 +802,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                                 <div className="border-t border-gray-600 pt-4">
                                   <div className="flex items-center justify-between mb-3">
                                     <h6 className="text-sm font-semibold text-blue-400">
-                                      Nghệ sĩ hợp tác cho track này
+                                      Nghệ sĩ hỗ trợ (Collaborators)
                                     </h6>
                                     <Button
                                       type="button"
@@ -841,12 +845,12 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                                                 onChange={(e) =>
                                                   updateTrackCollaborator(track.id, artistIndex, "name", e.target.value)
                                                 }
-                                                placeholder="Ví dụ: MC Cool"
+                                                placeholder="Ví dụ: An Kun"
                                                 className="mt-1 text-sm"
                                               />
                                             </div>
                                             <div>
-                                              <Label className="text-gray-300 text-xs">Tên thật</Label>
+                                              <Label className="text-gray-300 text-xs">Tên thật đầy đủ</Label>
                                               <Input
                                                 value={artist.fullName || ""}
                                                 onChange={(e) =>
@@ -857,7 +861,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                                                     e.target.value,
                                                   )
                                                 }
-                                                placeholder="Họ tên đầy đủ"
+                                                placeholder="Họ và tên đầy đủ"
                                                 className="mt-1 text-sm"
                                               />
                                             </div>
@@ -926,7 +930,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                   <div>
                     <h3 className="text-xl font-semibold text-purple-400 mb-4 flex items-center">
                       <Copyright className="mr-3" />
-                      Chi Tiết Bản Quyền & Phát Hành
+                      Chi tiết bản quyền & phát hành
                     </h3>
                     <div className="space-y-4">
                       <div>
@@ -937,13 +941,17 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="yes" id="copyright-yes" />
                             <Label htmlFor="copyright-yes" className="text-gray-300">
-                              Yep, chính chủ!
+                              Chính chủ! Xác nhận quyền sở hữu. Vậy tức là bạn đã đồng ý với tất cả điều khoản của {appSettings.appName}).
+                              Và quyền riêng tư bảo mật của {appSettings.appName} sẽ được áp dụng tại <br />
+                              <a href="https://ankun.dev/privacy-policy" className="text-purple-400 hover:underline">Quyền riêng tư và bảo mật</a> - <a href="https://ankun.dev/terms-and-conditions" className="text-purple-400 hover:underline">Điều khoản dịch vụ</a>
                             </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="no" id="copyright-no" />
                             <Label htmlFor="copyright-no" className="text-gray-300">
-                              Không, là cover/remix...
+                              Không phải chính chủ! Tuy nhiên nếu bạn có giấy phép hợp lệ. Chúng tôi vẫn hỗ trợ bạn phát hành tại {appSettings.appName}). Và bạn cũng đã đồng ý với tất cả điều khoản của {appSettings.appName}).
+                              Và quyền riêng tư bảo mật của {appSettings.appName} sẽ được áp dụng tại <br />
+                              <a href="https://ankun.dev/privacy-policy" className="text-purple-400 hover:underline">Quyền riêng tư và bảo mật</a> - <a href="https://ankun.dev/terms-and-conditions" className="text-purple-400 hover:underline">Điều khoản dịch vụ</a>
                             </Label>
                           </div>
                         </RadioGroup>
@@ -957,13 +965,13 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="yes" id="released-yes" />
                             <Label htmlFor="released-yes" className="text-gray-300">
-                              Rồi nè
+                              Nhạc đã từng phát hành (Chúng tôi chỉ hỏi để kiểm tra sản phẩm  của bạn có đang trong trạng thái Content ID trên YouTube hay không. Từ đó việc từ chối hoặc xác minh với bạn sẽ trở nên dễ dàng hơn)
                             </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="no" id="released-no" />
                             <Label htmlFor="released-no" className="text-gray-300">
-                              Chưa, đây là lần đầu
+                              Chưa, đây là lần đầu (Đứa con tinh thần của bạn sẽ được ra mắt trên hệ thống phân phối của {appSettings.appName}) chỉ 2 ngày sau khi gửi form này)
                             </Label>
                           </div>
                         </RadioGroup>
@@ -1005,7 +1013,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                   <div className="border-t border-gray-700 pt-6">
                     <h3 className="text-xl font-semibold text-purple-400 mb-4 flex items-center">
                       <FileText className="mr-3" />
-                      Lời Bài Hát (Nếu Có)
+                      Lời bài hát (Nếu Có)
                     </h3>
                     <div className="space-y-4">
                       <div>
@@ -1016,13 +1024,13 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="yes" id="lyrics-yes" />
                             <Label htmlFor="lyrics-yes" className="text-gray-300">
-                              Có chứ, lời hay lắm
+                              Có lời hay lắm nha
                             </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="no" id="lyrics-no" />
                             <Label htmlFor="lyrics-no" className="text-gray-300">
-                              Không, nhạc không lời chill
+                              Có hoặc bổ sung sau chứ lười ^ ^
                             </Label>
                           </div>
                         </RadioGroup>
@@ -1057,12 +1065,12 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                   <div>
                     <h3 className="text-xl font-semibold text-purple-400 mb-4 flex items-center">
                       <Mail className="mr-3" />
-                      Thông Tin Liên Hệ & Ghi Chú
+                      Thông tin liên hệ & Ghi chú
                     </h3>
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="userEmail" className="text-gray-300">
-                          Email Của Bạn<span className="text-red-500 font-bold ml-0.5">*</span>
+                          Email của bạn<span className="text-red-500 font-bold ml-0.5">*</span>
                         </Label>
                         <Input
                           id="userEmail"
@@ -1076,7 +1084,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
 
                       <div>
                         <Label htmlFor="notes" className="text-gray-300">
-                          Ghi Chú Thêm:
+                          Ghi chú thêm:
                         </Label>
                         <Textarea
                           id="notes"
@@ -1094,12 +1102,12 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                   <div className="border-t border-gray-700 pt-6">
                     <h3 className="text-xl font-semibold text-purple-400 mb-4 flex items-center">
                       <Calendar className="mr-3" />
-                      Lịch Phát Hành
+                      Lịch phát hành
                     </h3>
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="releaseDate" className="text-gray-300">
-                          Ngày Phát Hành<span className="text-red-500 font-bold ml-0.5">*</span>
+                          Ngày phát hành<span className="text-red-500 font-bold ml-0.5">*</span>
                         </Label>
                         <Input
                           id="releaseDate"
@@ -1166,7 +1174,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
                     className="w-full rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg py-6"
                   >
                     <Rocket className="mr-2" />
-                    UP NHẠC NGAY!
+                    PHÁT HÀNH!
                   </Button>
                 </div>
               </TabsContent>
@@ -1193,7 +1201,7 @@ export default function UploadFormView({ currentUser, onSubmissionAdded, showMod
           <div className="w-full max-w-md">
             <PreviewCard />
             <Button className="w-full mt-4 rounded-full" onClick={() => setShowPreview(false)}>
-              Đóng Xem Trước
+              Đóng xem trước
             </Button>
           </div>
         </div>

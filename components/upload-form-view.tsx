@@ -3,11 +3,11 @@ import type { User } from "@/types/user"
 
 export interface UploadFormViewProps {
     currentUser: User
-    onSubmissionAdded: (submission: Submission) => void // Tôi là An Kun
-    showModal: (title: string, messages: string[], type?: "success" | "error") => void // Tôi là An Kun
+    onSubmissionAddedAction: (submission: Submission) => void // Tôi là An Kun
+    showModalAction: (title: string, messages: string[], type?: "success" | "error") => void // Tôi là An Kun
 }
 
-export default function UploadFormView({ currentUser, onSubmissionAdded, showModal }: UploadFormViewProps) {
+export default function UploadFormView({ currentUser, onSubmissionAddedAction, showModalAction }: UploadFormViewProps) {
     // ...existing code...
     return (
         <div>

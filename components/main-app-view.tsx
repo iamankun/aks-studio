@@ -18,11 +18,10 @@ import type { Submission, SubmissionStatus } from "@/types/submission"
 
 interface MainAppViewProps {
   currentUser: User
-  onLogout: () => void
+  onLogoutAction: () => void // Tôi là An Kun
 }
 
-
-export default function MainAppView({ currentUser, onLogout }: MainAppViewProps) {
+export default function MainAppView({ currentUser, onLogoutAction }: MainAppViewProps) {
   const [currentView, setCurrentView] = useState("submissions")
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [notifications, setNotifications] = useState<NotificationData[]>([])
@@ -42,7 +41,7 @@ export default function MainAppView({ currentUser, onLogout }: MainAppViewProps)
           setSubmissions(result.data);
         } else {
           console.error("Failed to load submissions:", result.message);
-          showModal("Lỗi tải Submissions", [result.message || "Không thể tải dữ liệu submissions từ server."], "error");
+          showModal("Lỗi tải Submissions", [result.message ?? "Không thể tải dữ liệu submissions từ server."], "error");
         }
       } catch (error) {
         console.error("Error fetching submissions:", error);
@@ -56,7 +55,7 @@ export default function MainAppView({ currentUser, onLogout }: MainAppViewProps)
       const { title, message, type } = event.detail;
       const notification: NotificationData = {
         id: Date.now().toString(),
-        type: type || "info",
+        type: type ?? "info",
         title,
         message,
         duration: 5000,
@@ -118,21 +117,21 @@ export default function MainAppView({ currentUser, onLogout }: MainAppViewProps)
 
   const renderCurrentView = () => {
     const viewType = currentUser.role === "Label Manager" ? "allSubmissions" : "mySubmissions"
-
+    if (currentView === "submissions" || currentView === "default") {
+      return (
+        <SubmissionsView
+          submissions={submissions}
+          currentUser={currentUser}
+          viewType={viewType}
+          onUpdateStatus={handleUpdateStatus}
+          showModal={showModal}
+        />
+      )
+    }
     switch (currentView) {
-      case "submissions":
-        return (
-          <SubmissionsView
-            submissions={submissions}
-            currentUser={currentUser}
-            viewType={viewType}
-            onUpdateStatus={handleUpdateStatus}
-            showModal={showModal}
-          />
-        )
       case "upload":
         return (
-          <UploadFormView currentUser={currentUser} onSubmissionAdded={handleSubmissionAdded} showModal={showModal} />
+          <UploadFormView currentUser={currentUser} onSubmissionAddedAction={handleSubmissionAdded} showModalAction={showModal} />
         )
       case "users":
         return <UsersView />
@@ -145,15 +144,7 @@ export default function MainAppView({ currentUser, onLogout }: MainAppViewProps)
       case "settings":
         return <SettingsView currentUser={currentUser} />
       default:
-        return (
-          <SubmissionsView
-            submissions={submissions}
-            currentUser={currentUser}
-            viewType={viewType}
-            onUpdateStatus={handleUpdateStatus}
-            showModal={showModal}
-          />
-        )
+        return null
     }
   }
 
@@ -163,7 +154,7 @@ export default function MainAppView({ currentUser, onLogout }: MainAppViewProps)
         currentUser={currentUser}
         currentView={currentView}
         onViewChange={setCurrentView}
-        onLogout={onLogout}
+        onLogout={onLogoutAction}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
         <main className="flex-1 overflow-auto">{renderCurrentView()}</main>

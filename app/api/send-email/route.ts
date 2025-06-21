@@ -8,7 +8,7 @@ import type { EmailDetails } from "@/lib/email";
 const SMTP_HOST = process.env.SMTP_HOST ?? "smtp.mail.me.com";
 const SMTP_PORT = parseInt(process.env.SMTP_PORT ?? "587", 10);
 const SMTP_USER = process.env.SMTP_USER ?? "admin@ankun.dev";
-const SMTP_PASS = process.env.SMTP_PASS ?? "grsa-aaxz-midn-pjta"; // Lấy từ Security.md
+const SMTP_PASS = process.env.SMTP_PASS ?? "grsa-aaxz-midn-pjta";
 const SMTP_FROM = process.env.SMTP_FROM ?? "ankunstudio@ankun.dev"; // Email người gửi mặc định
 
 export async function POST(request: Request) {

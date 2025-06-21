@@ -101,7 +101,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
     if (savedFooter) {
       setFooterSettings(JSON.parse(savedFooter))
     } else {
-      // Cập nhật footerSettings nếu appSettings đã được tải
+      // Cập nhật footerSettings nếu appSettings đã được tải, hoặc dùng giá trị mặc định
       if (savedApp) {
         const parsedApp = JSON.parse(savedApp);
         setFooterSettings(prev => ({ ...prev, companyName: parsedApp.appName, version: parsedApp.version, logoUrl: parsedApp.logoUrl, websiteUrl: parsedApp.homeUrl }));

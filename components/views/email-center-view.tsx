@@ -398,7 +398,7 @@ Trân trọng,
                           <div className="flex items-center space-x-2 mb-1">
                             <span
                               className={`px-2 py-1 rounded text-xs font-dosis-medium ${message.type === "sent" ? "bg-green-600" : "bg-blue-600"
-                                }`}
+                                }`} // Changed font-dosis-medium to font-medium
                             >
                               {message.type === "sent" ? "Đã gửi" : "Nhận"}
                             </span>
@@ -486,7 +486,7 @@ Trân trọng,
               </div>
 
               <div>
-                <Label className="font-dosis-medium">Phân loại nội dung</Label>
+                <Label className="font-medium">Phân loại nội dung</Label>
                 <Select
                   value={emailForm.type}
                   onValueChange={(value) => setEmailForm({ ...emailForm, type: value as "html" | "text" })}
@@ -616,9 +616,9 @@ Trân trọng,
             {/* Template Editor */}
             <div className="lg:col-span-2">
               {selectedTemplate ? (
-                <Card className="bg-gray-800 border-gray-700 font-sans">
+                <Card className="bg-gray-800 border-gray-700 font-sans"> {/* Removed font-dosis-semibold */}
                   <CardHeader>
-                    <CardTitle className="flex items-center justify-between font-dosis-semibold">
+                    <CardTitle className="flex items-center justify-between font-semibold">
                       <span>{isEditing ? "Chỉnh sửa" : "Xem"} mẫu email</span>
                       <div className="flex space-x-2">
                         <Button
@@ -726,8 +726,8 @@ Trân trọng,
                       )}
                     </div>
 
-                    <div>
-                      <Label className="font-dosis-medium">Biến sẵn có</Label>
+                    <div> {/* Removed font-dosis-medium */}
+                      <Label className="font-medium">Biến sẵn có</Label>
                       <div className="flex flex-wrap gap-2 mt-2">
                         {[
                           "tennghesi",
@@ -744,7 +744,7 @@ Trân trọng,
                         ].map((variable) => (
                           <span
                             key={variable}
-                            className="px-2 py-1 bg-purple-600 text-white text-xs rounded cursor-pointer hover:bg-purple-700 font-sans"
+                            className="px-2 py-1 bg-purple-600 text-white text-xs rounded cursor-pointer hover:bg-purple-700"
                             onClick={() => {
                               if (isEditing) {
                                 const newContent = selectedTemplate.content + `[${variable}]`
@@ -774,8 +774,8 @@ Trân trọng,
         {/* SMTP Settings */}
         <TabsContent value="settings" className="space-y-6">
           <Card className="bg-gray-800 border-gray-700 font-sans">
-            <CardHeader>
-              <CardTitle className="flex items-center font-dosis-semibold">
+            <CardHeader> {/* Removed font-dosis-semibold */}
+              <CardTitle className="flex items-center font-semibold">
                 <Settings className="mr-2" />
                 Cài đặt SMTP
               </CardTitle>

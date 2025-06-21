@@ -37,7 +37,7 @@ import { generateISRC, validateImageFile, validateAudioFile, getMinimumReleaseDa
 // Điều này giúp TypeScript hiểu rõ các giá trị hợp lệ và tránh lỗi "string is not assignable"
 type ArtistRole = "singer" | "composer" | "singersongwriter" | "rapper" | "producer" | "singer-songwriter" | "instrumentalist"
 type MainCategory = "pop" | "singer-songwriter" | "hiphoprap" | "edm" | "rnb" | "ballad" | "acoustic" | "indie" | "other_main"
-type SubCategory = "official" | "cover" | "vpop" | "lofi" | "chill" | "trap" | "house" | "alternative" | "folk" | "other_sub"
+type SubCategory = "official" | "cover" | "vpop" | "lofi" | "chill" | "trap" | "house" | "alternative" | "folk" | "other_sub" | ""
 type ReleaseType = "single" | "ep" | "lp" | "album"
 type YesNo = "yes" | "no"
 
@@ -69,7 +69,7 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
   const [formActiveTab, setFormActiveTab] = useState("info")
 
   // Preview state
-  const [imagePreviewUrl, setImagePreviewUrl] = useState("/public/face.png")
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("/face.png")
   const [showPreview, setShowPreview] = useState(false)
   const [playingTrack, setPlayingTrack] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -99,7 +99,7 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
     const file = e.target.files?.[0]
     if (!file) {
       setImageFile(null)
-      setImagePreviewUrl("public/dianhac.jpg")
+      setImagePreviewUrl("/dianhac.jpg")
       return
     }
 
@@ -362,19 +362,20 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
       audioFilesCount: audioTracks.length,
       submissionDate: new Date().toISOString(),
       status: "Đã nhận, đang chờ duyệt", // This status is a string, not a specific type from SubmissionStatus
-      'MainCategory': mainCategory,
-      'SubCategory': subCategory as SubCategory,
-      'ReleaseType': releaseType as ReleaseType,
-      'IsCopyrightOwner': isCopyrightOwner as YesNo,
-      'HasBeenReleased': hasBeenReleased as YesNo,
-      'Platform': hasBeenReleased === "yes" ? platforms : [],
-      'HasLyrics': hasLyrics as YesNo,
-      'Lyrics': (hasLyrics as YesNo) === "yes" ? lyrics : "",
-      'Notes': notes,
-      'FullName': fullName,
-      'ArtistRole': artistRole as ArtistRole,
-      'TrackInfos': audioTracks.map((track) => track.info),
-      'ReleaseDate': releaseDate,
+      mainCategory: mainCategory as MainCategory,
+      subCategory: subCategory || undefined,
+      releaseType: releaseType as ReleaseType,
+      isCopyrightOwner: isCopyrightOwner as YesNo,
+      hasBeenReleased: hasBeenReleased as YesNo,
+      platforms: hasBeenReleased === "yes" ? platforms : [],
+      hasLyrics: hasLyrics as YesNo,
+      lyrics: hasLyrics === "yes" ? lyrics : undefined,
+      notes: notes || undefined,
+      fullName: fullName,
+      artistRole: artistRole as ArtistRole,
+      trackInfos: audioTracks.map((track) => track.info),
+      releaseDate: releaseDate,
+      additionalArtists: [], // Field is required by Submission type
     }
 
     // Add submission
@@ -394,7 +395,7 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
     setReleaseType("")
     setAlbumName("")
     setImageFile(null)
-    setImagePreviewUrl("/public/dianhac.jpg")
+    setImagePreviewUrl("/dianhac.jpg")
     setAudioTracks([])
     setIsCopyrightOwner("")
     setHasBeenReleased("")

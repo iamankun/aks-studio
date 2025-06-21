@@ -1,9 +1,9 @@
 // Tôi là An Kun
 import { NextResponse } from "next/server"
-import { registerUser } from "@/lib/data"
+import { registerUser } from "@/lib/server-actions"
 import type { User } from "@/types/user"
 import bcrypt from "bcryptjs"
-
+import type { NextRequest } from "next/server"
 export async function POST(request: Request) {
     try {
         const { username, email, password } = await request.json()

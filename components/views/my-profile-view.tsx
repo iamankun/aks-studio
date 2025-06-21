@@ -35,7 +35,7 @@ export default function MyProfileView({ currentUser, showModalAction }: MyProfil
   })
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState(
-    currentUser.avatar ?? "/public/face.png"
+    currentUser.avatar ?? "/face.png"
   )
 
   const handleInputChange = (field: string, value: string) => {

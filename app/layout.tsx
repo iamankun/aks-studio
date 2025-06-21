@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import { ClientWrapper } from "@/components/client-wrapper"
 import { Dosis } from "next/font/google" // You are using Dosis here
 import { Analytics } from "@vercel/analytics/next"
+import { appSettings } from "@/app-settings"
 
 // Initialize the Dosis font with proper subsets
 const dosis = Dosis({

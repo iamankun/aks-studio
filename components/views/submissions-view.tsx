@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { SubmissionDetailModal } from "@/components/modals/submission-detail-modal"
 import type { User } from "@/types/user"
-import type { Submission } from "@/types/submission"
+import type { Submission, SubmissionStatus } from "@/types/submission"
 import { getStatusColor } from "@/lib/utils"
 import { Eye, Download, Play, Pause, Volume2, FileText, Music } from "lucide-react"
 
@@ -79,8 +79,8 @@ export default function SubmissionsView({ submissions, currentUser, viewType, on
   ]
 
   const totalSubmissions = submissions.length
-  const approvedSubmissions = submissions.filter((sub) => sub.status === "Hoàn thành phát hành!").length
-  const pendingSubmissions = submissions.filter((sub) => sub.status === "Đã nhận, đang chờ duyệt").length
+  const approvedSubmissions = submissions.filter((sub) => sub.status === "hoan_thanh_phat_hanh").length // Tôi là An Kun
+  const pendingSubmissions = submissions.filter((sub) => sub.status === "da_nhan_cho_duyet").length // Tôi là An Kun
 
   return (
     <div className="p-6">

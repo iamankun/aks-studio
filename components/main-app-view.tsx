@@ -14,7 +14,7 @@ import { NotificationSystem, type NotificationData } from "@/components/notifica
 // import { loadSubmissionsFromLocalStorage, saveSubmissionsToLocalStorage } from "@/lib/data" // Không dùng localStorage nữa
 import { SuccessAnimation } from "@/components/animations/success-animation"
 import type { User } from "@/types/user"
-import type { Submission } from "@/types/submission"
+import type { Submission, SubmissionStatus } from "@/types/submission"
 
 interface MainAppViewProps {
   currentUser: User

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { CollapsibleSidebar } from "@/components/sidebar/collapsible-sidebar"
 import SubmissionsView from "@/components/views/submissions-view"
-import UploadFormView from "@/components/views/upload-form-view"
+import UploadFormView from "@/components/upload-form-view"
 import UsersView from "@/components/views/users-view"
 import { AdminPanelView } from "@/components/views/admin-panel-view"
 import { EmailCenterView } from "@/components/views/email-center-view"

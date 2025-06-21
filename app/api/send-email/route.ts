@@ -3,16 +3,20 @@ import nodemailer from 'nodemailer';
 import { NextResponse } from "next/server";
 import type { EmailDetails } from "@/lib/email";
 
-// Lấy thông tin SMTP từ biến môi trường (an toàn hơn)
 // Bạn cần thiết lập các biến này trong môi trường Vercel của bạn
-const SMTP_HOST = process.env.SMTP_HOST ?? "smtp.mail.me.com";
-const SMTP_PORT = parseInt(process.env.SMTP_PORT ?? "587", 10);
-const SMTP_USER = process.env.SMTP_USER ?? "admin@ankun.dev";
-const SMTP_PASS = process.env.SMTP_PASS ?? "grsa-aaxz-midn-pjta";
-const SMTP_FROM = process.env.SMTP_FROM ?? "ankunstudio@ankun.dev"; // Email người gửi mặc định
+const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM } = process.env;
 
 export async function POST(request: Request) {
   try {
+    // Kiểm tra biến môi trường SMTP. Nếu thiếu, API sẽ không hoạt động.
+    if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
+      console.error("Lỗi nghiêm trọng: Một hoặc nhiều biến môi trường SMTP không được cấu hình.");
+      return NextResponse.json(
+        { success: false, message: "Lỗi cấu hình server: Dịch vụ email không được thiết lập đúng cách." },
+        { status: 500 }
+      );
+    }
+
     const emailDetails: EmailDetails = await request.json();
 
     // Kiểm tra các trường bắt buộc
@@ -22,8 +26,8 @@ export async function POST(request: Request) {
 
     const transporter = nodemailer.createTransport({
       host: SMTP_HOST,
-      port: SMTP_PORT,
-      secure: SMTP_PORT === 465, // true for 465, false for other ports
+      port: parseInt(SMTP_PORT, 10), // Chuyển đổi sang số nguyên
+      secure: SMTP_PORT === "465", // Sử dụng SSL nếu port là 465
       auth: {
         user: SMTP_USER,
         pass: SMTP_PASS,
@@ -35,7 +39,7 @@ export async function POST(request: Request) {
     });
 
     const mailOptions = {
-      from: emailDetails.from || SMTP_FROM, // Sử dụng from từ client hoặc default
+      from: emailDetails.from || SMTP_FROM || SMTP_USER, // Sử dụng from từ client hoặc default, fallback về user
       to: emailDetails.to,
       cc: emailDetails.cc,
       bcc: emailDetails.bcc,
@@ -49,6 +53,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, message: `Email đã được gửi thành công đến ${emailDetails.to}.` });
   } catch (error: any) {
     console.error("API Error sending email:", error);
-    return NextResponse.json({ success: false, message: "Lỗi gửi email từ server.", error: error.message ?? error.toString() }, { status: 500 });
+    return NextResponse.json({ success: false, message: "Lỗi gửi email từ server.", error: error.message }, { status: 500 });
   }
 }

@@ -419,11 +419,11 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
         <div className="space-y-4">
           <div>
             <span className="text-sm font-medium text-gray-400">Tên bài hát:</span>
-            <p className="font-dosis-bold text-gray-200">{songTitle ?? "-"}</p>
+            <p className="font-bold text-gray-200">{songTitle ?? "-"}</p>
           </div>
           <div>
             <span className="text-sm font-medium text-gray-400">Album:</span>
-            <p className="font-dosis-medium text-gray-200">
+            <p className="font-medium text-gray-200">
               {albumName ?? (releaseType === "single" ? `${songTitle ?? "-"} - Single` : "-")}
             </p>
           </div>

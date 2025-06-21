@@ -26,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="vi" suppressHydrationWarning>
-      <body className={dosis.variable}>
+    <html lang="vi" className={dosis.variable} suppressHydrationWarning>
+      <body className="font-sans">
         <ClientWrapper>{children}</ClientWrapper>
         <Analytics />
       </body>

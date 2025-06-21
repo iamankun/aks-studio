@@ -1,14 +1,20 @@
+const { fontFamily } = require("tailwindcss/defaultTheme")
 /** @type {import('tailwindcss').Config} */
+
 module.exports = {
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./layouts/**/*.{js,ts,jsx,tsx,mdx}",
-        "*.{js,ts,jsx,tsx,mdx}"
-    ],
+    "*.{js,ts,jsx,tsx,mdx}"
+  ],
   theme: {
     extend: {
+      fontFamily: {
+        // Dòng này sẽ đặt Dosis làm font mặc định
+        sans: ["var(--font-dosis)", ...fontFamily.sans],
+      },
       colors: {
         // Consolidated colors. Using the more structured 'card' and 'popover' from your second definition.
         background: "hsl(var(--background))",
@@ -55,9 +61,6 @@ module.exports = {
           ring: "hsl(var(--sidebar-ring))",
         }
       },
-      fontFamily: {
-        dosis: ['var(--font-dosis)', 'sans-serif'], // Add a fallback font
-      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
@@ -65,5 +68,5 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
 }

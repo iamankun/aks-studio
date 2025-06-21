@@ -23,8 +23,7 @@ import {
   Eye,
   X,
 } from "lucide-react"
-import { format } from "date-fns"
-
+import { format as formatDate } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -50,11 +49,10 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-    import type { User } from "@/types/user"; // Giả sử bạn có định nghĩa User type
+import type { User } from "@/types/user"; // Giả sử bạn có định nghĩa User type
 import { formatFileSize } from "@/lib/utils"; // Import từ utils
 // Types
 export type FileType = "folder" | "pdf" | "image" | "document" | "code" | "other"
-
 export interface FileItem {
   id: string
   name: string
@@ -64,7 +62,6 @@ export interface FileItem {
   modified: Date
   path: string[]
 }
-
 // Sample data
 const sampleFiles: FileItem[] = [
   {
@@ -582,9 +579,8 @@ export default function aksdata({ currentUser }: AksDataProps) {
                 {filteredFiles.map((file) => (
                   <div
                     key={file.id}
-                    className={`relative group rounded-lg border bg-card p-2 transition-all hover:shadow-md ${
-                      selectedFiles.includes(file.id) ? "ring-2 ring-primary" : ""
-                    }`}
+                    className={`relative group rounded-lg border bg-card p-2 transition-all hover:shadow-md ${selectedFiles.includes(file.id) ? "ring-2 ring-primary" : ""
+                      }`}
                   >
                     <div className="absolute top-2 right-2">
                       <Checkbox

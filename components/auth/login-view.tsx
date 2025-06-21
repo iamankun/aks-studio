@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { AlertModal } from "@/components/modals/alert-modal"
 import type { User } from "@/types/user"
 import { loginUser } from "@/lib/data"
-import { Disc3, Shield } from 'lucide-react';
+import { Disc3 } from 'lucide-react';
 import { useSystemStatus } from "@/components/system-status-provider"
 
 interface LoginViewProps {
@@ -48,21 +48,9 @@ export default function LoginView({ onLogin, onShowRegister }: LoginViewProps) {
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
               <Disc3 className="h-12 w-12 text-purple-500 mr-2" />
-              {status.isDemo && (
-                <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-dosis-bold">Beta</span>
-              )}
             </div>
             <h2 className="text-3xl font-dosis-bold text-white">Dashboard | Digital Music Distribution</h2>
             <p className="text-gray-400 mt-2 font-dosis">Đăng nhập để quản lý âm nhạc của bạn.</p>
-
-            {status.isDemo && (
-              <div className="mt-4 p-3 bg-orange-500/20 border border-orange-500/50 rounded-lg">
-                <p className="text-orange-300 text-sm font-dosis">
-                  <Shield className="inline h-4 w-4 mr-1" />
-                  Chế độ Demo - Cần cấu hình SMTP, Database để sử dụng đầy đủ
-                </p>
-              </div>
-            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">

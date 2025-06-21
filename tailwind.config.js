@@ -1,4 +1,3 @@
-// Tôi là An Kun
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [

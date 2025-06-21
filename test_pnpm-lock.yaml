@@ -1,5 +1,3 @@
-# Tôi là An Kun
-
 - name: Test lockfileVersion is present and correct
   assert:
     that:

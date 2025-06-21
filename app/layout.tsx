@@ -13,7 +13,7 @@ const dosis = Dosis({
 })
 
 export const metadata: Metadata = {
-  title: `${appSettings.appName} - Dashboard`,
+  title: "AKs Studio - Dashboard", // Đã thay đổi thành giá trị tĩnh
   description: "Nền tảng quản lý và phát hành âm nhạc dành cho giới trẻ",
   icons: {
     icon: "/public/face.png",

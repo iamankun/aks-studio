@@ -1,5 +1,9 @@
 {
   "extends": [
     "production"
-  ]
+  ],
+  "hints": {
+    "no-inline-styles": "off",
+    "typescript-config/consistent-casing": "off"
+  }
 }

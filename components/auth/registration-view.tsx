@@ -6,13 +6,15 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertModal } from "@/components/modals/alert-modal"
 import { Disc3 } from "lucide-react"
+import { loadUsersFromLocalStorage, saveUsersToLocalStorage } from "@/lib/data"
+import type { User } from "@/types/user"
 
 interface RegistrationViewProps {
   onRegistrationSuccess: () => void
   onShowLogin: () => void
 }
 
-export default function RegistrationView({ onRegistrationSuccess, onShowLogin }: RegistrationViewProps) {
+export default function RegistrationView({ onRegistrationSuccess, onShowLogin }: Readonly<RegistrationViewProps>) {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -47,25 +49,37 @@ export default function RegistrationView({ onRegistrationSuccess, onShowLogin }:
       const result = await response.json();
 
       if (response.ok) {
-      setModalTitle("Đăng ký thành công")
-        setModalMessage([result.message || "Tài khoản đã được tạo thành công!"])
-      setModalType("success")
-      setIsModalOpen(true)
-      setUsername("")
-      setPassword("")
-      setConfirmPassword("")
-      setEmail("")
-      setTimeout(() => {
-        onRegistrationSuccess()
-      }, 2000)
-      return
+        // Đối với chế độ demo, chúng ta thêm người dùng mới vào localStorage để họ có thể đăng nhập.
+        const newUserForLocal: User = {
+          id: `user_${Date.now()}`,
+          username,
+          password,
+          email,
+          role: "Artist",
+          fullName: username,
+          createdAt: new Date().toISOString(),
+        };
+        const currentUsers = loadUsersFromLocalStorage();
+        saveUsersToLocalStorage([...currentUsers, newUserForLocal]);
+
+        setModalTitle("Đăng ký thành công")
+        setModalMessage([result.message ?? "Tài khoản đã được tạo thành công!"])
+        setModalType("success")
+        setIsModalOpen(true)
+        setUsername("")
+        setPassword("")
+        setConfirmPassword("")
+        setEmail("")
+        setTimeout(() => onRegistrationSuccess(), 2000)
+        return
       } else {
         setModalTitle("Lỗi đăng ký")
-        setModalMessage([result.message || "Không thể tạo tài khoản."])
+        setModalMessage([result.message ?? "Không thể tạo tài khoản."])
         setModalType("error")
         setIsModalOpen(true)
       }
-    } catch (error) {
+    }
+    catch (error) {
       setModalTitle("Lỗi đăng ký")
       setModalMessage(["Đã xảy ra lỗi kết nối. Vui lòng thử lại."])
       setModalType("error")

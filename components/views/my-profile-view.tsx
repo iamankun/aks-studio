@@ -23,19 +23,19 @@ export default function MyProfileView({ currentUser, showModal }: MyProfileViewP
     username: currentUser.username,
     fullName: currentUser.fullName || "",
     email: currentUser.email || "",
-    bio: currentUser.bio || "",
+    bio: currentUser.bio ?? "",
     socialLinks: {
-      facebook: currentUser.socialLinks?.facebook || "",
-      youtube: currentUser.socialLinks?.youtube || "",
-      spotify: currentUser.socialLinks?.spotify || "",
-      appleMusic: currentUser.socialLinks?.appleMusic || "",
-      tiktok: currentUser.socialLinks?.tiktok || "",
-      instagram: currentUser.socialLinks?.instagram || "",
+      facebook: currentUser.socialLinks?.facebook ?? "",
+      youtube: currentUser.socialLinks?.youtube ?? "",
+      spotify: currentUser.socialLinks?.spotify ?? "",
+      appleMusic: currentUser.socialLinks?.appleMusic ?? "",
+      tiktok: currentUser.socialLinks?.tiktok ?? "",
+      instagram: currentUser.socialLinks?.instagram ?? "",
     },
   })
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState(
-    currentUser.avatar || "https://placehold.co/150x150/1f2937/4b5563?text=Avatar",
+    currentUser.avatar ?? "https://placehold.co/150x150/1f2937/4b5563?text=Avatar",
   )
 
   const handleInputChange = (field: string, value: string) => {

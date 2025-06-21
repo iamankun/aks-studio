@@ -59,26 +59,27 @@ export const saveSubmissionsToClient = (submissions: Submission[]): void => save
 
 export async function registerUser(newUser: User): Promise<boolean> {
   const dbUrl = process.env.aksstudio_POSTGRES_URL || process.env.DATABASE_URL;
-  if (!dbUrl) {
-    console.error("Database URL not configured. Cannot register user in DB.");
-    return false;
-  }
-  neonConfig.fetchOptions = { cache: "no-store" };
-  const sql = neon(dbUrl);
-
   let isUserSavedSuccessfully = false;
-  try {
-    // Trong thực tế, password nên được hash trước khi lưu
-    // ID có thể là SERIAL và tự tăng, hoặc bạn cần cơ chế tạo ID duy nhất
-    await sql`
-      INSERT INTO users (id, username, password, email, role, full_name, created_at) 
-      VALUES (${newUser.id || `user_${Date.now()}`}, ${newUser.username}, ${newUser.password}, ${newUser.email}, ${newUser.role}, ${newUser.fullName}, ${newUser.createdAt || new Date().toISOString()})
-    `;
+
+  if (dbUrl) {
+    // Logic cho database thực
+    neonConfig.fetchOptions = { cache: "no-store" };
+    const sql = neon(dbUrl);
+    try {
+      await sql`
+        INSERT INTO users (id, username, password, email, role, full_name, created_at) 
+        VALUES (${newUser.id || `user_${Date.now()}`}, ${newUser.username}, ${newUser.password}, ${newUser.email}, ${newUser.role}, ${newUser.fullName}, ${newUser.createdAt || new Date().toISOString()})
+      `;
+      isUserSavedSuccessfully = true;
+      console.log(`User ${newUser.username} registered in database.`);
+    } catch (error) {
+      console.error("Error registering user in database:", error);
+      return false;
+    }
+  } else {
+    // Logic cho chế độ demo (không có database)
+    console.warn("Database URL not configured. Simulating user registration for demo mode.");
     isUserSavedSuccessfully = true;
-    console.log(`User ${newUser.username} registered in database.`);
-  } catch (error) {
-    console.error("Error registering user in database:", error);
-    return false; // Đăng ký user thất bại nếu không lưu được vào DB
   }
 
   if (isUserSavedSuccessfully) {

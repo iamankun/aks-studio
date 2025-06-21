@@ -25,11 +25,11 @@ import {
 import { getStatusColor } from "@/lib/utils"
 
 interface AdminPanelViewProps {
-    showModalAction: (title: string, messages: string[], type?: "error" | "success") => void
+    showModal: (title: string, messages: string[], type?: "error" | "success") => void
     currentUser: User
 }
 
-export function AdminPanelView({ showModalAction, currentUser }: AdminPanelViewProps) {
+export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) {
     const [submissionsList, setSubmissionsList] = useState<Submission[]>([])
 
     useEffect(() => {
@@ -44,10 +44,10 @@ export function AdminPanelView({ showModalAction, currentUser }: AdminPanelViewP
     const saveData = () => {
         try {
             saveSubmissionsToClient(submissionsList)
-            showModalAction("Lưu thành công", ["Đã lưu danh sách bài hát."], "success")
+            showModal("Lưu thành công", ["Đã lưu danh sách bài hát."], "success")
         } catch (error) {
             console.error("Error saving submissions:", error)
-            showModalAction("Lỗi", ["Không thể lưu danh sách bài hát."], "error")
+            showModal("Lỗi", ["Không thể lưu danh sách bài hát."], "error")
         }
     }
 
@@ -66,7 +66,7 @@ export function AdminPanelView({ showModalAction, currentUser }: AdminPanelViewP
         a.click()
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
-        showModalAction("Xuất dữ liệu", ["Đã tải file backup bài hát thành công"], "success")
+        showModal("Xuất dữ liệu", ["Đã tải file backup bài hát thành công"], "success")
     }
 
     const importData = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,12 +80,12 @@ export function AdminPanelView({ showModalAction, currentUser }: AdminPanelViewP
 
                 if (data.submissions) {
                     setSubmissionsList(data.submissions)
-                    showModalAction("Nhập dữ liệu", ["Đã khôi phục dữ liệu bài hát thành công"], "success")
+                    showModal("Nhập dữ liệu", ["Đã khôi phục dữ liệu bài hát thành công"], "success")
                 } else {
-                    showModalAction("Lỗi nhập dữ liệu", ["File không đúng định dạng"], "error")
+                    showModal("Lỗi nhập dữ liệu", ["File không đúng định dạng"], "error")
                 }
             } catch (error) {
-                showModalAction("Lỗi nhập dữ liệu", ["Không thể đọc file JSON"], "error")
+                showModal("Lỗi nhập dữ liệu", ["Không thể đọc file JSON"], "error")
             }
         }
         reader.readAsText(file)
@@ -94,7 +94,7 @@ export function AdminPanelView({ showModalAction, currentUser }: AdminPanelViewP
     const downloadSubmissionFile = (submission: Submission, type: "audio" | "image") => {
         // In a real app, this would download the actual file
         // For demo, we'll show a message
-        showModalAction(
+        showModal(
             "Tải xuống",
             [`Đang tải ${type === "audio" ? "File Audio" : "Art Cover"} của "${submission.songTitle}"`],
             "success",

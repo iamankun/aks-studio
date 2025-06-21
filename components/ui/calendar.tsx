@@ -54,8 +54,7 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        leftIcon: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
-        rightIcon: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
+        // Xoá leftIcon và rightIcon vì không được hỗ trợ
       }}
       {...props}
     />

@@ -124,14 +124,14 @@ const NotificationItem: React.FC<{ notification: NotificationData; onRemove: (id
   }[notification.type]
 
   return (
-    <div className={`${baseClasses} ${typeClasses[notification.type]} ${animationClasses} font-dosis`}>
+    <div className={`${baseClasses} ${typeClasses[notification.type]} ${animationClasses} font-sans`}>
       <div className="flex items-start">
         <div className="flex-shrink-0 pt-0.5">
           <Icon className="h-6 w-6" aria-hidden="true" />
         </div>
         <div className="ml-3 flex-1">
-          <p className="text-sm font-dosis-bold">{notification.title}</p>
-          <p className="mt-1 text-sm font-dosis-medium">{notification.message}</p>
+          <p className="text-sm font-bold">{notification.title}</p>
+          <p className="mt-1 text-sm font-medium">{notification.message}</p>
         </div>
         <div className="ml-4 flex-shrink-0 flex">
           <button

@@ -1,8 +1,7 @@
 // Tôi là An Kun
 "use server";
 import { neon } from "@neondatabase/serverless"
-import { createClient } from '@supabase/supabase-js';
-import { ensureDefaultAdminUser } from "@/lib/data/user";
+import { ensureDefaultAdminUser } from "@/lib/server-actions";
 
 // Định nghĩa một interface cho dữ liệu đầu vào của postData
 interface SongInputData {

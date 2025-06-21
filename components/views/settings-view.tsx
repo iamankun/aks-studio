@@ -57,10 +57,10 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
   })
 
   const [footerSettings, setFooterSettings] = useState({
-    companyName: `${appSettings.appName}`,
-    version: `${appSettings.version}`,
-    logoUrl: `${appSettings.logoUrl}`,
-    websiteUrl: `${appSettings.homeUrl}`,
+    companyName: "AKs Studio", // Giá trị mặc định
+    version: "1.0.0", // Giá trị mặc định
+    logoUrl: "/face.png", // Giá trị mặc định
+    websiteUrl: "/", // Giá trị mặc định
     description: "Digital Music Distribution",
   })
 
@@ -100,6 +100,12 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
     const savedFooter = localStorage.getItem("footerSettings_v2")
     if (savedFooter) {
       setFooterSettings(JSON.parse(savedFooter))
+    } else {
+      // Cập nhật footerSettings nếu appSettings đã được tải
+      if (savedApp) {
+        const parsedApp = JSON.parse(savedApp);
+        setFooterSettings(prev => ({ ...prev, companyName: parsedApp.appName, version: parsedApp.version, logoUrl: parsedApp.logoUrl, websiteUrl: parsedApp.homeUrl }));
+      }
     }
 
     // Load database settings

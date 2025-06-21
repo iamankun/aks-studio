@@ -1,15 +1,12 @@
-"version": "0.2.0",
-"configurations": [
-    {
-        "type": "node-terminal",
-        "name": "Run Script: build",
-        "request": "launch",
-        "command": "pnpm run build",
-        "cwd": "${workspaceFolder}"
-<<<<<<< HEAD
-    }
-=======
-    }
-]
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node-terminal",
+            "name": "Run Script: build",
+            "request": "launch",
+            "command": "pnpm run build",
+            "cwd": "${workspaceFolder}"
+        }
+    ]
 }
->>>>>>> 37781608305ac91b69022358485c6adec67358c7

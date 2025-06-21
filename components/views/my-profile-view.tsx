@@ -13,12 +13,12 @@ import type { User } from "@/types/user"
 import { loadUsersFromLocalStorage, saveUsersToLocalStorage } from "@/lib/data"
 import { UserCircle, Copy, Sparkles } from "lucide-react"
 
-interface MyProfileViewProps {
+export interface MyProfileViewProps {
   currentUser: User
-  showModalAction: (title: string, messages: string[], type?: "error" | "success") => void
+  showModal: (title: string, messages: string[], type?: "success" | "error") => void // Tôi là An Kun
 }
 
-export default function MyProfileView({ currentUser, showModalAction }: MyProfileViewProps) {
+export default function MyProfileView({ currentUser, showModal }: MyProfileViewProps) {
   const [formData, setFormData] = useState({
     username: currentUser.username,
     fullName: currentUser.fullName,
@@ -57,12 +57,12 @@ export default function MyProfileView({ currentUser, showModalAction }: MyProfil
     const file = e.target.files?.[0]
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        showModalAction("Lỗi Tải Ảnh", ["Ảnh đại diện max 2MB."])
+        showModal("Lỗi Tải Ảnh", ["Ảnh đại diện max 2MB."])
         e.target.value = ""
         return
       }
       if (!["image/jpeg", "image/png"].includes(file.type)) {
-        showModalAction("Lỗi Tải Ảnh", ["Chỉ nhận JPG/PNG."])
+        showModal("Lỗi Tải Ảnh", ["Chỉ nhận JPG/PNG."])
         e.target.value = ""
         return
       }
@@ -89,20 +89,20 @@ export default function MyProfileView({ currentUser, showModalAction }: MyProfil
 
     const randomBio = suggestedBios[Math.floor(Math.random() * suggestedBios.length)]
     setFormData((prev) => ({ ...prev, bio: randomBio }))
-    showModalAction("Gợi Ý Bio", ["Đã có bio mẫu! Bạn có thể chỉnh sửa thêm nhé!"], "success")
+    showModal("Gợi Ý Bio", ["Đã có bio mẫu! Bạn có thể chỉnh sửa thêm nhé!"], "success")
   }
 
   const handleCopyLink = async (link: string, platform: string) => {
     if (!link) {
-      showModalAction("Chưa có Link", ["Vui lòng nhập link trước khi copy."], "error")
+      showModal("Chưa có Link", ["Vui lòng nhập link trước khi copy."], "error")
       return
     }
 
     try {
       await navigator.clipboard.writeText(link)
-      showModalAction("Copy Thành Công", [`Đã copy link ${platform}: ${link}`], "success")
+      showModal("Copy Thành Công", [`Đã copy link ${platform}: ${link}`], "success")
     } catch (err) {
-      showModalAction("Lỗi Copy", ["Không thể copy link vào clipboard."])
+      showModal("Lỗi Copy", ["Không thể copy link vào clipboard."])
     }
   }
 
@@ -114,7 +114,7 @@ export default function MyProfileView({ currentUser, showModalAction }: MyProfil
 
     const userIndex = currentUsers.findIndex((u) => u.username === currentUser.username)
     if (userIndex === -1) {
-      showModalAction("Lỗi Cập Nhật", ["Không tìm thấy người dùng."])
+      showModal("Lỗi Cập Nhật", ["Không tìm thấy người dùng."])
       return
     }
 
@@ -138,7 +138,7 @@ export default function MyProfileView({ currentUser, showModalAction }: MyProfil
 
     // 5. Cập nhật session và thông báo
     sessionStorage.setItem("currentUser", JSON.stringify(updatedUser))
-    showModalAction("Thành công", ["Hồ sơ của bạn đã được cập nhật!"], "success")
+    showModal("Thành công", ["Hồ sơ của bạn đã được cập nhật!"], "success")
   }
 
   return (
@@ -264,7 +264,7 @@ export default function MyProfileView({ currentUser, showModalAction }: MyProfil
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => showModalAction("Profile Test", ["Profile notification with musical sound!"], "success")}
+                  onClick={() => showModal("Profile Test", ["Profile notification with musical sound!"], "success")}
                   className="text-sm"
                 >
                   🎵 Success Sound
@@ -272,7 +272,7 @@ export default function MyProfileView({ currentUser, showModalAction }: MyProfil
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => showModalAction("Error Test", ["Error notification with alert sound!"], "error")}
+                  onClick={() => showModal("Error Test", ["Error notification with alert sound!"], "error")}
                   className="text-sm"
                 >
                   🚨 Error Sound

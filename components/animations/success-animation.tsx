@@ -74,7 +74,7 @@ export function SuccessAnimation({ artistName, songTitle, onClose }: SuccessAnim
               <div className="w-3 h-3 rounded-full bg-gray-200"></div>
             </div>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-3">{songTitle}</h3> {/* Changed font-dosis-bold to font-bold */}
+          <h3 className="text-2xl font-bold text-white mb-3">{songTitle}</h3>
           <p className="text-lg text-gray-300">by {artistName}</p>
         </div>
       )}
@@ -93,7 +93,7 @@ export function SuccessAnimation({ artistName, songTitle, onClose }: SuccessAnim
               </div>
             </div>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-3">{songTitle}</h3> {/* Changed font-dosis-bold to font-bold */}
+          <h3 className="text-2xl font-bold text-white mb-3">{songTitle}</h3>
           <p className="text-lg text-gray-300">by {artistName}</p>
         </div>
       )}
@@ -103,7 +103,7 @@ export function SuccessAnimation({ artistName, songTitle, onClose }: SuccessAnim
           <div className="flex justify-center mb-8">
             <Music className="h-16 w-16 text-green-500 animate-bounce" />
           </div>
-          <h2 className="text-3xl font-bold text-gradient-purple mb-4"> {/* Changed font-dosis-bold to font-bold */}
+          <h2 className="text-3xl font-bold text-gradient-purple mb-4">
             Cảm ơn {artistName} đã đồng hành cùng Giai Điệu Gen Z!
           </h2>
           <p className="text-xl text-gray-300 mb-3">

@@ -429,8 +429,8 @@ Trân trọng,
         {/* Compose Email */}
         <TabsContent value="compose" className="space-y-6">
           <Card className="bg-gray-800 border-gray-700 font-sans">
-            <CardHeader>
-              <CardTitle className="flex items-center font-dosis-semibold">
+            <CardHeader> {/* Removed font-dosis-semibold */}
+              <CardTitle className="flex items-center font-semibold">
                 <Send className="mr-2" />
                 Soạn email mới
               </CardTitle>
@@ -555,7 +555,7 @@ Trân trọng,
             {/* Templates List */}
             <Card className="bg-gray-800 border-gray-700 font-sans">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between font-dosis-semibold">
+                <CardTitle className="flex items-center justify-between font-semibold">
                   <span className="flex items-center">
                     <FileText className="mr-2" />
                     Mẫu email ({templates.length})

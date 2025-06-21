@@ -293,8 +293,8 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
         {/* SMTP Settings */}
         <TabsContent value="smtp">
           <Card className="bg-gray-800 border border-gray-700">
-            <CardHeader>
-              <CardTitle className="flex items-center">
+            <CardHeader> {/* Removed font-dosis-semibold */}
+              <CardTitle className="flex items-center font-semibold">
                 <Mail className="mr-2" />
                 Cài đặt hộp thư SMTP || {appSettings.appName}
               </CardTitle>
@@ -359,8 +359,8 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
         {/* Database Settings */}
         <TabsContent value="database">
           <Card className="bg-gray-800 border border-gray-700">
-            <CardHeader>
-              <CardTitle className="flex items-center">
+            <CardHeader> {/* Removed font-dosis-semibold */}
+              <CardTitle className="flex items-center font-semibold">
                 <Database className="mr-2" />
                 Database
               </CardTitle>

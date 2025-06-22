@@ -35,9 +35,10 @@ import { generateISRC, validateImageFile, validateAudioFile, getMinimumReleaseDa
 
 // Định nghĩa các kiểu dữ liệu cụ thể cho các trường trong form
 // Điều này giúp TypeScript hiểu rõ các giá trị hợp lệ và tránh lỗi "string is not assignable"
-type ArtistRole = "singer" | "composer" | "singersongwriter" | "rapper" | "producer" | "singer-songwriter" | "instrumentalist"
+type PrimaryArtistRole = "singer" | "composer" | "singersongwriter" | "rapper" | "producer" | "songwriter" | "instrumental"
+type ArtistRole = "singer" | "composer" | "rapper" | "producer" | "singer-songwriter" | "instrumental"
 type MainCategory = "pop" | "singer-songwriter" | "hiphoprap" | "edm" | "rnb" | "ballad" | "acoustic" | "indie" | "other_main"
-type SubCategory = "official" | "cover" | "vpop" | "lofi" | "chill" | "trap" | "house" | "alternative" | "folk" | "other_sub" | ""
+type SubCategory = "official" | "cover" | "vpop" | "lofi" | "chill" | "trap" | "house" | "alternative" | "folk" | "other_sub"
 type ReleaseType = "single" | "ep" | "lp" | "album"
 type YesNo = "yes" | "no"
 

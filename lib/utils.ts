@@ -2,9 +2,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import type { User } from "@/types/user"
-import { neon } from '@neondatabase/serverless'
-import { format } from "date-fns"
-import { createClient } from '@supabase/supabase-js'
+import { format, addDays } from "date-fns"
 
 export function cn(...inputs: ClassValue[]) { // This function was already exported
   return twMerge(clsx(inputs))
@@ -39,11 +37,11 @@ export function getStatusColor(status: string): string { // This function was al
   }
 }
 
-export function getMinimumReleaseDate(): string { // This function was already exported
-  const today = new Date()
-  // Add 2 days for review process
-  today.setDate(today.getDate() + 2)
-  return today.toISOString().split("T")[0]
+export function getMinimumReleaseDate(): string {
+  const today = new Date();
+  // Add 2 days for review process, ensuring immutability by creating a new date object.
+  const minimumDate = addDays(today, 2);
+  return format(minimumDate, "yyyy-MM-dd");
 }
 
 export async function validateImageFile(file: File): Promise<{ valid: boolean; errors: string[] }> {
@@ -59,20 +57,27 @@ export async function validateImageFile(file: File): Promise<{ valid: boolean; e
     errors.push("File quá lớn (tối đa 5MB)")
   }
 
-  // Check dimensions (would need to load image to check, simplified for now)
+  // Check dimensions by loading the image
   return new Promise((resolve) => {
+    const imageUrl = URL.createObjectURL(file)
     const img = new Image()
+
+    const finalResolve = (result: { valid: boolean; errors: string[] }) => {
+      URL.revokeObjectURL(imageUrl) // Revoke to prevent memory leaks
+      resolve(result)
+    }
+
     img.onload = () => {
       if (img.width !== 4000 || img.height !== 4000) {
         errors.push("Kích thước phải là 4000x4000px")
       }
-      resolve({ valid: errors.length === 0, errors })
+      finalResolve({ valid: errors.length === 0, errors })
     }
     img.onerror = () => {
       errors.push("File ảnh không hợp lệ")
-      resolve({ valid: false, errors })
+      finalResolve({ valid: false, errors })
     }
-    img.src = URL.createObjectURL(file)
+    img.src = imageUrl
   })
 }
 

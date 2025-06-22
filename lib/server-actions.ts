@@ -4,6 +4,8 @@ import "server-only"
 import type { User } from "@/types/user"
 import { sendEmail, type EmailDetails } from "@/lib/email"
 import { neon, neonConfig } from "@neondatabase/serverless"
+import bcrypt from "bcryptjs"
+
 
 export async function registerUser(newUser: User): Promise<boolean> {
     const dbUrl = process.env.aksstudio_POSTGRES_URL || process.env.DATABASE_URL

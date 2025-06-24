@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
+import type { User } from "@/types/user"
 
 // Server-side Supabase client (for API routes only)
 function createServerSupabaseClient() {
@@ -22,24 +23,6 @@ function createClientSupabaseClient() {
   }
 
   return createClient(supabaseUrl, supabaseAnonKey)
-}
-
-export interface User {
-  id: string
-  username: string
-  password_hash: string
-  fullname: string
-  email: string
-  avatar?: string
-  bio?: string
-  createdat?: string
-  role: "artist" | "label_manager"
-  facebook?: string
-  youtube?: string
-  spotify?: string
-  applemusic?: string
-  tiktok?: string
-  instagram?: string
 }
 
 export interface AuthResult {
@@ -167,5 +150,67 @@ export function authenticateUserLocal(username: string, password: string): AuthR
   return {
     success: false,
     message: "Invalid credentials",
+  }
+}
+
+// Main authenticateUser function for backward compatibility
+export async function authenticateUser(username: string, password: string): Promise<User | null> {
+  try {
+    // Try server-side authentication first (if running on server)
+    if (typeof window === "undefined") {
+      const result = await authenticateUserServer(username, password)
+      return result.success ? result.user || null : null
+    }
+
+    // For client-side, use client authentication
+    const result = await authenticateUserClient(username, password)
+    if (result.success && result.user) {
+      return {
+        id: result.user.id,
+        username: result.user.username,
+        role: result.user.role === "label_manager" ? "Label Manager" : "Artist",
+        full_name: result.user.fullname,
+        email: result.user.email,
+        avatar_url: result.user.avatar || "/face.png",
+        bio: result.user.bio || "",
+        social_links: {
+          facebook: result.user.facebook || "",
+          youtube: result.user.youtube || "",
+          spotify: result.user.spotify || "",
+          appleMusic: result.user.applemusic || "",
+          tiktok: result.user.tiktok || "",
+          instagram: result.user.instagram || "",
+        },
+        created_at: result.user.createdat || new Date().toISOString(),
+      }
+    }
+
+    // Fallback to local authentication
+    const localResult = authenticateUserLocal(username, password)
+    if (localResult.success && localResult.user) {
+      return {
+        id: localResult.user.id,
+        username: localResult.user.username,
+        role: localResult.user.role === "label_manager" ? "Label Manager" : "Artist",
+        full_name: localResult.user.fullname,
+        email: result.user.email,
+        avatar_url: localResult.user.avatar || "/face.png",
+        bio: result.user.bio || "",
+        social_links: {
+          facebook: result.user.facebook || "",
+          youtube: result.user.youtube || "",
+          spotify: result.user.spotify || "",
+          appleMusic: result.user.applemusic || "",
+          tiktok: result.user.tiktok || "",
+          instagram: result.user.instagram || "",
+        },
+        created_at: localResult.user.createdat || new Date().toISOString(),
+      }
+    }
+
+    return null
+  } catch (error) {
+    console.error("🚨 Authentication error:", error)
+    return null
   }
 }

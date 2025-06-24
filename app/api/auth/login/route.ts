@@ -5,7 +5,7 @@ export async function POST(request: Request) {
   try {
     const { username, password } = await request.json()
 
-    console.log("🔍 Login API request:", { username })
+    console.log("🔍 Login API request for:", username)
 
     if (!username || !password) {
       return NextResponse.json(
@@ -19,11 +19,15 @@ export async function POST(request: Request) {
 
     const result = await authenticateUserServer(username, password)
 
+    console.log("🔍 Authentication result:", {
+      success: result.success,
+      hasUser: !!result.user,
+      debug: result.debug,
+    })
+
     if (result.success) {
-      console.log("✅ Login API successful")
       return NextResponse.json(result)
     } else {
-      console.log("❌ Login API failed:", result.message)
       return NextResponse.json(result, { status: 401 })
     }
   } catch (error) {
@@ -31,7 +35,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Internal server error",
+        message: `Internal server error: ${error.message}`,
       },
       { status: 500 },
     )

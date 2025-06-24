@@ -1,5 +1,4 @@
 import "./globals.css"
-import type React from "react"
 import type { Metadata } from "next"
 import { ClientWrapper } from "@/components/client-wrapper"
 import { Dosis } from "next/font/google"

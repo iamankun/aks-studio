@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const transporter = nodemailer.createTransport({
       host: SMTP_HOST,
       port: parseInt(SMTP_PORT, 10), // Chuyển đổi sang số nguyên
-      secure: SMTP_PORT === "465", // Sử dụng SSL nếu port là 465
+      secure: SMTP_PORT === "587", // Sử dụng SSL nếu port là 587
       auth: {
         user: SMTP_USER,
         pass: SMTP_PASS,

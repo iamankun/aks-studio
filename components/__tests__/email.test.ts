@@ -1,5 +1,5 @@
-// File: c:\Users\admin\aksstudio\lib\__tests__\email.test.ts
-import { sendEmail, type EmailDetails } from '../email'; // Adjust path as needed
+// Tôi là An Kun
+import { sendEmail, type EmailDetails } from '@/lib/email'; // Adjust path as needed
 
 // Mocking window.fetch
 global.fetch = jest.fn();

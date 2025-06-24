@@ -50,7 +50,6 @@ import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 import type { User } from "@/types/user"; // Giả sử bạn có định nghĩa User type
-import { formatFileSize } from "@/lib/utils"; // Import từ utils
 // Types
 export type FileType = "folder" | "pdf" | "image" | "document" | "code" | "other"
 export interface FileItem {

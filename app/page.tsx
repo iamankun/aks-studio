@@ -1,58 +1,38 @@
-"use client"
+import { cookies } from 'next/headers'; // Import cookies from next/headers
+import type { User } from "@/types/user";
+import { createClient } from '@/ultis/supabase/server'; // Đảm bảo đường dẫn đúng
+import AuthFlowClient from "@/components/auth-flow-client"; // Import the new client component
 
-import { useState, useEffect } from "react"
-import LoginView from "@/components/auth/login-view"
-import RegistrationView from "@/components/auth/registration-view"
-import MainAppView from "@/components/main-app-view"
-import type { User } from "@/types/user"
+// Component phải là `async` để có thể dùng `await`
+export default async function MyDataPage() {
+  // Tạo Supabase client phía server. Nó sẽ tự động truy cập cookies.
+  const supabase = createClient();
+  
+  // Fetch user session from Supabase on the server
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  let initialUser: User | null = null;
 
-export default function Home() {
-    const [currentView, setCurrentView] = useState<"login" | "registration" | "main">("login")
-    const [currentUser, setCurrentUser] = useState<User | null>(null)
+  if (session && session.user) {
+    // Map Supabase user to your User type if necessary
+    initialUser = {
+      id: session.user.id,
+      email: session.user.email ?? '',
+      role: session.user.user_metadata?.role ?? 'user', // Assuming role is in user_metadata
+      // Add other properties from Supabase user to your User type
+    };
+  }
 
-    useEffect(() => {
-        // Check if user is already logged in
-        const loggedInUserJSON = sessionStorage.getItem("currentUser");
-        if (loggedInUserJSON) {
-            try {
-                const user = JSON.parse(loggedInUserJSON);
-                setCurrentUser(user);
-                setCurrentView("main");
-            } catch (error) {
-                console.error("Failed to parse user from sessionStorage:", error);
-                // Optionally clear the corrupted item to prevent future errors
-                sessionStorage.removeItem("currentUser");
-            }
-        }
-    }, []);
+  if (sessionError) {
+    console.error('Lỗi khi lấy session từ Supabase:', sessionError);
+    // Handle error: redirect to login or show a generic error
+    // return <Redirect to="/login" />; // Example of redirecting to login
+  }
 
-    const handleLogin = (user: User) => {
-        setCurrentUser(user)
-        sessionStorage.setItem("currentUser", JSON.stringify(user))
-        setCurrentView("main")
-    }
+  // You can also fetch other data here if needed for the initial render
+  // const { data: someOtherData, error: someOtherError } = await supabase.from('your_table').select('*');
 
-    const handleLogout = () => {
-        setCurrentUser(null)
-        sessionStorage.removeItem("currentUser")
-        setCurrentView("login")
-    }
-
-    const handleRegistration = () => {
-        setCurrentView("login")
-    }
-
-    return (
-        <main className="min-h-screen bg-background">
-            {currentView === "login" && (
-                <LoginView onLogin={handleLogin} onShowRegister={() => setCurrentView("registration")} />
-            )}
-
-            {currentView === "registration" && (
-                <RegistrationView onRegistrationSuccess={handleRegistration} onShowLogin={() => setCurrentView("login")} />
-            )}
-
-            {currentView === "main" && currentUser && <MainAppView currentUser={currentUser} onLogoutAction={handleLogout} />}
-        </main>
-    )
+  // Pass the initial user (or other server-fetched data) to the client component
+  return (
+    <AuthFlowClient initialUser={initialUser} />
+  );
 }

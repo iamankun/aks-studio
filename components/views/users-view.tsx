@@ -48,10 +48,7 @@ export default function UsersView() {
             <div className="space-y-3">
               {usersList.map((user: User) => (
                 <div key={user.id} className="flex items-center space-x-4 p-3 bg-gray-700 rounded-lg">
-                  <img
-                    src={
-                      user.avatar ||
-                      `https://placehold.co/40x40/8b5cf6/FFFFFF?text=${user.username.substring(0, 1).toUpperCase()}`
+                  <img src={user.avatar ?? `/face.png?text=${user.username.substring(0, 1).toUpperCase()}`
                     }
                     alt={user.username}
                     className="w-10 h-10 rounded-full object-cover"

@@ -19,7 +19,7 @@ function toFileItem(supabaseFile: any, basePathParts: string[]): FileItem {
   } // Thêm các loại khác nếu cần
 
   return {
-    id: supabaseFile.id || supabaseFile.name, // Dùng name làm id cho folder nếu id null
+    id: supabaseFile.id ?? supabaseFile.name, // Dùng name làm id cho folder nếu id null
     name: supabaseFile.name,
     type: fileType,
     size: supabaseFile.metadata?.size ? formatFileSize(supabaseFile.metadata.size) : '', // Cần hàm formatFileSize

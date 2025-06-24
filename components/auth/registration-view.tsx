@@ -6,8 +6,6 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertModal } from "@/components/modals/alert-modal"
 import { Disc3 } from "lucide-react"
-import { loadUsersFromLocalStorage, saveUsersToLocalStorage } from "@/lib/data"
-import type { User } from "@/types/user"
 
 interface RegistrationViewProps {
   onRegistrationSuccess: () => void

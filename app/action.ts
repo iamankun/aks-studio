@@ -14,7 +14,7 @@ interface SongInputData {
 // Sử dụng biến môi trường đúng cho aksstudio
 export async function getData() {
   // Tôi là An Kun
-  const sql = neon(process.env.DATABASE_URL ?? process.env.aksstudio_POSTGRES_URL!, { // Ưu tiên DATABASE_URL chuẩn
+  const sql = neon(process.env.NEXT_PUBLIC_SUPABASE_URL  ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { // Ưu tiên DATABASE_URL chuẩn
     disableWarningInBrowsers: true
   })
   const data = await sql`SELECT 1`

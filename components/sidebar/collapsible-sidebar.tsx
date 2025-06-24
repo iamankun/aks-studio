@@ -3,8 +3,6 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import type { User } from "@/types/user"
-import { neon } from '@neondatabase/serverless';
-import { createClient } from '@supabase/supabase-js'
 import {
   Music,
   Upload,
@@ -20,15 +18,15 @@ import {
   Menu,
   X,
 } from "lucide-react"
+import { createClient } from "@/ultis/supabase/client"
 
 interface SidebarProps {
   currentUser: User
   currentView: string
   onViewChange: (view: string) => void
-  onLogout: () => void
 }
 
-export function CollapsibleSidebar({ currentUser, currentView, onViewChange, onLogout }: SidebarProps) {
+export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
@@ -63,10 +61,19 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange, onL
     setCollapsed(!collapsed)
   }
 
+  // Hàm xử lý đăng xuất
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+  }
+
   return (
     <>
       {/* Mobile toggle button */}
-      <button onClick={toggleSidebar} className="sidebar-toggle">
+      <button onClick={toggleSidebar}
+      className="fixed md:hidden z-50 top-4 left-4 p-2 rounded-full bg-gray-800 text-white shadow-lg sidebar-toggle"
+      aria-label={collapsed ? "Mở menu" : "Đóng menu"}
+    >
         {collapsed ? <Menu /> : <X />}
       </button>
 
@@ -170,7 +177,7 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange, onL
               className={`w-full ${
                 collapsed ? "justify-center px-0" : "justify-start"
               } text-red-400 hover:text-red-300 hover:bg-red-900/20 font-dosis-medium`}
-              onClick={onLogout}
+              onClick={handleLogout}
             >
               <LogOut className={`h-4 w-4 ${collapsed ? "" : "mr-3"}`} />
               {!collapsed && "Logout"}

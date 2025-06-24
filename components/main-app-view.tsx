@@ -11,17 +11,15 @@ import MyProfileView from "@/components/views/my-profile-view"
 import SettingsView from "@/components/views/settings-view"
 import { Footer } from "@/components/footer"
 import { NotificationSystem, type NotificationData } from "@/components/notification-system"
-// import { loadSubmissionsFromLocalStorage, saveSubmissionsToLocalStorage } from "@/lib/data" // Không dùng localStorage nữa
 import { SuccessAnimation } from "@/components/animations/success-animation"
 import type { User } from "@/types/user"
 import type { Submission, SubmissionStatus } from "@/types/submission"
 
 interface MainAppViewProps {
   currentUser: User
-  onLogoutAction: () => void // Tôi là An Kun
 }
 
-export default function MainAppView({ currentUser, onLogoutAction }: MainAppViewProps) {
+export default function MainAppView({ currentUser }: MainAppViewProps) {
   const [currentView, setCurrentView] = useState("submissions")
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [notifications, setNotifications] = useState<NotificationData[]>([])
@@ -41,11 +39,11 @@ export default function MainAppView({ currentUser, onLogoutAction }: MainAppView
           setSubmissions(result.data);
         } else {
           console.error("Failed to load submissions:", result.message);
-          showModal("Lỗi tải Submissions", [result.message ?? "Không thể tải dữ liệu submissions từ server."], "error");
+          showNotification("Lỗi tải Submissions", [result.message ?? "Không thể tải dữ liệu submissions từ server."], "error");
         }
       } catch (error) {
         console.error("Error fetching submissions:", error);
-        showModal("Lỗi kết nối", ["Không thể kết nối đến server để tải submissions."], "error");
+        showNotification("Lỗi kết nối", ["Không thể kết nối đến server để tải submissions."], "error");
       }
     };
     fetchSubmissions();
@@ -67,7 +65,7 @@ export default function MainAppView({ currentUser, onLogoutAction }: MainAppView
     return () => window.removeEventListener('showGlobalNotification', handleGlobalNotification as EventListener);
   }, [])
 
-  const showModal = (title: string, messages: string[], type: "error" | "success" = "error") => {
+  const showNotification = (title: string, messages: string[], type: "error" | "success" = "error") => {
     const notification: NotificationData = {
       id: Date.now().toString(),
       type: type,
@@ -83,13 +81,21 @@ export default function MainAppView({ currentUser, onLogoutAction }: MainAppView
     setNotifications((prev) => prev.filter((n) => n.id !== id))
   }
 
-  const handleSubmissionAdded = (submission: Submission) => {
+  const handleSubmissionAdded = async (submission: Submission) => {
     const updatedSubmissions = [...submissions, submission]
     setSubmissions(updatedSubmissions)
-    // saveSubmissionsToLocalStorage(updatedSubmissions) // Không lưu vào localStorage nữa
-    // Thay vào đó, bạn có thể cần một API để POST submission mới lên DB
-    // và sau đó fetch lại danh sách hoặc chỉ cần cập nhật UI tạm thời.
-    // Ví dụ đơn giản là cập nhật UI:
+
+    // Gửi submission mới lên server
+    try {
+      const response = await fetch('/api/submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submission),
+      });
+      // Bạn có thể xử lý kết quả response ở đây nếu cần
+    } catch (error) {
+      showNotification("Lỗi", ["Không thể gửi submission lên server."], "error");
+    }
 
     // Show success animation with the new submission data
     setSuccessData({
@@ -104,15 +110,23 @@ export default function MainAppView({ currentUser, onLogoutAction }: MainAppView
     }, 5000)
   }
 
-  const handleUpdateStatus = (submissionId: string, newStatus: string) => {
+  const handleUpdateStatus = async (submissionId: string, newStatus: string) => {
     const updatedSubmissions = submissions.map((sub) =>
       sub.id === submissionId ? { ...sub, status: newStatus as SubmissionStatus } : sub
     )
     setSubmissions(updatedSubmissions)
-    // saveSubmissionsToLocalStorage(updatedSubmissions) // Không lưu vào localStorage nữa
-    // Tương tự, cần API để cập nhật status trong DB.
-    // Sau đó có thể fetch lại hoặc cập nhật UI.
-    showModal("Cập nhật trạng thái", [`Đã cập nhật trạng thái thành: ${newStatus}`], "success")
+
+    // Gửi yêu cầu cập nhật status lên server
+    try {
+      await fetch(`/api/submissions/${submissionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+    } catch (error) {
+      showNotification("Lỗi", [`Không thể cập nhật status cho submission ${submissionId}.`], "error");
+    }
+    showNotification("Cập nhật trạng thái", [`Đã cập nhật trạng thái thành: ${newStatus}`], "success")
   }
 
   const renderCurrentView = () => {
@@ -124,23 +138,23 @@ export default function MainAppView({ currentUser, onLogoutAction }: MainAppView
           currentUser={currentUser}
           viewType={viewType}
           onUpdateStatus={handleUpdateStatus}
-          showModal={showModal}
+          showModal={showNotification}
         />
       )
     }
     switch (currentView) {
       case "upload":
         return (
-          <UploadFormView currentUser={currentUser} onSubmissionAddedAction={handleSubmissionAdded} showModalAction={showModal} />
+          <UploadFormView currentUser={currentUser} onSubmissionAddedAction={handleSubmissionAdded} showModalAction={showNotification} />
         )
       case "users":
         return <UsersView />
       case "admin":
-        return <AdminPanelView currentUser={currentUser} showModal={showModal} />
+        return <AdminPanelView currentUser={currentUser} showModal={showNotification} />
       case "email":
-        return <EmailCenterView showModal={showModal} />
+        return <EmailCenterView showModal={showNotification} />
       case "profile":
-        return <MyProfileView currentUser={currentUser} showModal={showModal} />
+        return <MyProfileView currentUser={currentUser} showModal={showNotification} />
       case "settings":
         return <SettingsView currentUser={currentUser} />
       default:
@@ -154,7 +168,6 @@ export default function MainAppView({ currentUser, onLogoutAction }: MainAppView
         currentUser={currentUser}
         currentView={currentView}
         onViewChange={setCurrentView}
-        onLogout={onLogoutAction}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
         <main className="flex-1 overflow-auto">{renderCurrentView()}</main>

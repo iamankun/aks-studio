@@ -2,8 +2,6 @@
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import type { User } from "@/types/user"
-import { neon } from '@neondatabase/serverless';
-import { createClient } from '@supabase/supabase-js'
 import { Music, Upload, Users, Settings, UserIcon, Mail, Shield, LogOut, FileText } from "lucide-react"
 
 interface SidebarProps {

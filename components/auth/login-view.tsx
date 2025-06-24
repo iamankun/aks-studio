@@ -7,38 +7,44 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertModal } from "@/components/modals/alert-modal"
-import type { User } from "@/types/user"
-import { loginUser } from "@/lib/data"
-import { Disc3 } from 'lucide-react';
+import { Disc3, LogOut } from 'lucide-react';
 import { useSystemStatus } from "@/components/system-status-provider"
+import { createClient } from "@/ultis/supabase/client"
 
 interface LoginViewProps {
-  onLogin: (user: User) => void
   onShowRegister: () => void
 }
 
-export default function LoginView({ onLogin, onShowRegister }: LoginViewProps) {
+export default function LoginView({ onShowRegister }: LoginViewProps) {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMessage, setModalMessage] = useState<string[]>([])
   const [modalTitle, setModalTitle] = useState("")
   const [modalType, setModalType] = useState<"success" | "error">("error")
+  const [isLoading, setIsLoading] = useState(false)
   const { status } = useSystemStatus()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
+    const supabase = createClient()
+    // Supabase mặc định sử dụng email để đăng nhập.
+    // Bạn cần đảm bảo người dùng nhập email vào ô "Tên đăng nhập".
+    const { error } = await supabase.auth.signInWithPassword({
+      email: username,
+      password: password,
+    })
 
-    // Hàm loginUser đã xử lý việc tìm người dùng trong localStorage
-    const foundUser = loginUser(username, password)
-    if (foundUser) {
-      onLogin(foundUser)
-    } else {
+    setIsLoading(false)
+    if (error) {
       setModalTitle("Đăng nhập thất bại")
-      setModalMessage(["Sai tên đăng nhập hoặc mật khẩu."])
+      setModalMessage([error.message])
       setIsModalOpen(true)
       setPassword("")
     }
+      // Khi đăng nhập thành công, trình lắng nghe onAuthStateChange trong AuthFlowClient sẽ xử lý việc chuyển view.
+
   }
 
   return (
@@ -114,15 +120,15 @@ export default function LoginView({ onLogin, onShowRegister }: LoginViewProps) {
               </div>
             </div>
 
-            <Button type="submit" className="w-full rounded-full bg-purple-600 hover:bg-purple-700 font-dosis-medium">
-              <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Đăng nhập
+            <Button type="submit" disabled={isLoading} className="w-full rounded-full bg-purple-600 hover:bg-purple-700 font-dosis-medium flex items-center justify-center">
+              {isLoading ? (
+                <Disc3 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <LogOut className="h-5 w-5 mr-2 transform -scale-x-100" />
+                  <span>Đăng nhập</span>
+                </>
+              )}
             </Button>
 
             <div className="mt-4 p-3 bg-gray-700/50 rounded-lg">

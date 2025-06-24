@@ -29,7 +29,7 @@ interface AdminPanelViewProps {
   currentUser: User
 }
 
-export function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) {
+export default function AdminPanelView({ showModal, currentUser }: AdminPanelViewProps) {
   const [submissionsList, setSubmissionsList] = useState<Submission[]>([])
   const [storageStats, setStorageStats] = useState({
     totalFiles: 0,

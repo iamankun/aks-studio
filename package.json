@@ -10,6 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@auth/core": "latest",
     "@hookform/resolvers": "3.9.0",
     "@neondatabase/serverless": "latest",
     "@radix-ui/react-accordion": "latest",
@@ -57,6 +58,7 @@
     "input-otp": "latest",
     "lucide-react": "^0.454.0",
     "next": "15.2.4",
+    "next-auth": "latest",
     "next-themes": "latest",
     "nodemailer": "latest",
     "react": "^19",
@@ -73,7 +75,7 @@
     "vaul": "latest",
     "vue": "latest",
     "vue-router": "latest",
-    "zod": "3.25.67"
+    "zod": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { SoundSystem } from "@/components/sound-system"
 import { BackgroundSystem } from "@/components/background-system"
 import { SystemStatusProvider } from "@/components/system-status-provider"
+import { AuthProvider } from "@/components/auth-provider"
 
 interface ClientWrapperProps {
   children: React.ReactNode
@@ -23,9 +24,11 @@ export function ClientWrapper({ children }: ClientWrapperProps) {
 
   return (
     <SystemStatusProvider>
-      <BackgroundSystem />
-      <div className="relative z-10">{children}</div>
-      <SoundSystem />
+      <AuthProvider>
+        <BackgroundSystem />
+        <div className="relative z-10">{children}</div>
+        <SoundSystem />
+      </AuthProvider>
     </SystemStatusProvider>
   )
 }

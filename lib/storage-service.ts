@@ -1,5 +1,4 @@
-import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3"
-import { s3Client, STORAGE_BUCKETS, getStorageUrl, getS3Key } from "./supabase-config"
+import { STORAGE_BUCKETS, getStorageUrl, getS3Key, initializeS3Client } from "./supabase-config"
 
 export interface UploadResult {
   success: boolean
@@ -8,14 +7,32 @@ export interface UploadResult {
   error?: string
 }
 
-// Upload file to S3 storage
+// Upload file to S3 storage (server-side only)
 export async function uploadFileToStorage(
   file: File,
   bucket: keyof typeof STORAGE_BUCKETS,
   path: string,
 ): Promise<UploadResult> {
   try {
+    // Only run on server side
+    if (typeof window !== "undefined") {
+      return {
+        success: false,
+        error: "File upload must be done on server side",
+      }
+    }
+
     console.log("🔍 Uploading file:", { fileName: file.name, bucket, path })
+
+    const s3Client = await initializeS3Client()
+    if (!s3Client) {
+      return {
+        success: false,
+        error: "S3 Client not available",
+      }
+    }
+
+    const { PutObjectCommand } = await import("@aws-sdk/client-s3")
 
     const bucketName = STORAGE_BUCKETS[bucket]
     const key = getS3Key(bucketName, path)
@@ -53,9 +70,21 @@ export async function uploadFileToStorage(
   }
 }
 
-// Delete file from storage
+// Delete file from storage (server-side only)
 export async function deleteFileFromStorage(bucket: keyof typeof STORAGE_BUCKETS, path: string): Promise<boolean> {
   try {
+    // Only run on server side
+    if (typeof window !== "undefined") {
+      return false
+    }
+
+    const s3Client = await initializeS3Client()
+    if (!s3Client) {
+      return false
+    }
+
+    const { DeleteObjectCommand } = await import("@aws-sdk/client-s3")
+
     const bucketName = STORAGE_BUCKETS[bucket]
 
     const command = new DeleteObjectCommand({

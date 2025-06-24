@@ -1,32 +1,56 @@
 "use client"
 
-import type React from "react"
-import { useSession, signOut } from "next-auth/react"
-import { useRouter } from "next/router"
-import AdminPanelView from "@/components/views/admin-panel-view"
+import { useState } from "react"
+import { Sidebar } from "./sidebar/sidebar"
+import { UploadFormView } from "./upload-form-view"
+import { SubmissionsView } from "./views/submissions-view"
+import { MyProfileView } from "./views/my-profile-view"
+import { SettingsView } from "./views/settings-view"
+import { UsersView } from "./views/users-view"
+import { AdminPanelView } from "./views/admin-panel-view"
+import { EmailCenterView } from "./views/email-center-view"
+import { DynamicBackground } from "./dynamic-background"
+import { NotificationSystem } from "./notification-system"
+import { SoundSystem } from "./sound-system"
 
-const MainAppView: React.FC = () => {
-  const { data: session } = useSession()
-  const router = useRouter()
+interface MainAppViewProps {
+  user: any
+  onLogout: () => void
+}
 
-  if (!session) {
-    router.push("/login")
-    return null
-  }
+export function MainAppView({ user, onLogout }: MainAppViewProps) {
+  const [activeView, setActiveView] = useState("upload")
 
-  const handleSignOut = async () => {
-    await signOut()
-    router.push("/login")
+  const renderView = () => {
+    switch (activeView) {
+      case "upload":
+        return <UploadFormView />
+      case "submissions":
+        return <SubmissionsView />
+      case "profile":
+        return <MyProfileView />
+      case "settings":
+        return <SettingsView />
+      case "users":
+        return user?.role === "Label Manager" ? <UsersView /> : <div>Access Denied</div>
+      case "admin":
+        return user?.role === "Label Manager" ? <AdminPanelView /> : <div>Access Denied</div>
+      case "email":
+        return user?.role === "Label Manager" ? <EmailCenterView /> : <div>Access Denied</div>
+      default:
+        return <UploadFormView />
+    }
   }
 
   return (
-    <div>
-      <h1>Welcome, {session.user?.name}!</h1>
-      <p>Email: {session.user?.email}</p>
-      <button onClick={handleSignOut}>Sign Out</button>
-      {session?.user?.email === "admin@example.com" && <AdminPanelView />}
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+      <DynamicBackground user={user} />
+      <div className="flex">
+        <Sidebar user={user} activeView={activeView} onViewChange={setActiveView} onLogout={onLogout} />
+        <main className="flex-1 p-6">{renderView()}</main>
+      </div>
+      <NotificationSystem />
+      <SoundSystem />
     </div>
   )
 }
-
-export default MainAppView

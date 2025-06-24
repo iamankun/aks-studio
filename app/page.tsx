@@ -1,38 +1,89 @@
-import { cookies } from 'next/headers'; // Import cookies from next/headers
-import type { User } from "@/types/user";
-import { createClient } from '@/ultis/supabase/server'; // Đảm bảo đường dẫn đúng
-import AuthFlowClient from "@/components/auth-flow-client"; // Import the new client component
+"use client"
 
-// Component phải là `async` để có thể dùng `await`
-export default async function MyDataPage() {
-  // Tạo Supabase client phía server. Nó sẽ tự động truy cập cookies.
-  const supabase = createClient();
-  
-  // Fetch user session from Supabase on the server
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  let initialUser: User | null = null;
+import { useState, useEffect } from "react"
+import { AuthFlowClient } from "@/components/auth-flow-client"
+import { MainAppView } from "@/components/main-app-view"
 
-  if (session && session.user) {
-    // Map Supabase user to your User type if necessary
-    initialUser = {
-      id: session.user.id,
-      email: session.user.email ?? '',
-      role: session.user.user_metadata?.role ?? 'user', // Assuming role is in user_metadata
-      // Add other properties from Supabase user to your User type
-    };
+export default function HomePage() {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Kiểm tra localStorage cho session
+    try {
+      const savedUser = localStorage.getItem("aks_user")
+      if (savedUser) {
+        setUser(JSON.parse(savedUser))
+      }
+    } catch (error) {
+      console.error("Error loading user:", error)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const handleLogin = async (username: string, password: string) => {
+    try {
+      setLoading(true)
+
+      // Fallback authentication - chỉ 1 tài khoản
+      if (username === "ankunstudio" && password === "admin") {
+        const userData = {
+          id: "1",
+          username: "ankunstudio",
+          role: "Label Manager",
+          full_name: "An Kun Studio Digital Music Distribution",
+          email: "admin@ankun.dev",
+          avatar_url: "/face.png",
+          bio: "Digital Music Distribution Platform",
+          social_links: {
+            facebook: "",
+            youtube: "",
+            spotify: "",
+            appleMusic: "",
+            tiktok: "",
+            instagram: "",
+          },
+          created_at: new Date().toISOString(),
+          background_settings: {
+            type: "video",
+            gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            video_url: "",
+            opacity: 0.3,
+            playlist: "PLrAKWdKgX5mxuE6w5DAR5NEeQrwunsSeO",
+          },
+        }
+
+        localStorage.setItem("aks_user", JSON.stringify(userData))
+        setUser(userData)
+        return { success: true }
+      } else {
+        return { success: false, message: "Invalid credentials" }
+      }
+    } catch (error) {
+      console.error("Login error:", error)
+      return { success: false, message: "Login failed" }
+    } finally {
+      setLoading(false)
+    }
   }
 
-  if (sessionError) {
-    console.error('Lỗi khi lấy session từ Supabase:', sessionError);
-    // Handle error: redirect to login or show a generic error
-    // return <Redirect to="/login" />; // Example of redirecting to login
+  const handleLogout = () => {
+    localStorage.removeItem("aks_user")
+    setUser(null)
   }
 
-  // You can also fetch other data here if needed for the initial render
-  // const { data: someOtherData, error: someOtherError } = await supabase.from('your_table').select('*');
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="text-white text-xl">Đang tải...</div>
+      </div>
+    )
+  }
 
-  // Pass the initial user (or other server-fetched data) to the client component
-  return (
-    <AuthFlowClient initialUser={initialUser} />
-  );
+  if (!user) {
+    return <AuthFlowClient onLogin={handleLogin} />
+  }
+
+  return <MainAppView user={user} onLogout={handleLogout} />
 }

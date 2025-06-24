@@ -1,9 +1,11 @@
+import type React from "react"
 import "./globals.css"
 import type { Metadata } from "next"
 import { ClientWrapper } from "@/components/client-wrapper"
 import { Dosis } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
+
 // Initialize the Dosis font with proper subsets
 const dosis = Dosis({
   subsets: ["latin", "latin-ext", "vietnamese"], // Added vietnamese and latin-ext for broader character support
@@ -20,6 +22,7 @@ export const metadata: Metadata = {
   },
   generator: "ankun.dev",
 }
+
 export default function RootLayout({
   children,
 }: Readonly<{

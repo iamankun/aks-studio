@@ -67,6 +67,12 @@ export default function RegistrationView({ onSwitchToLogin }: RegistrationViewPr
     setIsLoading(true)
 
     try {
+      console.log("🔍 Registration attempt:", {
+        username: formData.username,
+        email: formData.email,
+        full_name: formData.fullName,
+      })
+
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
@@ -81,8 +87,9 @@ export default function RegistrationView({ onSwitchToLogin }: RegistrationViewPr
       })
 
       const data = await response.json()
+      console.log("🔍 Registration response:", data)
 
-      if (response.ok) {
+      if (data.success) {
         setSuccess(true)
         setTimeout(() => {
           onSwitchToLogin()
@@ -91,7 +98,7 @@ export default function RegistrationView({ onSwitchToLogin }: RegistrationViewPr
         setError(data.message || "Đã xảy ra lỗi khi đăng ký")
       }
     } catch (error) {
-      console.error("Registration error:", error)
+      console.error("🚨 Registration error:", error)
       setError("Đã xảy ra lỗi kết nối")
     } finally {
       setIsLoading(false)
@@ -101,12 +108,15 @@ export default function RegistrationView({ onSwitchToLogin }: RegistrationViewPr
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-        {/* Video Background */}
+        {/* YouTube Video Background */}
         <div className="absolute inset-0 z-0">
-          <video autoPlay muted loop playsInline className="w-full h-full object-cover">
-            <source src="/videos/auth-bg.webm" type="video/webm" />
-            <source src="/videos/auth-bg.mp4" type="video/mp4" />
-          </video>
+          <iframe
+            src="https://www.youtube.com/embed/videoseries?list=PLrAKWdKgX5mxuE6w5DAR5NEeQrwunsSeO&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1"
+            className="absolute top-1/2 left-1/2 w-[177.77777778vh] h-[56.25vw] min-h-full min-w-full transform -translate-x-1/2 -translate-y-1/2"
+            style={{ opacity: 0.3 }}
+            allow="autoplay; encrypted-media"
+            allowFullScreen={false}
+          />
           <div className="absolute inset-0 bg-black/50" />
         </div>
 
@@ -127,12 +137,15 @@ export default function RegistrationView({ onSwitchToLogin }: RegistrationViewPr
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* Video Background */}
+      {/* YouTube Video Background */}
       <div className="absolute inset-0 z-0">
-        <video autoPlay muted loop playsInline className="w-full h-full object-cover">
-          <source src="/videos/auth-bg.webm" type="video/webm" />
-          <source src="/videos/auth-bg.mp4" type="video/mp4" />
-        </video>
+        <iframe
+          src="https://www.youtube.com/embed/videoseries?list=PLrAKWdKgX5mxuE6w5DAR5NEeQrwunsSeO&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1"
+          className="absolute top-1/2 left-1/2 w-[177.77777778vh] h-[56.25vw] min-h-full min-w-full transform -translate-x-1/2 -translate-y-1/2"
+          style={{ opacity: 0.3 }}
+          allow="autoplay; encrypted-media"
+          allowFullScreen={false}
+        />
         <div className="absolute inset-0 bg-black/50" />
       </div>
 

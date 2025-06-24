@@ -1,41 +1,87 @@
-// Ví dụ: c:\Users\admin\aksstudio\app\api\submissions\route.ts
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import type { Submission } from '@/types/submission'; // Đảm bảo type này khớp với DB
+import { NextResponse } from "next/server"
 
-// Khởi tạo Supabase client (sử dụng service role key để có toàn quyền truy cập DB từ server)
-// Bạn nên lưu các key này trong biến môi trường phía server, không phải NEXT_PUBLIC_
-
-export async function GET(request: Request) {
-  const supabaseUrl = process.env.aksstudio_SUPABASE_URL;
-  const supabaseServiceKey = process.env.aksstudio_SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseServiceKey) {
-    console.error('Supabase URL or Service Key is not defined in environment variables.');
-    return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Lỗi cấu hình server: Supabase URL hoặc Service Key không được định nghĩa.', 
-        error: 'Missing Supabase credentials on the server.' 
-      },
-      { status: 500 }
-    );
-  }
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+export async function GET() {
   try {
-    const { data, error } = await supabase
-      .from('submissions') // Tên bảng submissions của bạn
-      .select('*')
-      .order('created_at', { ascending: false }); // Sử dụng cột 'created_at' hoặc tên cột ngày tháng đúng của bạn
+    // Check if Supabase is configured
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
 
-    if (error) {
-      console.error('Error fetching submissions:', error);
-      return NextResponse.json({ success: false, message: 'Lỗi lấy dữ liệu submissions.', error: error.message }, { status: 500 });
+    if (!supabaseUrl || !supabaseServiceKey) {
+      // Fallback to localStorage data (return empty array for server-side)
+      return NextResponse.json({
+        success: true,
+        data: [],
+        message: "Supabase not configured, using client-side storage",
+      })
     }
 
-    return NextResponse.json({ success: true, data: data as Submission[] });
-  } catch (error: any) {
-    console.error('API Error fetching submissions:', error);
-    return NextResponse.json({ success: false, message: 'Lỗi server khi lấy submissions.', error: error.message }, { status: 500 });
+    // Continue with existing Supabase logic...
+    const { createClient } = require("@supabase/supabase-js")
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    const { data, error } = await supabase.from("submissions").select("*").order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("Supabase error:", error)
+      return NextResponse.json({
+        success: false,
+        message: `Lỗi database: ${error.message}`,
+        data: [],
+      })
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: data || [],
+      message: "Submissions loaded successfully",
+    })
+  } catch (error) {
+    console.error("API Error:", error)
+    return NextResponse.json({
+      success: false,
+      message: "Lỗi server không xác định",
+      data: [],
+    })
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return NextResponse.json({
+        success: true,
+        message: "Submission saved locally (Supabase not configured)",
+      })
+    }
+
+    // Continue with existing Supabase logic for POST...
+    const body = await request.json()
+    const { createClient } = require("@supabase/supabase-js")
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    const { data, error } = await supabase.from("submissions").insert([body]).select()
+
+    if (error) {
+      console.error("Supabase error:", error)
+      return NextResponse.json({
+        success: false,
+        message: `Lỗi lưu database: ${error.message}`,
+      })
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: data?.[0],
+      message: "Submission saved successfully",
+    })
+  } catch (error) {
+    console.error("API Error:", error)
+    return NextResponse.json({
+      success: false,
+      message: "Lỗi server không xác định",
+    })
   }
 }

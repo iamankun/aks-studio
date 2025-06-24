@@ -30,26 +30,52 @@ import {
   Trash2,
   FileText,
   Mail,
-} from "lucide-react";
-import { generateISRC, validateImageFile, validateAudioFile, getMinimumReleaseDate } from "@/lib/utils";
+} from "lucide-react"
+import { generateISRC, validateImageFile, validateAudioFile, getMinimumReleaseDate } from "@/lib/utils"
 
 // Định nghĩa các kiểu dữ liệu cụ thể cho các trường trong form
-// Điều này giúp TypeScript hiểu rõ các giá trị hợp lệ và tránh lỗi "string is not assignable"
-type PrimaryArtistRole = "singer" | "composer" | "singersongwriter" | "rapper" | "producer" | "songwriter" | "instrumental"
+type PrimaryArtistRole =
+  | "singer"
+  | "composer"
+  | "singersongwriter"
+  | "rapper"
+  | "producer"
+  | "songwriter"
+  | "instrumental"
 type ArtistRole = "singer" | "composer" | "rapper" | "producer" | "singer-songwriter" | "instrumental"
-type MainCategory = "pop" | "singer-songwriter" | "hiphoprap" | "edm" | "rnb" | "ballad" | "acoustic" | "indie" | "other_main"
-type SubCategory = "official" | "cover" | "vpop" | "lofi" | "chill" | "trap" | "house" | "alternative" | "folk" | "other_sub"
+type MainCategory =
+  | "pop"
+  | "singer-songwriter"
+  | "hiphoprap"
+  | "edm"
+  | "rnb"
+  | "ballad"
+  | "acoustic"
+  | "indie"
+  | "other_main"
+type SubCategory =
+  | "official"
+  | "cover"
+  | "vpop"
+  | "lofi"
+  | "chill"
+  | "trap"
+  | "house"
+  | "alternative"
+  | "folk"
+  | "other_sub"
 type ReleaseType = "single" | "ep" | "lp" | "album"
 type YesNo = "yes" | "no"
 
 interface UploadFormViewProps {
-  currentUser: User;
-  onSubmissionAddedAction: (submission: Submission) => void;
-  showModalAction: (title: string, messages: string[], type?: "error" | "success") => void;
+  currentUser: User
+  onSubmissionAddedAction: (submission: Submission) => void
+  showModalAction: (title: string, messages: string[], type?: "error" | "success") => void
 }
+
 export default function UploadFormView({ currentUser, onSubmissionAddedAction, showModalAction }: UploadFormViewProps) {
   // Form state
-  const [fullName, setFullName] = useState(currentUser.fullName || "")
+  const [fullName, setFullName] = useState(currentUser.full_name || "")
   const [artistName, setArtistName] = useState(currentUser.role === "Artist" ? currentUser.username : "")
   const [artistRole, setArtistRole] = useState<ArtistRole | "">("")
   const [songTitle, setSongTitle] = useState("")
@@ -225,9 +251,12 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
         if (track.id === trackId) {
           return {
             ...track,
-            info: { // Ensure the role is a valid AdditionalArtistRole
+            info: {
               ...track.info,
-              additionalArtists: [...track.info.additionalArtists, { name: "", fullName: "", role: "featuring", percentage: 0 }],
+              additionalArtists: [
+                ...track.info.additionalArtists,
+                { name: "", fullName: "", role: "featuring", percentage: 0 },
+              ],
             },
           }
         }
@@ -274,7 +303,7 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
   }
 
   const handleReleaseTypeChange = (value: string) => {
-    setReleaseType(value as "" | ReleaseType) // Tôi là An Kun
+    setReleaseType(value as "" | ReleaseType)
 
     // If changing to single and more than 2 tracks, keep only first 2
     if (value === "single" && audioTracks.length > 2) {
@@ -362,9 +391,9 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
       imageUrl: imagePreviewUrl,
       audioFilesCount: audioTracks.length,
       submissionDate: new Date().toISOString(),
-      status: "Đã nhận, đang chờ duyệt", // This status is a string, not a specific type from SubmissionStatus
-      mainCategory: mainCategory as import("@/types/submission").MainCategory, // Tôi là An Kun
-      subCategory: subCategory as import("@/types/submission").SubCategory || undefined, // Tôi là An Kun
+      status: "Đã nhận, đang chờ duyệt",
+      mainCategory: mainCategory as import("@/types/submission").MainCategory,
+      subCategory: (subCategory as import("@/types/submission").SubCategory) || undefined,
       releaseType: releaseType as ReleaseType,
       isCopyrightOwner: isCopyrightOwner as YesNo,
       hasBeenReleased: hasBeenReleased as YesNo,
@@ -373,21 +402,32 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
       lyrics: hasLyrics === "yes" ? lyrics : undefined,
       notes: notes || undefined,
       fullName: fullName,
-      artistRole: artistRole as import("@/types/submission").ArtistPrimaryRole, // Tôi là An Kun
+      artistRole: artistRole as import("@/types/submission").ArtistPrimaryRole,
       trackInfos: audioTracks.map((track) => track.info),
       releaseDate: releaseDate,
-      additionalArtists: [], // Field is required by Submission type
+      additionalArtists: [],
     }
 
     // Add submission
     onSubmissionAddedAction(submissionData)
+
+    // Show success message
+    showModalAction(
+      "🎉 Gửi thành công!",
+      [
+        "Submission của bạn đã được gửi thành công!",
+        "Chúng tôi sẽ xem xét và phản hồi trong vòng 2 ngày làm việc.",
+        `ISRC Code: ${isrc}`,
+      ],
+      "success",
+    )
 
     // Reset form
     resetForm()
   }
 
   const resetForm = () => {
-    setFullName(currentUser.fullName ?? "")
+    setFullName(currentUser.full_name ?? "")
     setArtistName(currentUser.role === "Artist" ? currentUser.username : "")
     setArtistRole("")
     setSongTitle("")
@@ -482,15 +522,19 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
       </CardContent>
     </Card>
   )
+
   return (
     <div className="flex flex-col lg:flex-row gap-8 p-4">
+      {/* Hidden audio element for preview */}
+      <audio ref={audioRef} />
+
       <div className="flex-grow lg:w-2/3">
         <Card className="bg-gray-800 bg-opacity-80 backdrop-blur-md border border-gray-700">
           <CardContent className="p-6 md:p-10">
             <div className="text-center mb-8">
               <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 mb-3">
                 <Rocket className="inline-block mr-2" />
-                Gửi nhạc chờ sóng  - Nhanh té ghế chỉ 2 ngày
+                Gửi nhạc chờ sóng - Nhanh té ghế chỉ 2 ngày
               </h2>
               <p className="text-gray-400">Điền form zui zẻ này để nhạc bạn lên sóng nha.</p>
             </div>
@@ -499,19 +543,19 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="info" className="flex items-center gap-2">
                   <UserIcon className="h-4 w-4" />
-                  <span className="hidden sm:inline text-black-200">Thông tin</span>
+                  <span className="hidden sm:inline">Thông tin</span>
                 </TabsTrigger>
                 <TabsTrigger value="tracks" className="flex items-center gap-2">
                   <Disc3 className="h-4 w-4" />
-                  <span className="hidden sm:inline text-black-200">Tracks</span>
+                  <span className="hidden sm:inline">Tracks</span>
                 </TabsTrigger>
                 <TabsTrigger value="details" className="flex items-center gap-2">
                   <Copyright className="h-4 w-4" />
-                  <span className="hidden sm:inline text-black-200">Bản quyền</span>
+                  <span className="hidden sm:inline">Bản quyền</span>
                 </TabsTrigger>
                 <TabsTrigger value="release" className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span className="hidden sm:inline text-black-200">Phát hành</span>
+                  <span className="hidden sm:inline">Phát hành</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -561,11 +605,11 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
                           <SelectContent>
                             <SelectItem value="singer">Ca sĩ</SelectItem>
                             <SelectItem value="composer">Nhạc sĩ</SelectItem>
-                            <SelectItem value="singersongwriter">Singer-Songwriter</SelectItem>
+                            <SelectItem value="singer-songwriter">Singer-Songwriter</SelectItem>
                             <SelectItem value="rapper">Rapper</SelectItem>
                             <SelectItem value="producer">Producer</SelectItem>
                             <SelectItem value="songwriter">Người viết lời</SelectItem>
-                            <SelectItem value="instrumentalist">Nhạc công</SelectItem>
+                            <SelectItem value="instrumental">Nhạc công</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -601,7 +645,9 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
                           value={albumName}
                           onChange={(e) => setAlbumName(e.target.value)}
                           placeholder={
-                            releaseType === "single" ? "Tự động: [Tên bài hát] - Single" : "Ví dụ: Giai điệu Gen Z - Single"
+                            releaseType === "single"
+                              ? "Tự động: [Tên bài hát] - Single"
+                              : "Ví dụ: Giai điệu Gen Z - Single"
                           }
                           className="rounded-xl mt-1"
                           disabled={releaseType === "single"}
@@ -618,13 +664,16 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
                           <Label htmlFor="mainCategory" className="text-gray-300">
                             Thể Loại Chính<span className="text-red-500 font-bold ml-0.5">*</span>
                           </Label>
-                          <Select value={mainCategory} onValueChange={(value) => setMainCategory(value as "" | MainCategory)}>
+                          <Select
+                            value={mainCategory}
+                            onValueChange={(value) => setMainCategory(value as "" | MainCategory)}
+                          >
                             <SelectTrigger className="rounded-xl mt-1">
                               <SelectValue placeholder="Chọn thể loại..." />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="pop">Pop</SelectItem>
-                              <SelectItem value="singersongwriter">Singer-Songwriter</SelectItem>
+                              <SelectItem value="singer-songwriter">Singer-Songwriter</SelectItem>
                               <SelectItem value="hiphoprap">Hip Hop / Rap</SelectItem>
                               <SelectItem value="edm">EDM</SelectItem>
                               <SelectItem value="rnb">R&B / Soul</SelectItem>
@@ -640,7 +689,10 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
                           <Label htmlFor="subCategory" className="text-gray-300">
                             Thể loại phụ:
                           </Label>
-                          <Select value={subCategory} onValueChange={(value) => setSubCategory(value as "" | SubCategory)}>
+                          <Select
+                            value={subCategory}
+                            onValueChange={(value) => setSubCategory(value as "" | SubCategory)}
+                          >
                             <SelectTrigger className="rounded-xl mt-1">
                               <SelectValue placeholder="Chọn thể loại..." />
                             </SelectTrigger>
@@ -732,9 +784,7 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
                       {/* Audio Tracks List */}
                       {audioTracks.length > 0 && (
                         <div className="space-y-4 mt-6">
-                          <h4 className="text-lg font-semibold text-purple-300">
-                            Danh sách ({audioTracks.length})
-                          </h4>
+                          <h4 className="text-lg font-semibold text-purple-300">Danh sách ({audioTracks.length})</h4>
                           {audioTracks.map((track, index) => (
                             <Card key={track.id} className="bg-gray-700 border-gray-600">
                               <CardContent className="p-4">
@@ -945,21 +995,43 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
                         <Label className="text-sm font-medium text-gray-300 mb-3 block">
                           Bản quyền của bạn?<span className="text-red-500 font-bold ml-0.5">*</span>
                         </Label>
-                        <RadioGroup value={isCopyrightOwner} onValueChange={(value) => setIsCopyrightOwner(value as "" | YesNo)}>
+                        <RadioGroup
+                          value={isCopyrightOwner}
+                          onValueChange={(value) => setIsCopyrightOwner(value as "" | YesNo)}
+                        >
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="yes" id="copyright-yes" />
                             <Label htmlFor="copyright-yes" className="text-gray-300">
-                              Chính chủ! Xác nhận quyền sở hữu. Vậy tức là bạn đã đồng ý với tất cả điều khoản của chúng mình.
-                              Và quyền riêng tư bảo mật của chúng mình sẽ được áp dụng tại <br />
-                              <a href="https://ankun.dev/privacy-policy" className="text-purple-400 hover:underline">Quyền riêng tư và bảo mật</a> - <a href="https://ankun.dev/terms-and-conditions" className="text-purple-400 hover:underline">Điều khoản dịch vụ</a>
+                              Chính chủ! Xác nhận quyền sở hữu. Vậy tức là bạn đã đồng ý với tất cả điều khoản của chúng
+                              mình. Và quyền riêng tư bảo mật của chúng mình sẽ được áp dụng tại <br />
+                              <a href="https://ankun.dev/privacy-policy" className="text-purple-400 hover:underline">
+                                Quyền riêng tư và bảo mật
+                              </a>{" "}
+                              -{" "}
+                              <a
+                                href="https://ankun.dev/terms-and-conditions"
+                                className="text-purple-400 hover:underline"
+                              >
+                                Điều khoản dịch vụ
+                              </a>
                             </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="no" id="copyright-no" />
                             <Label htmlFor="copyright-no" className="text-gray-300">
-                              Không phải chính chủ! Tuy nhiên nếu bạn có giấy phép hợp lệ. Chúng tôi vẫn hỗ trợ bạn phát hành tại chúng mình. Và bạn cũng đã đồng ý với tất cả điều khoản của chúng mình.
-                              Và quyền riêng tư bảo mật của chúng mình sẽ được áp dụng tại <br />
-                              <a href="https://ankun.dev/privacy-policy" className="text-purple-400 hover:underline">Quyền riêng tư và bảo mật</a> - <a href="https://ankun.dev/terms-and-conditions" className="text-purple-400 hover:underline">Điều khoản dịch vụ</a>
+                              Không phải chính chủ! Tuy nhiên nếu bạn có giấy phép hợp lệ. Chúng tôi vẫn hỗ trợ bạn phát
+                              hành tại chúng mình. Và bạn cũng đã đồng ý với tất cả điều khoản của chúng mình. Và quyền
+                              riêng tư bảo mật của chúng mình sẽ được áp dụng tại <br />
+                              <a href="https://ankun.dev/privacy-policy" className="text-purple-400 hover:underline">
+                                Quyền riêng tư và bảo mật
+                              </a>{" "}
+                              -{" "}
+                              <a
+                                href="https://ankun.dev/terms-and-conditions"
+                                className="text-purple-400 hover:underline"
+                              >
+                                Điều khoản dịch vụ
+                              </a>
                             </Label>
                           </div>
                         </RadioGroup>
@@ -969,17 +1041,23 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
                         <Label className="text-sm font-medium text-gray-300 mb-3 block">
                           Đã từng phát hành?<span className="text-red-500 font-bold ml-0.5">*</span>
                         </Label>
-                        <RadioGroup value={hasBeenReleased} onValueChange={(value) => setHasBeenReleased(value as "" | YesNo)}>
+                        <RadioGroup
+                          value={hasBeenReleased}
+                          onValueChange={(value) => setHasBeenReleased(value as "" | YesNo)}
+                        >
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="yes" id="released-yes" />
                             <Label htmlFor="released-yes" className="text-gray-300">
-                              Nhạc đã từng phát hành (Chúng tôi chỉ hỏi để kiểm tra sản phẩm  của bạn có đang trong trạng thái Content ID trên YouTube hay không. Từ đó việc từ chối hoặc xác minh với bạn sẽ trở nên dễ dàng hơn)
+                              Nhạc đã từng phát hành (Chúng tôi chỉ hỏi để kiểm tra sản phẩm của bạn có đang trong trạng
+                              thái Content ID trên YouTube hay không. Từ đó việc từ chối hoặc xác minh với bạn sẽ trở
+                              nên dễ dàng hơn)
                             </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="no" id="released-no" />
                             <Label htmlFor="released-no" className="text-gray-300">
-                              Chưa, đây là lần đầu (Đứa con tinh thần của bạn sẽ được ra mắt trên hệ thống phân phối của chúng mình chỉ 2 ngày sau khi gửi form này)
+                              Chưa, đây là lần đầu (Đứa con tinh thần của bạn sẽ được ra mắt trên hệ thống phân phối của
+                              chúng mình chỉ 2 ngày sau khi gửi form này)
                             </Label>
                           </div>
                         </RadioGroup>
@@ -1149,7 +1227,9 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => showModalAction("Test Error", ["This is an error notification with sound!"], "error")}
+                        onClick={() =>
+                          showModalAction("Test Error", ["This is an error notification with sound!"], "error")
+                        }
                         className="text-xs"
                       >
                         ❌ Error
@@ -1215,6 +1295,5 @@ export default function UploadFormView({ currentUser, onSubmissionAddedAction, s
         </div>
       )}
     </div>
-  );
-};
-// Tôi là An Kun
+  )
+}

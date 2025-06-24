@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import type { User } from "@/types/user"
 import {
-  Music,
   Upload,
   Users,
   Settings,
@@ -30,7 +29,11 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
   const [collapsed, setCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
-  // Check if we're in a mobile viewport
+  // Debug log để kiểm tra role
+  console.log("🔍 Sidebar Debug - Current User:", currentUser)
+  console.log("🔍 Sidebar Debug - User Role:", currentUser?.role)
+  console.log("🔍 Sidebar Debug - Role Type:", typeof currentUser?.role)
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768)
@@ -44,50 +47,64 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  const menuItems = [
+  // Kiểm tra role chính xác
+  const isLabelManager = currentUser?.role === "Label Manager"
+  console.log("🔍 Sidebar Debug - Is Label Manager:", isLabelManager)
+
+  // Menu items cho Label Manager (7 items)
+  const labelManagerMenuItems = [
     { id: "submissions", label: "Submissions", icon: FileText },
     { id: "upload", label: "Upload", icon: Upload },
-    { id: "users", label: "Users", icon: Users, adminOnly: true },
-    { id: "admin", label: "Admin Panel", icon: Shield, adminOnly: true },
-    { id: "email", label: "Email Center", icon: Mail, adminOnly: true },
+    { id: "users", label: "Users", icon: Users },
+    { id: "admin", label: "Admin Panel", icon: Shield },
+    { id: "email", label: "Email Center", icon: Mail },
     { id: "profile", label: "My Profile", icon: UserIcon },
     { id: "settings", label: "Settings", icon: Settings },
   ]
 
-  const filteredMenuItems = menuItems.filter((item) => !item.adminOnly || currentUser.role === "Label Manager")
+  // Menu items cho Artist (4 items)
+  const artistMenuItems = [
+    { id: "submissions", label: "My Submissions", icon: FileText },
+    { id: "upload", label: "Upload", icon: Upload },
+    { id: "profile", label: "My Profile", icon: UserIcon },
+    { id: "settings", label: "Settings", icon: Settings },
+  ]
 
-  // Toggle sidebar (external button for mobile)
+  const menuItems = isLabelManager ? labelManagerMenuItems : artistMenuItems
+  console.log("🔍 Sidebar Debug - Menu Items Count:", menuItems.length)
+
   const toggleSidebar = () => {
     setCollapsed(!collapsed)
   }
 
-  // Hàm xử lý đăng xuất
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    const supabase = createClient()
+    await supabase.auth.signOut()
   }
 
   return (
     <>
       {/* Mobile toggle button */}
-      <button onClick={toggleSidebar}
-      className="fixed md:hidden z-50 top-4 left-4 p-2 rounded-full bg-gray-800 text-white shadow-lg sidebar-toggle"
-      aria-label={collapsed ? "Mở menu" : "Đóng menu"}
-    >
+      <button
+        onClick={toggleSidebar}
+        className="fixed md:hidden z-50 top-4 left-4 p-2 rounded-full bg-gray-800 text-white shadow-lg"
+        aria-label={collapsed ? "Mở menu" : "Đóng menu"}
+      >
         {collapsed ? <Menu /> : <X />}
       </button>
 
       <Card
-        className={`sidebar-collapse-animation h-full bg-gray-800 border-gray-700 rounded-none overflow-hidden ${
+        className={`h-full bg-gray-800 border-gray-700 rounded-none overflow-hidden transition-all duration-300 ${
           collapsed ? "w-16" : "w-64"
         }`}
       >
         <div className="p-6 h-full flex flex-col">
+          {/* Logo Section */}
           <div className={`flex items-center ${collapsed ? "justify-center" : "mb-8"}`}>
             {!collapsed ? (
               <>
-                <Music className="h-8 w-8 text-purple-500 mr-3 flex-shrink-0" />
-                <h1 className="text-xl font-dosis-bold text-white brand-text">[tenapp]</h1>
+                <img src="/Logo-An-Kun-Studio-White.png" alt="AKs Studio" className="h-8 w-auto mr-3 flex-shrink-0" />
+                <h1 className="text-xl font-dosis-bold text-white">AKs Studio</h1>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -99,7 +116,7 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
               </>
             ) : (
               <div className="flex flex-col items-center">
-                <Music className="h-8 w-8 text-purple-500" />
+                <img src="/Logo-An-Kun-Studio-White.png" alt="AKs Studio" className="h-8 w-8 object-contain" />
                 <Button
                   variant="ghost"
                   size="icon"
@@ -112,21 +129,30 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
             )}
           </div>
 
+          {/* User Info */}
           {!collapsed && (
             <div className="mb-6">
               <div className="flex items-center space-x-3">
                 <img
                   src={
-                    currentUser.avatar ||
-                    `https://placehold.co/50x50/8b5cf6/FFFFFF?text=${currentUser.username.substring(0, 1).toUpperCase()}`
+                    currentUser?.avatar_url ||
+                    `https://placehold.co/50x50/8b5cf6/FFFFFF?text=${(currentUser?.username || "U").substring(0, 1).toUpperCase()}`
                   }
-                  alt={currentUser.username}
+                  alt={currentUser?.username || "User"}
                   className="w-10 h-10 rounded-full object-cover"
                 />
                 <div>
                   <p className="text-sm text-gray-400 font-dosis-light">Welcome back,</p>
-                  <p className="text-lg font-dosis-semibold text-white">{currentUser.username}</p>
-                  <p className="text-sm text-purple-400 font-dosis">{currentUser.role}</p>
+                  <p className="text-lg font-dosis-semibold text-white">
+                    {currentUser?.full_name || currentUser?.username}
+                  </p>
+                  <p className="text-sm text-purple-400 font-dosis">
+                    {currentUser?.role} {isLabelManager && "✓"}
+                  </p>
+                  {/* Debug info */}
+                  <p className="text-xs text-gray-500">
+                    Menu: {menuItems.length} items | Admin: {isLabelManager ? "Yes" : "No"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -136,30 +162,30 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
             <div className="mb-6 flex justify-center">
               <img
                 src={
-                  currentUser.avatar ||
-                  `https://placehold.co/40x40/8b5cf6/FFFFFF?text=${currentUser.username.substring(0, 1).toUpperCase()}`
+                  currentUser?.avatar_url ||
+                  `https://placehold.co/40x40/8b5cf6/FFFFFF?text=${(currentUser?.username || "U").substring(0, 1).toUpperCase()}`
                 }
-                alt={currentUser.username}
+                alt={currentUser?.username || "User"}
                 className="w-8 h-8 rounded-full object-cover"
               />
             </div>
           )}
 
+          {/* Navigation Menu */}
           <nav className="space-y-2 flex-1">
-            {filteredMenuItems.map((item) => {
+            {menuItems.map((item) => {
               const Icon = item.icon
               return (
                 <Button
                   key={item.id}
                   variant={currentView === item.id ? "secondary" : "ghost"}
-                  className={`w-full ${
-                    collapsed ? "justify-center px-0" : "justify-start"
-                  } font-dosis-medium nav-text ${
+                  className={`w-full ${collapsed ? "justify-center px-0" : "justify-start"} font-dosis-medium ${
                     currentView === item.id
                       ? "bg-purple-600 text-white"
                       : "text-gray-300 hover:text-white hover:bg-gray-700"
                   }`}
                   onClick={() => {
+                    console.log("🔍 Sidebar Debug - Clicking menu item:", item.id)
                     onViewChange(item.id)
                     if (isMobile) setCollapsed(true)
                   }}
@@ -171,6 +197,7 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
             })}
           </nav>
 
+          {/* Logout Button */}
           <div className={`mt-8 pt-4 ${collapsed ? "" : "border-t border-gray-700"}`}>
             <Button
               variant="ghost"

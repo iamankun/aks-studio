@@ -1,165 +1,162 @@
-// Tôi là An Kun
 "use client"
 
 import type React from "react"
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import { AlertModal } from "@/components/modals/alert-modal"
-import { Disc3, LogOut } from 'lucide-react';
-import { useSystemStatus } from "@/components/system-status-provider"
-import { createClient } from "@/ultis/supabase/client"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Eye, EyeOff, LogIn, Music } from "lucide-react"
+import { authenticateUser } from "@/lib/auth-service"
+import type { User } from "@/types/user"
 
 interface LoginViewProps {
-  onShowRegister: () => void
+  onLoginSuccess: (user: User) => void
+  onSwitchToRegister: () => void
+  onSwitchToForgotPassword: () => void
 }
 
-export default function LoginView({ onShowRegister }: LoginViewProps) {
+export default function LoginView({ onLoginSuccess, onSwitchToRegister, onSwitchToForgotPassword }: LoginViewProps) {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [modalMessage, setModalMessage] = useState<string[]>([])
-  const [modalTitle, setModalTitle] = useState("")
-  const [modalType, setModalType] = useState<"success" | "error">("error")
+  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const { status } = useSystemStatus()
+  const [error, setError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    const supabase = createClient()
-    // Supabase mặc định sử dụng email để đăng nhập.
-    // Bạn cần đảm bảo người dùng nhập email vào ô "Tên đăng nhập".
-    const { error } = await supabase.auth.signInWithPassword({
-      email: username,
-      password: password,
-    })
+    setError("")
 
-    setIsLoading(false)
-    if (error) {
-      setModalTitle("Đăng nhập thất bại")
-      setModalMessage([error.message])
-      setIsModalOpen(true)
-      setPassword("")
+    try {
+      const user = await authenticateUser(username, password)
+
+      if (user) {
+        console.log("✅ Login successful:", user)
+        onLoginSuccess(user)
+      } else {
+        setError("Tên đăng nhập hoặc mật khẩu không đúng")
+      }
+    } catch (error) {
+      console.error("🚨 Login error:", error)
+      setError("Đã xảy ra lỗi khi đăng nhập")
+    } finally {
+      setIsLoading(false)
     }
-      // Khi đăng nhập thành công, trình lắng nghe onAuthStateChange trong AuthFlowClient sẽ xử lý việc chuyển view.
-
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4">
-      <Card className="w-full max-w-lg border border-gray-700 bg-gray-800/90 backdrop-blur-md">
-        <CardContent className="p-8 md:p-12">
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <Disc3 className="h-12 w-12 text-purple-500 mr-2" />
-            </div>
-            <h2 className="text-3xl font-dosis-bold text-white">Dashboard | Digital Music Distribution</h2>
-            <p className="text-gray-400 mt-2 font-dosis">Đăng nhập để quản lý âm nhạc của bạn.</p>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      {/* Video Background */}
+      <video autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover z-0">
+        <source src="/videos/auth-bg.mp4" type="video/mp4" />
+        <source src="/videos/auth-bg.webm" type="video/webm" />
+      </video>
+
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black/60 z-10" />
+
+      {/* Login Form */}
+      <Card className="w-full max-w-md mx-4 bg-gray-900/90 backdrop-blur-md border-gray-700 z-20">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <img src="/Logo-An-Kun-Studio-White.png" alt="AKs Studio" className="h-12 w-auto" />
           </div>
+          <CardTitle className="text-2xl font-bold text-white flex items-center justify-center gap-2">
+            <Music className="h-6 w-6 text-purple-400" />
+            Đăng nhập
+          </CardTitle>
+          <CardDescription className="text-gray-400">Chào mừng trở lại với AKs Studio</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <Alert className="border-red-500 bg-red-500/10">
+                <AlertDescription className="text-red-400">{error}</AlertDescription>
+              </Alert>
+            )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="username" className="block text-sm font-dosis-semibold text-gray-300 mb-1">
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-gray-300">
                 Tên đăng nhập
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                  <svg
-                    className="h-5 w-5 text-gray-500"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </span>
-                <Input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="pl-10 font-dosis"
-                  placeholder="Username"
-                />
-              </div>
+              </Label>
+              <Input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Nhập tên đăng nhập"
+                className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                required
+              />
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-dosis-semibold text-gray-300 mb-1">
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-gray-300">
                 Mật khẩu
-              </label>
+              </Label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                  <svg
-                    className="h-5 w-5 text-gray-500"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </span>
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 font-dosis"
-                  placeholder="Password"
+                  placeholder="Nhập mật khẩu"
+                  className="bg-gray-800 border-gray-600 text-white placeholder-gray-400 pr-10"
+                  required
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-white"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
               </div>
             </div>
 
-            <Button type="submit" disabled={isLoading} className="w-full rounded-full bg-purple-600 hover:bg-purple-700 font-dosis-medium flex items-center justify-center">
+            <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white" disabled={isLoading}>
               {isLoading ? (
-                <Disc3 className="h-5 w-5 animate-spin" />
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Đang đăng nhập...
+                </div>
               ) : (
-                <>
-                  <LogOut className="h-5 w-5 mr-2 transform -scale-x-100" />
-                  <span>Đăng nhập</span>
-                </>
+                <div className="flex items-center gap-2">
+                  <LogIn className="h-4 w-4" />
+                  Đăng nhập
+                </div>
               )}
             </Button>
 
-            <div className="mt-4 p-3 bg-gray-700/50 rounded-lg">
-              <p className="text-xs text-gray-400 mb-2 font-dosis">📋 Tài khoản demo:</p>
-              <div className="text-xs space-y-1 font-dosis">
-                <p className="text-green-400">• Hình như bạn chưa có tài khoản</p>
-                <p className="text-blue-400">• Vui lòng đăng ký hoặc liên hệ quản trị nếu tài khoản có vấn đề</p>
+            <div className="text-center space-y-2">
+              <Button
+                type="button"
+                variant="link"
+                className="text-purple-400 hover:text-purple-300"
+                onClick={onSwitchToForgotPassword}
+              >
+                Quên mật khẩu?
+              </Button>
+              <div className="text-gray-400">
+                Chưa có tài khoản?{" "}
+                <Button
+                  type="button"
+                  variant="link"
+                  className="text-purple-400 hover:text-purple-300 p-0"
+                  onClick={onSwitchToRegister}
+                >
+                  Đăng ký ngay
+                </Button>
               </div>
             </div>
-
-            <p className="text-center text-sm text-gray-400 font-dosis">
-              Chưa có tài khoản?
-              <Button
-                variant="link"
-                onClick={onShowRegister}
-                className="font-dosis-semibold text-purple-400 hover:text-purple-300"
-              >
-                Đăng ký tài khoản mới
-              </Button>
-            </p>
           </form>
         </CardContent>
       </Card>
-
-      <AlertModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={modalTitle}
-        messages={modalMessage}
-        type={modalType}
-      />
     </div>
   )
 }

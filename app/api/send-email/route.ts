@@ -1,58 +1,93 @@
-// Tôi là An Kun
-import nodemailer from 'nodemailer';
-import { NextResponse } from "next/server";
-import type { EmailDetails } from "@/lib/email";
-
-// Bạn cần thiết lập các biến này trong môi trường Vercel của bạn
-const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM } = process.env;
+import { NextResponse } from "next/server"
+import nodemailer from "nodemailer"
 
 export async function POST(request: Request) {
   try {
-    // Kiểm tra biến môi trường SMTP. Nếu thiếu, API sẽ không hoạt động.
-    if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
-      console.error("Lỗi nghiêm trọng: Một hoặc nhiều biến môi trường SMTP không được cấu hình.");
+    const { to, cc, bcc, subject, textBody, htmlBody } = await request.json()
+
+    // Validate required fields
+    if (!to || !subject || (!textBody && !htmlBody)) {
       return NextResponse.json(
-        { success: false, message: "Lỗi cấu hình server: Dịch vụ email không được thiết lập đúng cách." },
-        { status: 500 }
-      );
+        { success: false, message: "Missing required fields: to, subject, and body" },
+        { status: 400 },
+      )
     }
 
-    const emailDetails: EmailDetails = await request.json();
+    // Validate environment variables
+    const requiredEnvVars = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASSWORD", "SMTP_FROM", "SMTP_FROM_NAME"]
+    const missingVars = requiredEnvVars.filter((varName) => !process.env[varName])
 
-    // Kiểm tra các trường bắt buộc
-    if (!emailDetails.to || !emailDetails.subject || (!emailDetails.textBody && !emailDetails.htmlBody)) {
-      return NextResponse.json({ success: false, message: "Thiếu thông tin email bắt buộc." }, { status: 400 });
+    if (missingVars.length > 0) {
+      console.error("❌ Missing SMTP environment variables:", missingVars)
+      return NextResponse.json(
+        { success: false, message: `Missing SMTP configuration: ${missingVars.join(", ")}` },
+        { status: 500 },
+      )
     }
 
-    const transporter = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: parseInt(SMTP_PORT, 10), // Chuyển đổi sang số nguyên
-      secure: SMTP_PORT === "587", // Sử dụng SSL nếu port là 587
+    console.log("📧 Configuring SMTP with:", {
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      user: process.env.SMTP_USER,
+      from: process.env.SMTP_FROM,
+      fromName: process.env.SMTP_FROM_NAME,
+    })
+
+    // Create transporter
+    const transporter = nodemailer.createTransporter({
+      host: process.env.SMTP_HOST,
+      port: Number.parseInt(process.env.SMTP_PORT || "587"),
+      secure: false, // false for 587, true for 465
       auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
       },
-      // Thêm cấu hình TLS nếu cần, ví dụ cho một số nhà cung cấp
-      // tls: {
-      //   ciphers:'SSLv3'
-      // }
-    });
+      tls: {
+        ciphers: "SSLv3",
+      },
+    })
 
-    const mailOptions = {
-      from: emailDetails.from || SMTP_FROM || SMTP_USER, // Sử dụng from từ client hoặc default, fallback về user
-      to: emailDetails.to,
-      cc: emailDetails.cc,
-      bcc: emailDetails.bcc,
-      subject: emailDetails.subject,
-      text: emailDetails.textBody,
-      html: emailDetails.htmlBody,
-    };
+    // Verify connection
+    try {
+      await transporter.verify()
+      console.log("✅ SMTP connection verified")
+    } catch (verifyError) {
+      console.error("❌ SMTP verification failed:", verifyError)
+      return NextResponse.json({ success: false, message: "SMTP configuration error" }, { status: 500 })
+    }
 
-    await transporter.sendMail(mailOptions);
+    // Send email
+    const info = await transporter.sendMail({
+      from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM}>`,
+      to: to,
+      cc: cc || undefined,
+      bcc: bcc || undefined,
+      subject: subject,
+      text: textBody,
+      html: htmlBody || textBody,
+    })
 
-    return NextResponse.json({ success: true, message: `Email đã được gửi thành công đến ${emailDetails.to}.` });
+    console.log("✅ Email sent successfully:", {
+      messageId: info.messageId,
+      to: to,
+      subject: subject,
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: "Email sent successfully",
+      messageId: info.messageId,
+    })
   } catch (error: any) {
-    console.error("API Error sending email:", error);
-    return NextResponse.json({ success: false, message: "Lỗi gửi email từ server.", error: error.message }, { status: 500 });
+    console.error("🚨 Email sending error:", error)
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to send email",
+        error: error.message,
+      },
+      { status: 500 },
+    )
   }
 }

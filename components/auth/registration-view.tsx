@@ -1,5 +1,6 @@
-// Tôi là An Kun
-import React from "react"
+"use client"
+
+import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,48 +18,39 @@ export default function RegistrationView({ onRegistrationSuccess, onShowLogin }:
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [email, setEmail] = useState("")
+  const [fullName, setFullName] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMessage, setModalMessage] = useState<string[]>([])
   const [modalTitle, setModalTitle] = useState("")
   const [modalType, setModalType] = useState<"success" | "error">("error")
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
 
-    // Validation
     if (password !== confirmPassword) {
       setModalTitle("Lỗi đăng ký")
       setModalMessage(["Mật khẩu xác nhận không khớp."])
       setModalType("error")
       setIsModalOpen(true)
+      setIsLoading(false)
       return
     }
 
-    // Gửi dữ liệu đăng ký đến API endpoint
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, email, password }), // Chỉ gửi password dạng text
-      });
+        body: JSON.stringify({ username, email, password, full_name: fullName }),
+      })
 
-      const result = await response.json();
+      const result = await response.json()
+      setIsLoading(false)
 
       if (response.ok) {
-        // Đối với chế độ demo, chúng ta thêm người dùng mới vào localStorage để họ có thể đăng nhập.
-        // LƯU Ý QUAN TRỌNG: KHÔNG NÊN LƯU MẬT KHẨU PLAINTEXT VÀO LOCALSTORAGE.
-        // Nếu bạn muốn người dùng đăng ký qua API có thể đăng nhập, bạn cần:
-        // 1. Chuyển hàm loginUser sang server-side để so sánh mật khẩu đã hash.
-        // 2. Hoặc, nếu chỉ là demo và chấp nhận rủi ro, bạn có thể lưu mật khẩu plaintext ở đây
-        //    NHƯNG ĐIỀU NÀY KHÔNG ĐƯỢC KHUYẾN KHÍCH VÀ RẤT NGUY HIỂM TRONG THỰC TẾ.
-        // Hiện tại, tôi sẽ loại bỏ việc lưu mật khẩu plaintext vào localStorage.
-        // Người dùng đăng ký qua API sẽ không thể đăng nhập bằng hàm loginUser hiện tại.
-        // Để họ đăng nhập, bạn cần triển khai API đăng nhập và sử dụng bcrypt.compare() trên server.
-        // const currentUsers = loadUsersFromLocalStorage();
-        // saveUsersToLocalStorage([...currentUsers, newUserForLocal]);
-
         setModalTitle("Đăng ký thành công")
         setModalMessage([result.message ?? "Tài khoản đã được tạo thành công!"])
         setModalType("success")
@@ -67,16 +59,16 @@ export default function RegistrationView({ onRegistrationSuccess, onShowLogin }:
         setPassword("")
         setConfirmPassword("")
         setEmail("")
+        setFullName("")
         setTimeout(() => onRegistrationSuccess(), 2000)
-        return
       } else {
         setModalTitle("Lỗi đăng ký")
         setModalMessage([result.message ?? "Không thể tạo tài khoản."])
         setModalType("error")
         setIsModalOpen(true)
       }
-    }
-    catch (error) {
+    } catch (error) {
+      setIsLoading(false)
       setModalTitle("Lỗi đăng ký")
       setModalMessage(["Đã xảy ra lỗi kết nối. Vui lòng thử lại."])
       setModalType("error")
@@ -85,16 +77,40 @@ export default function RegistrationView({ onRegistrationSuccess, onShowLogin }:
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4">
-      <Card className="w-full max-w-lg border border-gray-700 bg-gray-800">
+    <div className="min-h-screen relative flex items-center justify-center p-4">
+      {/* Video Background */}
+      <video autoPlay muted loop className="absolute inset-0 w-full h-full object-cover opacity-30">
+        <source src="/videos/auth-bg.mp4" type="video/mp4" />
+        <source src="/videos/auth-bg.webm" type="video/webm" />
+      </video>
+
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black/60"></div>
+
+      {/* Content */}
+      <Card className="relative z-10 w-full max-w-lg border border-gray-700 bg-gray-800/90 backdrop-blur-md">
         <CardContent className="p-8 md:p-12">
           <div className="text-center mb-8">
-            <Disc3 className="h-12 w-12 text-purple-500 mx-auto mb-4" />
-            <h2 className="text-3xl font-bold text-white">Register || An Kun Studio Digital Music Distribution</h2>
+            <img src="/Logo-An-Kun-Studio-White.png" alt="AKs Studio" className="h-12 w-auto mx-auto mb-4" />
+            <h2 className="text-3xl font-bold text-white">Đăng ký tài khoản</h2>
             <p className="text-gray-400 mt-2">Tạo tài khoản mới để quản lý âm nhạc.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="fullName" className="block text-sm font-semibold text-gray-300 mb-1">
+                Họ tên đầy đủ
+              </label>
+              <Input
+                id="fullName"
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Nguyễn Văn A"
+                required
+              />
+            </div>
+
             <div>
               <label htmlFor="username" className="block text-sm font-semibold text-gray-300 mb-1">
                 Tên đăng nhập
@@ -151,13 +167,18 @@ export default function RegistrationView({ onRegistrationSuccess, onShowLogin }:
               />
             </div>
 
-            <Button type="submit" className="w-full rounded-full bg-purple-600 hover:bg-purple-700">
-              Đăng ký
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full rounded-full bg-purple-600 hover:bg-purple-700"
+            >
+              {isLoading ? <Disc3 className="h-5 w-5 animate-spin" /> : "Đăng ký"}
             </Button>
 
             <p className="text-center text-sm text-gray-400">
               Đã có tài khoản?
               <Button
+                type="button"
                 variant="link"
                 onClick={onShowLogin}
                 className="font-semibold text-purple-400 hover:text-purple-300"
@@ -179,4 +200,3 @@ export default function RegistrationView({ onRegistrationSuccess, onShowLogin }:
     </div>
   )
 }
-// Tôi là An Kun

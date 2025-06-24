@@ -75,7 +75,7 @@
     "vaul": "latest",
     "vue": "latest",
     "vue-router": "latest",
-    "zod": "latest"
+    "zod": "3.25.67"
   },
   "devDependencies": {
     "@types/node": "^22",

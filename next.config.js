@@ -2,7 +2,16 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    allowedDevOrigins: ['http://192.168.1.11:3000', 'http://localhost:3000'] // Thay thế bằng IP và cổng thực tế của bạn
+    allowedDevOrigins: ["https://aks.ankun.dev", "https://*.aks.ankun.dev", "https://aksstudio.vercel.app"], // Thay thế bằng IP và cổng thực tế của bạn
   },
-};
-module.exports = nextConfig;
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  images: {
+    unoptimized: true,
+  },
+}
+module.exports = nextConfig

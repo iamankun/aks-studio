@@ -1,168 +1,171 @@
-import { createClient } from "@/ultis/supabase/client"
-import type { User } from "@/types/user"
+import { createClient } from "@supabase/supabase-js"
 
-export async function authenticateUser(username: string, password: string): Promise<User | null> {
-  const supabase = createClient()
+// Server-side Supabase client (for API routes only)
+function createServerSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY // Server-side only
 
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return null
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey)
+}
+
+// Client-side Supabase client (for client components)
+function createClientSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return null
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey)
+}
+
+export interface User {
+  id: string
+  username: string
+  password_hash: string
+  fullname: string
+  email: string
+  avatar?: string
+  bio?: string
+  createdat?: string
+  role: "artist" | "label_manager"
+  facebook?: string
+  youtube?: string
+  spotify?: string
+  applemusic?: string
+  tiktok?: string
+  instagram?: string
+}
+
+export interface AuthResult {
+  success: boolean
+  user?: User
+  message?: string
+}
+
+// Server-side authentication (for API routes)
+export async function authenticateUserServer(username: string, password: string): Promise<AuthResult> {
   try {
-    console.log("🔍 Authenticating user:", { username, password: "***" })
+    const supabase = createServerSupabaseClient()
 
-    // Đầu tiên check bảng label_manager với exact matching
+    if (!supabase) {
+      return {
+        success: false,
+        message: "Database not configured",
+      }
+    }
+
+    // Check label_manager table first
     const { data: labelManager, error: labelError } = await supabase
       .from("label_manager")
       .select("*")
       .eq("username", username)
-      .eq("password", password)
+      .eq("password", password) // In production, use proper password hashing
       .single()
 
-    console.log("🔍 Label Manager Query Result:", { labelManager, labelError })
-
-    if (labelManager && !labelError) {
-      console.log("✅ Found Label Manager:", labelManager)
-
-      // Convert LabelManager to User format
-      const user: User = {
-        id: labelManager.id.toString(),
-        username: labelManager.username,
-        role: "Label Manager",
-        full_name: labelManager.fullname,
-        email: labelManager.email,
-        avatar_url: labelManager.avatar || "/face.png",
-        bio: labelManager.bio || "",
-        social_links: {
-          facebook: labelManager.facebook || "",
-          youtube: labelManager.youtube || "",
-          spotify: labelManager.spotify || "",
-          appleMusic: labelManager.applemusic || "",
-          tiktok: labelManager.tiktok || "",
-          instagram: labelManager.instagram || "",
+    if (!labelError && labelManager) {
+      return {
+        success: true,
+        user: {
+          ...labelManager,
+          password_hash: labelManager.password,
+          role: "label_manager" as const,
         },
-        created_at: labelManager.createdat,
       }
-
-      console.log("🔍 Converted user object:", user)
-      return user
     }
 
-    // Nếu không tìm thấy trong label_manager, check bảng users (cho Artist)
+    // Check users table for artists
     const { data: artist, error: artistError } = await supabase
       .from("users")
       .select("*")
       .eq("username", username)
+      .eq("password_hash", password) // In production, use proper password hashing
       .single()
 
-    if (artist && !artistError) {
-      console.log("✅ Found Artist:", artist)
-
-      // For artists, you might want to implement proper password hashing
-      // For now, we'll just return the artist data
+    if (!artistError && artist) {
       return {
-        id: artist.id,
-        username: artist.username,
-        role: "Artist",
-        full_name: artist.full_name,
-        email: artist.email,
-        avatar_url: artist.avatar_url,
-        bio: artist.bio,
-        social_links: artist.social_links,
-        created_at: artist.created_at,
-      }
-    }
-
-    console.log("❌ No user found with provided credentials")
-    return null
-  } catch (error) {
-    console.error("🚨 Authentication error:", error)
-    return null
-  }
-}
-
-export async function getCurrentUser(): Promise<User | null> {
-  const supabase = createClient()
-
-  try {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser()
-
-    if (error || !user) {
-      console.log("❌ No authenticated user")
-      return null
-    }
-
-    // Check if user is label manager
-    const { data: labelManager } = await supabase.from("label_manager").select("*").eq("email", user.email).single()
-
-    if (labelManager) {
-      return {
-        id: labelManager.id.toString(),
-        username: labelManager.username,
-        role: "Label Manager",
-        full_name: labelManager.fullname,
-        email: labelManager.email,
-        avatar_url: labelManager.avatar,
-        bio: labelManager.bio,
-        social_links: {
-          facebook: labelManager.facebook,
-          youtube: labelManager.youtube,
-          spotify: labelManager.spotify,
-          appleMusic: labelManager.applemusic,
-          tiktok: labelManager.tiktok,
-          instagram: labelManager.instagram,
+        success: true,
+        user: {
+          ...artist,
+          role: "artist" as const,
         },
-        created_at: labelManager.createdat,
       }
     }
 
-    // Check users table
-    const { data: artist } = await supabase.from("users").select("*").eq("id", user.id).single()
-
-    if (artist) {
-      return {
-        id: artist.id,
-        username: artist.username,
-        role: "Artist",
-        full_name: artist.full_name,
-        email: artist.email,
-        avatar_url: artist.avatar_url,
-        bio: artist.bio,
-        social_links: artist.social_links,
-        created_at: artist.created_at,
-      }
+    return {
+      success: false,
+      message: "Invalid credentials",
     }
-
-    return null
   } catch (error) {
-    console.error("🚨 Get current user error:", error)
-    return null
+    console.error("Authentication error:", error)
+    return {
+      success: false,
+      message: "Authentication failed",
+    }
   }
 }
 
-export async function registerUser(userData: Partial<User>): Promise<boolean> {
-  const supabase = createClient()
-
+// Client-side authentication (for client components)
+export async function authenticateUserClient(username: string, password: string): Promise<AuthResult> {
   try {
-    const { data, error } = await supabase.from("users").insert([
-      {
-        username: userData.username,
-        email: userData.email,
-        full_name: userData.full_name,
-        avatar_url: userData.avatar_url,
-        bio: userData.bio,
-        social_links: userData.social_links,
+    // For client-side, we'll call the API route instead of direct database access
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    ])
+      body: JSON.stringify({ username, password }),
+    })
 
-    if (error) {
-      console.error("🚨 Registration error:", error)
-      return false
-    }
-
-    console.log("✅ User registered successfully:", data)
-    return true
+    const result = await response.json()
+    return result
   } catch (error) {
-    console.error("🚨 Registration error:", error)
-    return false
+    console.error("Client authentication error:", error)
+    return {
+      success: false,
+      message: "Authentication failed",
+    }
+  }
+}
+
+// Fallback to localStorage for development
+export function authenticateUserLocal(username: string, password: string): AuthResult {
+  const defaultUsers: User[] = [
+    {
+      id: "1",
+      username: "ankunstudio",
+      password_hash: "admin",
+      fullname: "An Kun Studio Digital Music Distribution",
+      email: "admin@ankun.dev",
+      avatar: "/face.png",
+      bio: "",
+      createdat: "2025-06-24 09:54:55.895016+00",
+      role: "label_manager",
+      facebook: "",
+      youtube: "",
+      spotify: "",
+      applemusic: "",
+      tiktok: "",
+      instagram: "",
+    },
+  ]
+
+  const user = defaultUsers.find((u) => u.username === username && u.password_hash === password)
+
+  if (user) {
+    return {
+      success: true,
+      user,
+    }
+  }
+
+  return {
+    success: false,
+    message: "Invalid credentials",
   }
 }

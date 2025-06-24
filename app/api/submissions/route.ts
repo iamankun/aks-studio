@@ -2,9 +2,9 @@ import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
-    // Check if Supabase is configured
+    // Use server-side environment variables (without NEXT_PUBLIC_)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY // Server-side only
 
     if (!supabaseUrl || !supabaseServiceKey) {
       // Fallback to localStorage data (return empty array for server-side)
@@ -48,7 +48,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY // Server-side only
 
     if (!supabaseUrl || !supabaseServiceKey) {
       return NextResponse.json({

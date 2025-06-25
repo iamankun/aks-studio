@@ -21,6 +21,18 @@ interface MainAppViewProps {
 export default function MainAppView({ user, onLogout }: MainAppViewProps) {
   const [activeView, setActiveView] = useState("upload")
 
+  // Add loading state if user is not available
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-500 mx-auto"></div>
+          <p className="mt-4 text-lg">Loading your dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
   const renderView = () => {
     switch (activeView) {
       case "upload":

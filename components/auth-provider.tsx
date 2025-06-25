@@ -26,15 +26,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check for existing session
     const checkSession = () => {
       try {
         const savedUser = localStorage.getItem("aks_user")
         if (savedUser) {
-          setUser(JSON.parse(savedUser))
+          const parsedUser = JSON.parse(savedUser)
+          // Validate user object
+          if (parsedUser && parsedUser.role && parsedUser.username) {
+            setUser(parsedUser)
+          } else {
+            // Clear invalid user data
+            localStorage.removeItem("aks_user")
+          }
         }
       } catch (error) {
         console.error("Error checking session:", error)
+        localStorage.removeItem("aks_user")
       } finally {
         setLoading(false)
       }
@@ -56,9 +63,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const data = await response.json()
 
-      if (data.success && data.user) {
-        setUser(data.user)
-        localStorage.setItem("aks_user", JSON.stringify(data.user))
+      if (data.success && data.user && data.user.role) {
+        // Validate user object has required properties
+        const validatedUser = {
+          id: data.user.id || "unknown",
+          username: data.user.username || username,
+          email: data.user.email || "",
+          role: data.user.role || "Artist",
+          full_name: data.user.full_name || data.user.username,
+          ...data.user,
+        }
+
+        setUser(validatedUser)
+        localStorage.setItem("aks_user", JSON.stringify(validatedUser))
         return true
       }
       return false

@@ -47,7 +47,7 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  // Kiểm tra role chính xác
+  // Safe role checking
   const isLabelManager = currentUser?.role === "Label Manager"
   console.log("🔍 Sidebar Debug - Is Label Manager:", isLabelManager)
 
@@ -80,6 +80,17 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
   const handleLogout = async () => {
     const supabase = createClient()
     await supabase.auth.signOut()
+  }
+
+  // Add null check
+  if (!currentUser) {
+    return (
+      <Card className="w-16 h-full bg-gray-800 border-gray-700 rounded-none">
+        <div className="p-6 flex items-center justify-center">
+          <div className="text-white text-xs">Loading...</div>
+        </div>
+      </Card>
+    )
   }
 
   return (

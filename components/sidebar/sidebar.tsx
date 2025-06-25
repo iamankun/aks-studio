@@ -12,6 +12,17 @@ interface SidebarProps {
 }
 
 export function Sidebar({ currentUser, currentView, onViewChange, onLogout }: SidebarProps) {
+  // Add null check at the start
+  if (!currentUser) {
+    return (
+      <Card className="w-64 h-full bg-gray-800 border-gray-700 rounded-none">
+        <div className="p-6 flex items-center justify-center">
+          <div className="text-white">Loading...</div>
+        </div>
+      </Card>
+    )
+  }
+
   const menuItems = [
     { id: "submissions", label: "Submissions", icon: FileText },
     { id: "upload", label: "Upload", icon: Upload },
@@ -22,7 +33,9 @@ export function Sidebar({ currentUser, currentView, onViewChange, onLogout }: Si
     { id: "settings", label: "Settings", icon: Settings },
   ]
 
-  const filteredMenuItems = menuItems.filter((item) => !item.adminOnly || currentUser.role === "Label Manager")
+  const filteredMenuItems = menuItems.filter(
+    (item) => !item.adminOnly || (currentUser && currentUser.role === "Label Manager"),
+  )
 
   return (
     <Card className="w-64 h-full bg-gray-800 border-gray-700 rounded-none">

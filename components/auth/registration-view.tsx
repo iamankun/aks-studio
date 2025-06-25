@@ -14,7 +14,7 @@ interface RegistrationViewProps {
   onSwitchToLogin: () => void
 }
 
-export default function RegistrationView({ onSwitchToLogin }: RegistrationViewProps) {
+export function RegistrationView({ onSwitchToLogin }: RegistrationViewProps) {
   const [formData, setFormData] = useState({
     username: "",
     email: "",

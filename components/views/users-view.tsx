@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { fetchUsersFromClient } from "@/lib/data" // Đổi tên hàm fetch
 import { Users, UserPlus } from "lucide-react"
 
-export default function UsersView() {
+export function UsersView() {
   const [usersList, setUsersList] = useState<User[]>([])
   const [isClient, setIsClient] = useState(false) // State để kiểm tra client-side
 
@@ -48,8 +48,8 @@ export default function UsersView() {
             <div className="space-y-3">
               {usersList.map((user: User) => (
                 <div key={user.id} className="flex items-center space-x-4 p-3 bg-gray-700 rounded-lg">
-                  <img src={user.avatar ?? `/face.png?text=${user.username.substring(0, 1).toUpperCase()}`
-                    }
+                  <img
+                    src={user.avatar ?? `/face.png?text=${user.username.substring(0, 1).toUpperCase()}`}
                     alt={user.username}
                     className="w-10 h-10 rounded-full object-cover"
                     style={{ aspectRatio: "1/1" }}
@@ -63,8 +63,9 @@ export default function UsersView() {
                   </div>
                   <div className="text-right">
                     <span
-                      className={`px-2 py-1 rounded-full text-xs ${user.role === "Label Manager" ? "bg-purple-500 text-white" : "bg-green-500 text-white"
-                        }`}
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        user.role === "Label Manager" ? "bg-purple-500 text-white" : "bg-green-500 text-white"
+                      }`}
                     >
                       {user.role}
                     </span>

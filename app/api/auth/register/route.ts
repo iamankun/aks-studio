@@ -1,52 +1,48 @@
-import { NextResponse } from "next/server"
-import { registerArtist } from "@/lib/auth-service"
+import { type NextRequest, NextResponse } from "next/server"
+import { multiDB } from "@/lib/multi-database-service"
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const { username, email, password, full_name } = await request.json()
 
-    console.log("🔍 Registration request:", { username, email, full_name })
+    console.log("📝 Multi-DB Registration attempt:", { username, email, full_name })
 
     if (!username || !email || !password) {
       return NextResponse.json(
         {
           success: false,
-          message: "Tên đăng nhập, email, và mật khẩu là bắt buộc.",
+          message: "Username, email, and password are required",
         },
         { status: 400 },
       )
     }
 
-    const result = await registerArtist({
+    const result = await multiDB.createUser({
       username,
-      password,
       email,
-      fullname: full_name || username,
+      password,
+      fullName: full_name,
+      role: "Artist",
     })
 
     if (result.success) {
-      return NextResponse.json(
-        {
-          success: true,
-          message: "Đăng ký thành công!",
-        },
-        { status: 201 },
-      )
+      console.log("✅ User registered successfully via:", result.source)
+      return NextResponse.json(result)
     } else {
       return NextResponse.json(
         {
           success: false,
-          message: result.message || "Không thể đăng ký người dùng.",
+          message: result.message || "Registration failed",
         },
-        { status: 400 },
+        { status: 500 },
       )
     }
   } catch (error) {
-    console.error("🚨 API Registration Error:", error)
+    console.error("❌ Registration error:", error)
     return NextResponse.json(
       {
         success: false,
-        message: "Đã xảy ra lỗi không mong muốn từ server.",
+        message: "Registration failed due to server error",
       },
       { status: 500 },
     )

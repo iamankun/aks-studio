@@ -18,7 +18,7 @@ export interface MyProfileViewProps {
   showModal: (title: string, messages: string[], type?: "success" | "error") => void // Tôi là An Kun
 }
 
-export default function MyProfileView({ currentUser, showModal }: MyProfileViewProps) {
+export function MyProfileView({ currentUser, showModal }: MyProfileViewProps) {
   const [formData, setFormData] = useState({
     username: currentUser.username,
     fullName: currentUser.fullName,
@@ -34,9 +34,7 @@ export default function MyProfileView({ currentUser, showModal }: MyProfileViewP
     },
   })
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const [avatarPreview, setAvatarPreview] = useState(
-    currentUser.avatar ?? "/face.png"
-  )
+  const [avatarPreview, setAvatarPreview] = useState(currentUser.avatar ?? "/face.png")
 
   const handleInputChange = (field: string, value: string) => {
     if (field.startsWith("socialLinks.")) {
@@ -247,7 +245,7 @@ export default function MyProfileView({ currentUser, showModal }: MyProfileViewP
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => handleCopyLink(link ?? '', platform)}
+                        onClick={() => handleCopyLink(link ?? "", platform)}
                         className="rounded-xl rounded-l-none border-l-0 px-3"
                       >
                         <Copy className="h-4 w-4" />

@@ -18,7 +18,7 @@ interface MainAppViewProps {
   onLogout: () => void
 }
 
-export function MainAppView({ user, onLogout }: MainAppViewProps) {
+export default function MainAppView({ user, onLogout }: MainAppViewProps) {
   const [activeView, setActiveView] = useState("upload")
 
   const renderView = () => {
@@ -54,3 +54,6 @@ export function MainAppView({ user, onLogout }: MainAppViewProps) {
     </div>
   )
 }
+
+// Also export as named export for compatibility
+export { MainAppView }

@@ -1,87 +1,86 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
+import { multiDB } from "@/lib/multi-database-service"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Use server-side environment variables (without NEXT_PUBLIC_)
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY // Server-side only
+    const { searchParams } = new URL(request.url)
+    const username = searchParams.get("username")
 
-    if (!supabaseUrl || !supabaseServiceKey) {
-      // Fallback to localStorage data (return empty array for server-side)
+    console.log("📋 Multi-DB Get submissions for:", username || "all users")
+
+    const result = await multiDB.getSubmissions(username || undefined)
+
+    if (result.success) {
+      console.log("✅ Submissions retrieved via:", result.source)
       return NextResponse.json({
         success: true,
-        data: [],
-        message: "Supabase not configured, using client-side storage",
+        data: result.data,
+        source: result.source,
+        count: result.data.length,
       })
+    } else {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Failed to retrieve submissions",
+        },
+        { status: 500 },
+      )
     }
-
-    // Continue with existing Supabase logic...
-    const { createClient } = require("@supabase/supabase-js")
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
-    const { data, error } = await supabase.from("submissions").select("*").order("created_at", { ascending: false })
-
-    if (error) {
-      console.error("Supabase error:", error)
-      return NextResponse.json({
-        success: false,
-        message: `Lỗi database: ${error.message}`,
-        data: [],
-      })
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: data || [],
-      message: "Submissions loaded successfully",
-    })
   } catch (error) {
-    console.error("API Error:", error)
-    return NextResponse.json({
-      success: false,
-      message: "Lỗi server không xác định",
-      data: [],
-    })
+    console.error("❌ Get submissions error:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to retrieve submissions",
+      },
+      { status: 500 },
+    )
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY // Server-side only
+    const submissionData = await request.json()
 
-    if (!supabaseUrl || !supabaseServiceKey) {
+    console.log("📤 Multi-DB Create submission:", submissionData.song_title)
+
+    // Add required fields
+    const submission = {
+      id: `sub-${Date.now()}`,
+      ...submissionData,
+      status: submissionData.status || "Đã nhận, đang chờ duyệt",
+      submission_date: new Date().toISOString().split("T")[0],
+      created_at: new Date().toISOString(),
+    }
+
+    const result = await multiDB.createSubmission(submission)
+
+    if (result.success) {
+      console.log("✅ Submission created via:", result.source)
       return NextResponse.json({
         success: true,
-        message: "Submission saved locally (Supabase not configured)",
+        message: "Submission created successfully",
+        source: result.source,
+        id: submission.id,
       })
+    } else {
+      return NextResponse.json(
+        {
+          success: false,
+          message: result.message || "Failed to create submission",
+        },
+        { status: 500 },
+      )
     }
-
-    // Continue with existing Supabase logic for POST...
-    const body = await request.json()
-    const { createClient } = require("@supabase/supabase-js")
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
-    const { data, error } = await supabase.from("submissions").insert([body]).select()
-
-    if (error) {
-      console.error("Supabase error:", error)
-      return NextResponse.json({
-        success: false,
-        message: `Lỗi lưu database: ${error.message}`,
-      })
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: data?.[0],
-      message: "Submission saved successfully",
-    })
   } catch (error) {
-    console.error("API Error:", error)
-    return NextResponse.json({
-      success: false,
-      message: "Lỗi server không xác định",
-    })
+    console.error("❌ Create submission error:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to create submission",
+      },
+      { status: 500 },
+    )
   }
 }

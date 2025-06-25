@@ -14,7 +14,7 @@ interface ForgotPasswordViewProps {
   onBackToLogin: () => void
 }
 
-export default function ForgotPasswordView({ onBackToLogin }: ForgotPasswordViewProps) {
+export function ForgotPasswordView({ onBackToLogin }: ForgotPasswordViewProps) {
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState("")

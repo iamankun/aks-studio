@@ -7,10 +7,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { StatusIndicator } from "@/components/status-indicator";
+import { StatusIndicator } from "@/components/status-indicator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Settings, Mail, Save, Image, Globe, Database, Palette, HelpCircle } from "lucide-react"
+import { Settings, Mail, Save, ImageIcon, Globe, Database, Palette, HelpCircle } from "lucide-react"
 import { sendEmail, type EmailDetails } from "@/lib/email"
 import { useSystemStatus } from "@/components/system-status-provider"
 import type { User } from "@/types/user"
@@ -19,7 +19,7 @@ interface SettingsViewProps {
   currentUser: User
 }
 
-export default function SettingsView({ currentUser }: SettingsViewProps) {
+export function SettingsView({ currentUser }: SettingsViewProps) {
   const { status, checkAllSystems } = useSystemStatus()
 
   const [emailSettings, setEmailSettings] = useState({
@@ -103,8 +103,14 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
     } else {
       // Cập nhật footerSettings nếu appSettings đã được tải, hoặc dùng giá trị mặc định
       if (savedApp) {
-        const parsedApp = JSON.parse(savedApp);
-        setFooterSettings(prev => ({ ...prev, companyName: parsedApp.appName, version: parsedApp.version, logoUrl: parsedApp.logoUrl, websiteUrl: parsedApp.homeUrl }));
+        const parsedApp = JSON.parse(savedApp)
+        setFooterSettings((prev) => ({
+          ...prev,
+          companyName: parsedApp.appName,
+          version: parsedApp.version,
+          logoUrl: parsedApp.logoUrl,
+          websiteUrl: parsedApp.homeUrl,
+        }))
       }
     }
 
@@ -161,26 +167,30 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
 
     const testEmailDetails: EmailDetails = {
       from: emailSettings.smtpUsername, // Gửi từ chính email cấu hình
-      to: emailSettings.smtpUsername,   // Gửi đến chính email cấu hình để test
+      to: emailSettings.smtpUsername, // Gửi đến chính email cấu hình để test
       subject: `Test Email - ${appSettings.appName} - ${new Date().toISOString()}`,
       textBody: `Đây là email test từ hệ thống ${appSettings.appName}.\nCấu hình SMTP của bạn hoạt động bình thường!`,
       htmlBody: `<p>Đây là email test từ hệ thống <strong>${appSettings.appName}</strong>.</p><p>Cấu hình SMTP của bạn hoạt động bình thường!</p>`,
     }
     const result = await sendEmail(testEmailDetails)
-    showModal(result.success ? "Test SMTP Thành Công" : "Test SMTP Thất Bại", [result.message], result.success ? "success" : "error")
+    showModal(
+      result.success ? "Test SMTP Thành Công" : "Test SMTP Thất Bại",
+      [result.message],
+      result.success ? "success" : "error",
+    )
   }
 
   // Helper function to show modal (can be moved to a context or prop if needed more globally)
   const showModal = (title: string, messages: string[], type: "error" | "success" = "error") => {
-    const event = new CustomEvent('showGlobalNotification', {
+    const event = new CustomEvent("showGlobalNotification", {
       detail: {
         title,
-        message: messages.join(' '),
+        message: messages.join(" "),
         type,
-      }
-    });
-    window.dispatchEvent(event);
-  };
+      },
+    })
+    window.dispatchEvent(event)
+  }
 
   return (
     <div className="p-2 md:p-6">
@@ -269,7 +279,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                     alt="App Logo"
                     className="h-8 w-8 rounded object-cover"
                     onError={(e) => {
-                      ; (e.target as HTMLImageElement).src = appSettings.logoUrl || "/face.png"
+                      ;(e.target as HTMLImageElement).src = appSettings.logoUrl || "/face.png"
                     }}
                   />
                   <div>
@@ -293,7 +303,9 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
         {/* SMTP Settings */}
         <TabsContent value="smtp">
           <Card className="bg-gray-800 border border-gray-700">
-            <CardHeader> {/* Removed font-dosis-semibold */}
+            <CardHeader>
+              {" "}
+              {/* Removed font-dosis-semibold */}
               <CardTitle className="flex items-center font-semibold">
                 <Mail className="mr-2" />
                 Cài đặt hộp thư SMTP || {appSettings.appName}
@@ -359,7 +371,9 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
         {/* Database Settings */}
         <TabsContent value="database">
           <Card className="bg-gray-800 border border-gray-700">
-            <CardHeader> {/* Removed font-dosis-semibold */}
+            <CardHeader>
+              {" "}
+              {/* Removed font-dosis-semibold */}
               <CardTitle className="flex items-center font-semibold">
                 <Database className="mr-2" />
                 Database
@@ -537,7 +551,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
           <Card className="bg-gray-800 border border-gray-700">
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Image className="mr-2" />
+                <ImageIcon className="mr-2" />
                 Cài đặt Footer
               </CardTitle>
             </CardHeader>
@@ -671,6 +685,7 @@ export default function SettingsView({ currentUser }: SettingsViewProps) {
                 <ul>
                   <li>Tra cứu thông tin ISRC</li>
                   <li>Kiểm tra bài hát trên các platform</li>
+                  <li>Tránh trùng lặp khi phát hành</li>
                   <li>Tránh trùng lặp khi phát hành</li>
                 </ul>
 

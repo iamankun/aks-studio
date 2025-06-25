@@ -19,10 +19,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2, Wifi, WifiOff, RefreshCw } from "lucide-react"
 
 export default function MainAppView() {
-  const { user, loading, error, clearError } = useAuth()
   const [currentView, setCurrentView] = useState("upload")
   const [retryCount, setRetryCount] = useState(0)
   const [isOnline, setIsOnline] = useState(true)
+  const auth = useAuth()
+
+  // Add safety checks
+  if (!auth) {
+    return <div>Loading auth...</div>
+  }
+
+  const { user, loading, error, clearError } = auth
 
   // Monitor network status
   useEffect(() => {

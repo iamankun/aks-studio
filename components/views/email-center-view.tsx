@@ -51,7 +51,7 @@ type SmtpSettings = {
 };
 
 // Dummy sendEmail function for demonstration; replace with actual implementation
-async function sendEmail(details: EmailDetails): Promise<{ success: boolean; message: string }> {
+async function sendEmail(_details: EmailDetails): Promise<{ success: boolean; message: string }> {
   // Simulate sending email
   return new Promise((resolve) => setTimeout(() => resolve({ success: true, message: "Email sent successfully." }), 1000));
 }
@@ -237,7 +237,7 @@ Trân trọng,
       ngaygui: new Date().toLocaleDateString("vi-VN"),
       ngayphathanh: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("vi-VN"),
       tenmanager: "An Kun Studio",
-      email: "ankunstudio@ankun.dev",
+      email: "manager@yourdomain.com",
       tenlabel: "An Kun Studio",
       username: "test_user",
       vaitro: "Nghệ sĩ",
@@ -422,7 +422,7 @@ Trân trọng,
                   <Input
                     value={emailForm.to}
                     onChange={(e) => setEmailForm({ ...emailForm, to: e.target.value })}
-                    placeholder="ankun.n.m@gmail.com"
+                    placeholder="recipient@example.com"
                     className="font-sans"
                   />
                 </div>
@@ -542,13 +542,20 @@ Trân trọng,
               </CardHeader>
               <CardContent className="space-y-2">
                 {templates.map((template) => (
-                  <button
+                  <div
                     key={template.id}
-                    type="button"
+                    role="button"
+                    tabIndex={0}
                     aria-pressed={selectedTemplate?.id === template.id}
                     className={`p-3 rounded-lg cursor-pointer transition-colors email-template-card text-left w-full ${selectedTemplate?.id === template.id ? "bg-purple-600" : "bg-gray-700 hover:bg-gray-600"
                       }`}
                     onClick={() => setSelectedTemplate(template)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setSelectedTemplate(template)
+                      }
+                    }}
                   >
                     <div className="flex items-center justify-between font-sans">
                       <div>
@@ -556,32 +563,49 @@ Trân trọng,
                         <p className="text-xs text-gray-400">{template.type.toUpperCase()}</p>
                       </div>
                       <div className="flex space-x-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          aria-label="Edit template"
+                          className="h-8 w-8 p-0 font-sans inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation()
                             setSelectedTemplate(template)
                             setIsEditing(true)
                           }}
-                          className="h-8 w-8 p-0 font-sans"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              setSelectedTemplate(template)
+                              setIsEditing(true)
+                            }
+                          }}
                         >
                           <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        </div>
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          aria-label="Delete template"
+                          className="h-8 w-8 p-0 text-red-400 hover:text-red-300 font-sans inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleDeleteTemplate(template.id)
                           }}
-                          className="h-8 w-8 p-0 text-red-400 hover:text-red-300 font-sans"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              handleDeleteTemplate(template.id)
+                            }
+                          }}
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </div>
                       </div>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </CardContent>
             </Card>

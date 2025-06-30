@@ -18,17 +18,6 @@ import type { User } from "@/types/user"
 
 export function SettingsView() {
   const { user: currentUser } = useAuth();
-
-  if (!currentUser) {
-    return (
-      <div className="p-6 min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-700 mb-2">Đang tải thông tin</h2>
-          <p className="text-gray-500">Vui lòng chờ trong giây lát...</p>
-        </div>
-      </div>
-    );
-  }
   const { status, checkAllSystems } = useSystemStatus()
 
   const [emailSettings, setEmailSettings] = useState({
@@ -44,6 +33,8 @@ export function SettingsView() {
     homeUrl: "/",
     version: "1.0.0",
   })
+
+  const [appMode, setAppMode] = useState("demo") // demo or production
 
   const [backgroundSettings, setBackgroundSettings] = useState({
     type: "gradient",
@@ -86,7 +77,24 @@ export function SettingsView() {
     loadSettings()
   }, [])
 
+  if (!currentUser) {
+    return (
+      <div className="p-6 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">Đang tải thông tin</h2>
+          <p className="text-gray-500">Vui lòng chờ trong giây lát...</p>
+        </div>
+      </div>
+    );
+  }
+
   const loadSettings = () => {
+    // Load app mode from localStorage
+    const savedMode = localStorage.getItem("APP_MODE")
+    if (savedMode) {
+      setAppMode(savedMode)
+    }
+
     // Load email settings
     const savedEmail = localStorage.getItem("emailSettings_v2")
     if (savedEmail) {
@@ -222,8 +230,9 @@ export function SettingsView() {
       </div>
 
       <Tabs defaultValue="app" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="app">Name App</TabsTrigger>
+          <TabsTrigger value="mode">Mode</TabsTrigger>
           <TabsTrigger value="smtp">SMTP</TabsTrigger>
           <TabsTrigger value="database">Database</TabsTrigger>
           <TabsTrigger value="background">Background</TabsTrigger>
@@ -735,6 +744,105 @@ export function SettingsView() {
                     <li>Backup dữ liệu thường xuyên</li>
                     <li>Kiểm tra trạng thái kết nối ở góc phải màn hình</li>
                   </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Mode Settings */}
+        <TabsContent value="mode">
+          <Card className="bg-gray-800 border border-gray-700">
+            <CardHeader>
+              <CardTitle className="flex items-center font-semibold">
+                <Database className="mr-2" />
+                Chế độ ứng dụng
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-lg font-semibold">Chế độ hiện tại: {appMode === "production" ? "Production" : "Demo"}</Label>
+                    <div className="mt-2 p-4 bg-gray-700 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Demo Mode</span>
+                        <Switch
+                          checked={appMode === "demo"}
+                          onCheckedChange={(checked) => {
+                            if (checked && appMode !== "demo") {
+                              // Switch to demo
+                              localStorage.setItem("APP_MODE", "demo")
+                              setAppMode("demo")
+                              window.location.reload()
+                            }
+                          }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2">
+                        Sử dụng dữ liệu demo, không kết nối database/SMTP thực
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mt-2 p-4 bg-gray-700 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Production Mode</span>
+                        <Switch
+                          checked={appMode === "production"}
+                          onCheckedChange={(checked) => {
+                            if (checked && appMode !== "production") {
+                              // Switch to production
+                              localStorage.setItem("APP_MODE", "production")
+                              setAppMode("production")
+                              window.location.reload()
+                            }
+                          }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2">
+                        Kết nối database và SMTP thực, test chính thức
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-lg font-semibold">Thông tin chế độ</Label>
+                    <div className="mt-2 p-4 bg-blue-900/20 border border-blue-600 rounded-lg">
+                      <h4 className="font-semibold text-blue-400 mb-2">🔧 Production Mode</h4>
+                      <ul className="text-sm space-y-1 text-gray-300">
+                        <li>✅ Kết nối PostgreSQL Database thực</li>
+                        <li>✅ Gửi email qua SMTP thực</li>
+                        <li>✅ Authentication từ database</li>
+                        <li>✅ Lưu dữ liệu vào database</li>
+                        <li>⚠️ Cần cấu hình database và SMTP đúng</li>
+                      </ul>
+                    </div>
+
+                    <div className="mt-4 p-4 bg-yellow-900/20 border border-yellow-600 rounded-lg">
+                      <h4 className="font-semibold text-yellow-400 mb-2">🎮 Demo Mode</h4>
+                      <ul className="text-sm space-y-1 text-gray-300">
+                        <li>🎯 Dữ liệu demo/mock</li>
+                        <li>🎯 Authentication giả lập</li>
+                        <li>🎯 Email chỉ hiển thị, không gửi thực</li>
+                        <li>🎯 Phù hợp để demo/test UI</li>
+                        <li>💡 Không cần cấu hình gì</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-600 pt-4">
+                <div className="bg-orange-900/20 border border-orange-600 rounded-lg p-4">
+                  <h4 className="font-semibold text-orange-400 mb-2">⚡ Lưu ý quan trọng</h4>
+                  <p className="text-sm text-gray-300">
+                    Thay đổi chế độ sẽ reload lại ứng dụng. Đảm bảo bạn đã cấu hình đúng
+                    Database URL và SMTP settings trong file .env.local trước khi chuyển sang Production Mode.
+                  </p>
                 </div>
               </div>
             </CardContent>

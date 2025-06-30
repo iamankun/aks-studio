@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import {
     Home, ArrowLeft, Music, Lock, Menu, X, User, LogOut,
     ChevronUp, ChevronDown, FileText, Upload, Users,
@@ -9,6 +10,7 @@ import {
 } from "lucide-react"
 import { ThemeToggle } from "./theme-toggle"
 import { Button } from "./ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { useUserRole } from "@/hooks/use-user-role"
 import { useAuth } from "@/components/auth-provider"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
@@ -70,7 +72,7 @@ export function TopNavBar({ currentView, onViewChange }: TopNavBarProps) {
             <div className="flex justify-between items-center px-4 py-2">
                 <Link href="/" className="flex items-center gap-2">
                     <div className="bg-primary/10 rounded-full p-1.5">
-                        <img src="/face.png" alt="AKs Studio Logo" className="h-7 w-7" />
+                        <Image src="/face.png" alt="AKs Studio Logo" className="h-7 w-7" width={28} height={28} />
                     </div>
                     {!isCollapsed && (
                         <span className="font-dosis-semibold text-lg whitespace-nowrap ml-1">AKs Studio</span>
@@ -113,11 +115,15 @@ export function TopNavBar({ currentView, onViewChange }: TopNavBarProps) {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:bg-primary/10">
-                                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                                        <span className="text-white font-medium text-sm">
+                                    <Avatar className="w-8 h-8">
+                                        <AvatarImage
+                                            src={user.avatar || "/face.png"}
+                                            alt={user.fullName || user.username || "User avatar"}
+                                        />
+                                        <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium text-sm">
                                             {user.fullName?.charAt(0) || user.username?.charAt(0) || 'A'}
-                                        </span>
-                                    </div>
+                                        </AvatarFallback>
+                                    </Avatar>
                                     {!isCollapsed && (
                                         <div className="hidden sm:flex flex-col items-start">
                                             <span className="text-sm font-medium leading-none">
@@ -145,23 +151,31 @@ export function TopNavBar({ currentView, onViewChange }: TopNavBarProps) {
                                     </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onViewChange("profile")}>
                                     <User className="mr-2 h-4 w-4" />
                                     <span>Hồ sơ cá nhân</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onViewChange("settings")}>
                                     <Settings className="mr-2 h-4 w-4" />
                                     <span>Cài đặt</span>
                                 </DropdownMenuItem>
                                 {user.role === "Label Manager" && (
                                     <>
-                                        <DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onViewChange("admin")}>
                                             <Database className="mr-2 h-4 w-4" />
                                             <span>Quản lý hệ thống</span>
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onViewChange("admin")}>
                                             <Shield className="mr-2 h-4 w-4" />
                                             <span>Admin Panel</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onViewChange("email")}>
+                                            <Mail className="mr-2 h-4 w-4" />
+                                            <span>Email Center</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onViewChange("logs")}>
+                                            <FileText className="mr-2 h-4 w-4" />
+                                            <span>System Logs</span>
                                         </DropdownMenuItem>
                                     </>
                                 )}
@@ -197,17 +211,22 @@ export function TopNavBar({ currentView, onViewChange }: TopNavBarProps) {
                 >
                     <div className="flex flex-col md:flex-row items-start md:items-center gap-3 w-full md:w-auto">
                         {/* Main Navigation Items */}
-                        {menuItems.map((item) => {
+                        {menuItems.map((item, index) => {
                             const Icon = item.icon;
                             const isActive = currentView === item.id;
 
                             return (
                                 <Button
-                                    key={item.id}
+                                    key={`${item.id}-${index}`}
                                     variant={isActive ? "secondary" : "ghost"}
                                     size="sm"
                                     className={`rounded-full hover:bg-primary/10 w-full md:w-auto justify-start ${isActive ? 'bg-primary/20 text-primary' : ''}`}
-                                    onClick={() => onViewChange(item.id)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        console.log(`TopNavBar: Clicked on ${item.id} (index: ${index})`);
+                                        onViewChange(item.id);
+                                    }}
                                 >
                                     <Icon className="h-[1rem] w-[1rem] mr-1" />
                                     <span className="text-sm">{item.label}</span>

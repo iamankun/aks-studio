@@ -1,3 +1,5 @@
+import { shouldUseRealSMTP } from "@/lib/app-config"
+
 // Email Service - chỉ sử dụng SMTP_ environment variables
 export const SMTP_CONFIG = {
   host: process.env.SMTP_HOST!,
@@ -16,8 +18,28 @@ export interface EmailOptions {
 }
 
 export async function sendEmail(options: EmailOptions) {
+  const useRealSMTP = shouldUseRealSMTP()
+
   try {
     console.log("🔍 Sending email to:", options.to)
+    console.log("🔍 Mode:", useRealSMTP ? 'Real SMTP' : 'Demo Mode')
+
+    if (!useRealSMTP) {
+      // Demo mode: Just log the email
+      console.log("🎮 Demo Mode - Email would be sent:", {
+        to: options.to,
+        subject: options.subject,
+        textBody: options.textBody?.substring(0, 100) + (options.textBody && options.textBody.length > 100 ? '...' : ''),
+        htmlBody: options.htmlBody ? 'HTML content provided' : 'No HTML content'
+      })
+
+      return {
+        success: true,
+        messageId: `demo-${Date.now()}`,
+        message: 'Email queued successfully (Demo Mode)'
+      }
+    }
+
     console.log("🔍 SMTP Config:", {
       host: SMTP_CONFIG.host,
       port: SMTP_CONFIG.port,
@@ -52,12 +74,15 @@ export async function sendEmail(options: EmailOptions) {
     return {
       success: true,
       messageId: result.messageId,
+      message: 'Email sent successfully'
     }
   } catch (error) {
     console.error("🚨 Email send error:", error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return {
       success: false,
-      error: error.message,
+      error: errorMessage,
+      message: `Failed to send email: ${errorMessage}`
     }
   }
 }

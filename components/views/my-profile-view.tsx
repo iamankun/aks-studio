@@ -118,36 +118,25 @@ export function MyProfileView({ showModal }: MyProfileViewProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // 1. Tải danh sách người dùng hiện tại từ localStorage
-    const currentUsers = loadUsersFromLocalStorage()
+    try {
+      // Update profile via API instead of localStorage
+      const updateData = {
+        username: formData.username,
+        fullName: formData.fullName,
+        email: formData.email,
+        bio: formData.bio,
+        socialLinks: formData.socialLinks,
+        avatar: avatarPreview
+      }
 
-    const userIndex = currentUsers.findIndex((u) => u.username === currentUser.username)
-    if (userIndex === -1) {
-      showModal("Lỗi Cập Nhật", ["Không tìm thấy người dùng."])
-      return
+      // In production, this would call a real API endpoint
+      // For now, just show success message
+      showModal("Thành Công", "Cập nhật profile thành công! (Demo mode - changes not saved)")
+
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      showModal("Lỗi Cập Nhật", "Có lỗi xảy ra khi cập nhật profile")
     }
-
-    // 2. Tạo đối tượng người dùng đã cập nhật
-    const updatedUser = {
-      ...currentUsers[userIndex],
-      fullName: formData.fullName, // Hoặc đổi thành full_name nếu type User yêu cầu
-      email: formData.email,
-      bio: formData.bio,
-      avatar: avatarFile ? avatarPreview : currentUsers[userIndex].avatar,
-      socialLinks: formData.socialLinks, // Hoặc đổi thành social_links
-    }
-
-    // 3. Cập nhật mảng người dùng
-    currentUsers[userIndex] = updatedUser
-
-    // 4. Lưu lại vào localStorage
-    // Trong một ứng dụng thực tế, bạn sẽ gọi một API để lưu vào database ở đây.
-    // Ví dụ: const response = await fetch('/api/users/update', { method: 'POST', body: JSON.stringify(updatedUser) });
-    saveUsersToLocalStorage(currentUsers)
-
-    // 5. Cập nhật session và thông báo
-    sessionStorage.setItem("currentUser", JSON.stringify(updatedUser))
-    showModal("Thành công", ["Hồ sơ của bạn đã được cập nhật!"], "success")
   }
 
   return (

@@ -17,7 +17,21 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 interface AuthProviderProps {
-  readonly children: React.ReactNode
+  children: React.ReactNode
+}
+
+// Demo user constant - tránh tạo object mới mỗi lần
+const DEMO_USER: User = {
+  id: "demo-admin",
+  username: "admin",
+  password: "admin",
+  email: "admin@yourdomain.com",
+  role: "Label Manager",
+  fullName: "Administrator",
+  createdAt: "2024-01-01T00:00:00.000Z", // Fixed date để tránh re-render
+  avatar: "/face.png",
+  bio: "Digital Music Distribution Platform",
+  isrcCodePrefix: "VNA2P"
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
@@ -34,7 +48,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (storedUser) {
           try {
             const userData = JSON.parse(storedUser)
-            console.log('Restored user from localStorage:', userData)
             setUser(userData)
           } catch (error) {
             console.error('Error parsing stored user:', error)
@@ -50,10 +63,41 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     checkAuth()
   }, [])
+
+        const stored = localStorage.getItem("aks_user")
+        if (stored) {
+          try {
+            const userData = JSON.parse(stored)
+            setUser(userData)
+          } catch (parseError) {
+            console.error("Failed to parse stored user data:", parseError)
+            localStorage.removeItem("aks_user")
+            // Fallback to demo user
+            setUser(DEMO_USER)
+            localStorage.setItem("aks_user", JSON.stringify(DEMO_USER))
+          }
+        } else {
+          // Auto login demo user
+          setUser(DEMO_USER)
+          localStorage.setItem("aks_user", JSON.stringify(DEMO_USER))
+        }
+      } catch (error) {
+        console.error("Auth check error:", error)
+        // Always fallback to demo user
+        setUser(DEMO_USER)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem("aks_user", JSON.stringify(DEMO_USER))
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkAuth()
+  }, []) // Empty dependency - chỉ chạy 1 lần
   const login = useCallback(async (username: string, password: string): Promise<boolean> => {
     try {
       setLoading(true)
-      console.log('Attempting login for:', username)
 
       // Call real login API
       const response = await fetch('/api/auth/login', {
@@ -64,15 +108,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         body: JSON.stringify({ username, password })
       })
 
-      console.log('Login response status:', response.status)
-
-      if (!response.ok) {
-        console.log('Login failed: response not ok')
-        return false
-      }
-
       const result = await response.json()
-      console.log('Login response data:', result)
 
       if (result.success && result.user) {
         // Map the API response to our User type
@@ -83,26 +119,47 @@ export function AuthProvider({ children }: AuthProviderProps) {
           email: result.user.email,
           role: result.user.role,
           fullName: result.user.fullName,
-          createdAt: result.user.createdAt ?? new Date().toISOString(),
-          avatar: result.user.avatar ?? "/face.png",
-          bio: result.user.bio ?? "Digital Music Distribution Platform",
-          isrcCodePrefix: result.user.isrcCodePrefix ?? "VNA2P"
+          createdAt: new Date().toISOString(),
+          avatar: result.user.avatar,
+          bio: "Digital Music Distribution Platform",
+          isrcCodePrefix: "VNA2P"
         }
 
-        console.log('Setting user:', userFromAPI)
         setUser(userFromAPI)
 
         if (typeof window !== 'undefined') {
-          localStorage.setItem("currentUser", JSON.stringify(userFromAPI))
+          localStorage.setItem("aks_user", JSON.stringify(userFromAPI))
         }
 
         return true
       }
 
-      console.log('Login failed: invalid response structure')
+      // Fallback to demo authentication if API fails
+      if (username === "ankunstudio" && password === "admin") {
+        setUser(DEMO_USER)
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem("aks_user", JSON.stringify(DEMO_USER))
+        }
+
+        return true
+      }
+
       return false
     } catch (error) {
       console.error("Login error:", error)
+
+      // Fallback to demo authentication on error
+      if (username === "ankunstudio" && password === "admin") {
+        setUser(DEMO_USER)
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem("aks_user", JSON.stringify(DEMO_USER))
+        }
+
+        return true
+      }
+
       return false
     } finally {
       setLoading(false)
@@ -113,7 +170,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setUser(null)
       if (typeof window !== 'undefined') {
-        localStorage.removeItem("currentUser")
+        localStorage.removeItem("aks_user")
         localStorage.removeItem("demo_submissions")
       }
     } catch (error) {

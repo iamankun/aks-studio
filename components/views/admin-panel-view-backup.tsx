@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Shield, Database, Users, Settings, Plus, Edit, Trash2, RefreshCw } from "lucide-react"
 import { DebugTools } from "@/components/debug-tools"
 import { useAuth } from "@/components/auth-provider"
@@ -115,10 +116,10 @@ export function AdminPanelView({ showModal }: AdminPanelViewProps) {
           <CardContent>
             <div className="text-center py-4">
               <div className={`w-2 h-2 rounded-full mx-auto mb-2 ${loading ? 'bg-gray-400' :
-                stats?.database.connected ? 'bg-green-500' : 'bg-red-500'
+                  stats?.database.connected ? 'bg-green-500' : 'bg-red-500'
                 }`}></div>
               <p className={`text-sm ${loading ? 'text-gray-600' :
-                stats?.database.connected ? 'text-green-600' : 'text-red-600'
+                  stats?.database.connected ? 'text-green-600' : 'text-red-600'
                 }`}>
                 {loading ? 'Checking...' :
                   stats?.database.connected ? `Connected (${stats.database.type})` : 'Disconnected'}

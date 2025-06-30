@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     const { username, password } = await request.json()
 
-    console.log("🔐 Multi-DB Login attempt for:", username)
+    console.log("🔐 Multi-DB Login attempt for:", username, "with password length:", password?.length)
 
     if (!username || !password) {
       return NextResponse.json(
@@ -18,11 +18,13 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await multiDB.authenticateUser(username, password)
+    console.log("🔍 Authentication result:", result)
 
     if (result.success) {
       console.log("✅ Authentication successful via:", result.source)
       return NextResponse.json(result)
     } else {
+      console.log("❌ Authentication failed:", result.message)
       return NextResponse.json(
         {
           success: false,

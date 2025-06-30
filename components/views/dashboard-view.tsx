@@ -7,6 +7,8 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Music, Upload, FileText, Users } from "lucide-react"
+import { QuickDebug } from "@/components/quick-debug"
+import { APIDebugger } from "@/components/api-debugger"
 
 interface DashboardStats {
     totalSubmissions: number
@@ -14,7 +16,7 @@ interface DashboardStats {
     totalArtists: number
 }
 
-export function DashboardView({ onViewChange }: { onViewChange?: (view: string) => void }) {
+export function DashboardView({ onViewChange }: { readonly onViewChange?: (view: string) => void }) {
     const [stats, setStats] = useState<DashboardStats>({
         totalSubmissions: 0,
         totalTracks: 0,
@@ -24,33 +26,60 @@ export function DashboardView({ onViewChange }: { onViewChange?: (view: string) 
 
     useEffect(() => {
         const fetchStats = async () => {
+            console.log('🚀 Dashboard: Starting fetchStats...')
             try {
                 setLoading(true)
 
-                // Fetch submissions
-                const submissionsResponse = await fetch('/api/submissions')
-                const submissionsData = await submissionsResponse.json()
-
-                // Fetch artists
-                const artistsResponse = await fetch('/api/artists')
-                const artistsData = await artistsResponse.json()
-
-                if (submissionsData.success) {
-                    setStats(prev => ({
-                        ...prev,
-                        totalSubmissions: submissionsData.count ?? 0,
-                        totalTracks: submissionsData.count ?? 0, // Same as submissions for now
-                    }))
+                // Fetch submissions with error handling
+                let submissionsData = { success: false, count: 0 }
+                try {
+                    console.log('📊 Fetching submissions...')
+                    const submissionsResponse = await fetch('/api/submissions')
+                    console.log('📊 Submissions response status:', submissionsResponse.status)
+                    if (submissionsResponse.ok) {
+                        submissionsData = await submissionsResponse.json()
+                        console.log('📊 Submissions data:', submissionsData)
+                    } else {
+                        console.warn('Submissions API returned:', submissionsResponse.status)
+                    }
+                } catch (submissionsError) {
+                    console.error('Failed to fetch submissions:', submissionsError)
                 }
 
-                if (artistsData.success) {
-                    setStats(prev => ({
-                        ...prev,
-                        totalArtists: artistsData.count ?? 0,
-                    }))
+                // Fetch artists with error handling
+                let artistsData = { success: false, count: 0 }
+                try {
+                    console.log('👥 Fetching artists...')
+                    const artistsResponse = await fetch('/api/artists')
+                    console.log('👥 Artists response status:', artistsResponse.status)
+                    if (artistsResponse.ok) {
+                        artistsData = await artistsResponse.json()
+                        console.log('👥 Artists data:', artistsData)
+                    } else {
+                        console.warn('Artists API returned:', artistsResponse.status)
+                    }
+                } catch (artistsError) {
+                    console.error('Failed to fetch artists:', artistsError)
                 }
+
+                // Update stats even if some fetches failed
+                const newStats = {
+                    totalSubmissions: submissionsData.success ? (submissionsData.count ?? 0) : 0,
+                    totalTracks: submissionsData.success ? (submissionsData.count ?? 0) : 0,
+                    totalArtists: artistsData.success ? (artistsData.count ?? 0) : 0
+                }
+
+                console.log('📈 Final stats:', newStats)
+                setStats(newStats)
+
             } catch (error) {
                 console.error('Failed to fetch dashboard stats:', error)
+                // Set default values on error
+                setStats({
+                    totalSubmissions: 0,
+                    totalTracks: 0,
+                    totalArtists: 0
+                })
             } finally {
                 setLoading(false)
             }
@@ -60,6 +89,9 @@ export function DashboardView({ onViewChange }: { onViewChange?: (view: string) 
     }, [])
     return (
         <div className="pt-4 p-6 pb-20 bg-background transition-all duration-300">
+            {/* API Debug Tool */}
+            <QuickDebug />
+
             {/* Welcome Header - Simplified */}
             <div className="mb-8 bg-card rounded-lg shadow-sm p-6 border">
                 <div className="text-center">
@@ -184,6 +216,18 @@ export function DashboardView({ onViewChange }: { onViewChange?: (view: string) 
                                 <span className="text-sm text-yellow-600 font-medium">Chế Độ Demo</span>
                             </div>
                         </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* API Debugger - Temporary */}
+            <div className="mt-8">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>🔧 API Debug Tool</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <APIDebugger />
                     </CardContent>
                 </Card>
             </div>

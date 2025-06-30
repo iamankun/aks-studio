@@ -36,9 +36,25 @@ export function LogsView() {
         filterLogs()
     }, [logs, levelFilter, componentFilter, searchQuery])
 
-    const loadLogs = () => {
-        const allLogs = logger.getLogs()
-        setLogs(allLogs)
+    const loadLogs = async () => {
+        try {
+            const response = await fetch('/api/logs')
+            const data = await response.json()
+
+            if (data.success) {
+                setLogs(data.logs || [])
+            } else {
+                console.error('Failed to fetch logs:', data.error)
+                // Fallback to local logs
+                const allLogs = logger.getLogs()
+                setLogs(allLogs)
+            }
+        } catch (error) {
+            console.error('Error fetching logs:', error)
+            // Fallback to local logs
+            const allLogs = logger.getLogs()
+            setLogs(allLogs)
+        }
     }
 
     const filterLogs = () => {

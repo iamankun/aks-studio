@@ -16,7 +16,6 @@ import { SoundSystem } from "@/components/sound-system"
 import { SystemStatusProvider } from "@/components/system-status-provider"
 import { AuthFlowClient } from "@/components/auth-flow-client"
 import { useState, useEffect, useCallback } from "react"
-import { databaseService } from "@/lib/database-service"
 import type { Submission, SubmissionStatus } from "@/types/submission"
 import { LogsView } from "@/components/views/logs-view"
 import { logger } from "@/lib/logger"
@@ -44,14 +43,13 @@ export default function MainAppView() {
     })
 
     try {
-      const result = await databaseService.getSubmissions({
-        username: user.role === "Label Manager" ? undefined : user.username
-      })
+      const response = await fetch('/api/submissions')
+      const result = await response.json()
 
-      if (result.success && result.data) {
-        setSubmissions(result.data)
+      if (result.success && result.submissions) {
+        setSubmissions(result.submissions)
         logger.info('MainAppView: Submissions loaded successfully', {
-          count: result.data.length,
+          count: result.submissions.length,
           userId: user.id,
           component: 'MainAppView'
         })
@@ -88,7 +86,12 @@ export default function MainAppView() {
 
   const handleSubmissionAdded = async (submission: Submission) => {
     try {
-      const result = await databaseService.saveSubmission(submission)
+      const response = await fetch('/api/submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submission)
+      })
+      const result = await response.json()
       if (result.success) {
         setSubmissions(prev => [submission, ...prev])
         showNotification("Thành công", "Đã gửi submission thành công!", "success")
@@ -101,7 +104,12 @@ export default function MainAppView() {
 
   const handleStatusUpdate = async (submissionId: string, newStatus: string) => {
     try {
-      const result = await databaseService.updateSubmissionStatus(submissionId, newStatus as SubmissionStatus)
+      const response = await fetch(`/api/submissions/${submissionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      })
+      const result = await response.json()
       if (result.success) {
         setSubmissions(prev =>
           prev.map(sub =>

@@ -79,9 +79,14 @@ export class MultiDatabaseService {
           let passwordValid = false
 
           if (user.password_hash?.startsWith('$2b$')) {
-            // Bcrypt hashed password
-            const bcrypt = require('bcryptjs')
-            passwordValid = await bcrypt.compare(password, user.password_hash)
+            // Bcrypt hashed password - use dynamic import
+            try {
+              const bcrypt = await import('bcrypt')
+              passwordValid = await bcrypt.compare(password, user.password_hash)
+            } catch (error) {
+              console.error('Failed to import bcrypt:', error)
+              passwordValid = false
+            }
           } else {
             // Plain text password (fallback for existing data)
             passwordValid = user.password_hash === password
@@ -96,8 +101,8 @@ export class MultiDatabaseService {
                 username: user.username,
                 email: user.email,
                 fullName: user.full_name ?? user.username,
-                role: "Admin",
-                avatar: user.avatar_url ?? "/face.png",
+                role: "Label Manager",
+                avatar: user.avatar ?? "/face.png",
                 table: "label_manager"
               },
               source: "Neon",
@@ -119,9 +124,14 @@ export class MultiDatabaseService {
           let passwordValid = false
 
           if (user.password_hash?.startsWith('$2b$')) {
-            // Bcrypt hashed password
-            const bcrypt = require('bcryptjs')
-            passwordValid = await bcrypt.compare(password, user.password_hash)
+            // Bcrypt hashed password - use dynamic import
+            try {
+              const bcrypt = await import('bcrypt')
+              passwordValid = await bcrypt.compare(password, user.password_hash)
+            } catch (error) {
+              console.error('Failed to import bcrypt:', error)
+              passwordValid = false
+            }
           } else {
             // Plain text password (fallback for existing data)
             passwordValid = user.password_hash === password
@@ -288,29 +298,17 @@ export class MultiDatabaseService {
       try {
         let result
         if (filters?.username) {
-          // Find artist by username first, then get their submissions
-          const artistResult = await this.neonSql`
-            SELECT id FROM artist WHERE username = ${filters.username}
-          `
-
-          if (artistResult.length > 0) {
-            const artistId = artistResult[0].id
-            result = await this.neonSql`
-              SELECT s.*, a.username, a.real_name as artist_fullname, a.artist_name
-              FROM submissions s
-              LEFT JOIN artist a ON s.submitted_by_artist_id = a.id
-              WHERE s.submitted_by_artist_id = ${artistId}
-              ORDER BY s.created_at DESC
-            `
-          } else {
-            result = []
-          }
-        } else {
+          // Get submissions by specific username
           result = await this.neonSql`
-            SELECT s.*, a.username, a.real_name as artist_fullname, a.artist_name
-            FROM submissions s
-            LEFT JOIN artist a ON s.submitted_by_artist_id = a.id
-            ORDER BY s.created_at DESC
+            SELECT * FROM submissions
+            WHERE uploader_username = ${filters.username}
+            ORDER BY submission_date DESC
+          `
+        } else {
+          // Get all submissions
+          result = await this.neonSql`
+            SELECT * FROM submissions 
+            ORDER BY submission_date DESC
           `
         }
 
@@ -343,23 +341,12 @@ export class MultiDatabaseService {
     // Try Neon first
     if (this.neonAvailable && this.neonSql) {
       try {
-        let result
-        if (filters?.isActive !== undefined) {
-          result = await this.neonSql`
-            SELECT id, username, email, artist_name, stage_name, real_name, genre, bio, 
-                   is_active, email_verified, is_verified_artist, created_at, avatar_url
-            FROM artist 
-            WHERE is_active = ${filters.isActive}
-            ORDER BY created_at DESC
-          `
-        } else {
-          result = await this.neonSql`
-            SELECT id, username, email, artist_name, stage_name, real_name, genre, bio, 
-                   is_active, email_verified, is_verified_artist, created_at, avatar_url
-            FROM artist 
-            ORDER BY created_at DESC
-          `
-        }
+        // Get all artists (ignore isActive filter since column doesn't exist)
+        const result = await this.neonSql`
+          SELECT id, username, email, full_name, bio, avatar, social_links, created_at, updated_at
+          FROM artist 
+          ORDER BY created_at DESC
+        `
 
         console.log("✅ Neon artists query result:", result.length)
         return {

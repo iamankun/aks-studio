@@ -14,22 +14,22 @@ import('dotenv').then(dotenv => dotenv.config({ path: '.env.local' }));
 async function setupDatabase() {
     const { neon } = await import('@neondatabase/serverless');
     const sql = neon(process.env.DATABASE_URL);
-    
+
     console.log('🚀 Bắt đầu setup database...\n');
 
     try {
         // STEP 1: Drop existing tables
         console.log('📋 STEP 1: Dropping existing tables...');
-        
+
         await sql`DROP TABLE IF EXISTS submissions CASCADE`;
         await sql`DROP TABLE IF EXISTS artist CASCADE`;
         await sql`DROP TABLE IF EXISTS label_manager CASCADE`;
-        
+
         console.log('✅ Đã drop các bảng cũ');
 
         // STEP 2: Create tables with updated schema
         console.log('\n📋 STEP 2: Creating new tables...');
-        
+
         // Create artist table
         await sql`
             CREATE TABLE artist (
@@ -85,7 +85,7 @@ async function setupDatabase() {
 
         // STEP 3: Insert sample data
         console.log('\n📋 STEP 3: Inserting sample data...');
-        
+
         // Insert sample artists with bcrypt hashed passwords
         const bcrypt = await import('bcrypt');
         const password1 = await bcrypt.hash('admin123', 10);
@@ -115,11 +115,11 @@ async function setupDatabase() {
 
         // STEP 4: Verify data
         console.log('\n📋 STEP 4: Verifying setup...');
-        
+
         const artistCount = await sql`SELECT COUNT(*) as count FROM artist`;
         const managerCount = await sql`SELECT COUNT(*) as count FROM label_manager`;
         const submissionCount = await sql`SELECT COUNT(*) as count FROM submissions`;
-        
+
         console.log(`✅ Artists: ${artistCount[0].count}`);
         console.log(`✅ Label Managers: ${managerCount[0].count}`);
         console.log(`✅ Submissions: ${submissionCount[0].count}`);
@@ -127,7 +127,7 @@ async function setupDatabase() {
         // Test sample data
         const sampleArtist = await sql`SELECT username, full_name, email FROM artist LIMIT 1`;
         const sampleSubmission = await sql`SELECT title, artist_name, status FROM submissions LIMIT 1`;
-        
+
         console.log('\n📋 Sample Data:');
         console.log('Sample Artist:', sampleArtist[0]);
         console.log('Sample Submission:', sampleSubmission[0]);

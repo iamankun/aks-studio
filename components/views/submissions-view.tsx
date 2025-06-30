@@ -6,7 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { SubmissionDetailModal } from "@/components/modals/submission-detail-modal"
 import { useAuth } from "@/components/auth-provider"
-import type { User } from "@/types/user"
 import type { Submission } from "@/types/submission"
 import { Eye, Download, Play, Pause, Volume2, FileText, Music, Upload } from "lucide-react"
 

@@ -23,11 +23,11 @@ interface AuthProviderProps {
 // Demo user constant - tránh tạo object mới mỗi lần
 const DEMO_USER: User = {
   id: "demo-admin",
-  username: "ankunstudio",
+  username: "admin",
   password: "admin",
-  email: "ankunstudio@ankun.dev",
+  email: "admin@yourdomain.com",
   role: "Label Manager",
-  fullName: "An Kun Studio Digital Music Distribution",
+  fullName: "Administrator",
   createdAt: "2024-01-01T00:00:00.000Z", // Fixed date để tránh re-render
   avatar: "/face.png",
   bio: "Digital Music Distribution Platform",

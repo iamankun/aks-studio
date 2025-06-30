@@ -68,7 +68,7 @@ export function EmailCenterView({ showModal }: EmailCenterViewProps) {
   const [syncStatus, setSyncStatus] = useState("Connected")
   const [lastSync, setLastSync] = useState(new Date().toLocaleString("vi-VN"))
   const [emailForm, setEmailForm] = useState({
-    from: "ankunstudio@ankun.dev",
+    from: "",
     to: "",
     cc: "",
     bcc: "",
@@ -166,31 +166,9 @@ Trân trọng,
     if (saved) {
       setEmailMessages(JSON.parse(saved))
     } else {
-      // Sample messages
-      const sampleMessages: EmailMessage[] = [
-        {
-          id: "msg_1",
-          from: "ankunstudio@ankun.dev",
-          to: "ankun.n.m@gmail.com",
-          subject: "Chào mừng bạn đến với An Kun Studio!",
-          content: "Cảm ơn bạn đã tham gia cộng đồng An Kun Studio...",
-          date: new Date().toLocaleString("vi-VN"),
-          read: true,
-          type: "sent",
-        },
-        {
-          id: "msg_2",
-          from: "ankun.n.m@gmail.com",
-          to: "ankunstudio@ankun.dev",
-          subject: "Cảm ơn về dịch vụ tuyệt vời",
-          content: "Tôi rất hài lòng với dịch vụ phân phối nhạc của studio...",
-          date: new Date(Date.now() - 3600000).toLocaleString("vi-VN"),
-          read: false,
-          type: "received",
-        },
-      ]
-      setEmailMessages(sampleMessages)
-      localStorage.setItem("emailMessages_v2", JSON.stringify(sampleMessages))
+      // Start with empty messages - no sample data
+      setEmailMessages([])
+      localStorage.setItem("emailMessages_v2", JSON.stringify([]))
     }
   }
 
@@ -206,25 +184,8 @@ Trân trọng,
       setSyncStatus("Connected")
       setLastSync(new Date().toLocaleString("vi-VN"))
 
-      // Add a new received email occasionally
-      if (Math.random() > 0.8) {
-        const newMessage: EmailMessage = {
-          id: `msg_${Date.now()}`,
-          from: "system@ankun.dev",
-          to: "ankunstudio@ankun.dev",
-          subject: "Thông báo hệ thống",
-          content: "Hệ thống đã được cập nhật thành công.",
-          date: new Date().toLocaleString("vi-VN"),
-          read: false,
-          type: "received",
-        }
-
-        const updatedMessages = [newMessage, ...emailMessages]
-        setEmailMessages(updatedMessages)
-        localStorage.setItem("emailMessages_v2", JSON.stringify(updatedMessages))
-
-        showModal("Email mới", ["Bạn có email mới từ hệ thống"], "success")
-      }
+      // Note: Remove fake email generation for production use
+      // Email sync will be handled by real SMTP service
     }, 2000)
   }
 
@@ -321,7 +282,7 @@ Trân trọng,
       setEmailMessages(updatedMessages)
       localStorage.setItem("emailMessages_v2", JSON.stringify(updatedMessages))
       showModal("Gửi email thành công", [result.message], "success")
-      setEmailForm({ from: "ankunstudio@ankun.dev", to: "", cc: "", bcc: "", subject: "", content: "", htmlContent: "", type: "text" })
+      setEmailForm({ from: "", to: "", cc: "", bcc: "", subject: "", content: "", htmlContent: "", type: "text" })
     } else {
       showModal("Lỗi gửi email", [result.message], "error")
     }
@@ -452,7 +413,7 @@ Trân trọng,
                   <Input
                     value={emailForm.from}
                     onChange={(e) => setEmailForm({ ...emailForm, from: e.target.value })}
-                    placeholder="ankunstudio@ankun.dev"
+                    placeholder="your-email@example.com"
                     className="font-sans"
                   />
                 </div>
@@ -540,7 +501,7 @@ Trân trọng,
                   variant="outline"
                   onClick={() =>
                     setEmailForm({
-                      from: "ankunstudio@ankun.dev",
+                      from: "",
                       to: "",
                       cc: "",
                       bcc: "",
@@ -827,7 +788,7 @@ Trân trọng,
                   <Input
                     value={smtpSettings.smtpUsername}
                     onChange={(e) => setSmtpSettings({ ...smtpSettings, smtpUsername: e.target.value })}
-                    placeholder="ankunstudio@ankun.dev"
+                    placeholder="your-email@example.com"
                     className="font-dosis"
                   />
                 </div>

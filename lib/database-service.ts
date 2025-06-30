@@ -28,14 +28,14 @@ export class DatabaseService {
 
     try {
       // Demo authentication
-      if (username === "ankunstudio" && password === "admin") {
+      if (username === "admin" && password === "admin") {
         const user: User = {
           id: "demo-admin",
-          username: "ankunstudio",
+          username: "admin",
           password: "admin",
-          email: "ankunstudio@ankun.dev",
+          email: "admin@yourdomain.com",
           role: "Label Manager",
-          fullName: "An Kun Studio Digital Music Distribution",
+          fullName: "Administrator",
           createdAt: new Date().toISOString(),
           avatar: "/face.png",
           bio: "Digital Music Distribution Platform",

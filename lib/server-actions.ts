@@ -36,11 +36,11 @@ export async function registerUser(newUser: User): Promise<boolean> {
     if (isUserSavedSuccessfully) {
         // Gửi email chào mừng
         const welcomeEmail: EmailDetails = {
-            from: process.env.SMTP_FROM || "ankunstudio@ankun.dev", // Sử dụng biến môi trường
+            from: process.env.SMTP_FROM || "", // Chỉ sử dụng biến môi trường
             to: newUser.email,
-            subject: `Chào mừng ${newUser.username || newUser.fullName} đến với AKs Studio!`,
-            textBody: `Chào mừng bạn đến với nền tảng phân phối nhạc AKs Studio!\n\nTài khoản của bạn đã được tạo thành công.\nTên đăng nhập: ${newUser.username}\n\nChúc bạn có những trải nghiệm tuyệt vời!`,
-            htmlBody: `<p>Chào mừng bạn đến với nền tảng phân phối nhạc <strong>AKs Studio</strong>!</p><p>Tài khoản của bạn đã được tạo thành công.</p><ul><li>Tên đăng nhập: ${newUser.username}</li></ul><p>Chúc bạn có những trải nghiệm tuyệt vời!</p>`,
+            subject: `Chào mừng ${newUser.username || newUser.fullName} đến với DMG!`,
+            textBody: `Chào mừng bạn đến với nền tảng phân phối nhạc DMG!\n\nTài khoản của bạn đã được tạo thành công.\nTên đăng nhập: ${newUser.username}\n\nChúc bạn có những trải nghiệm tuyệt vời!`,
+            htmlBody: `<p>Chào mừng bạn đến với nền tảng phân phối nhạc <strong>DMG</strong>!</p><p>Tài khoản của bạn đã được tạo thành công.</p><ul><li>Tên đăng nhập: ${newUser.username}</li></ul><p>Chúc bạn có những trải nghiệm tuyệt vời!</p>`,
         }
         try {
             const emailResult = await sendEmail(welcomeEmail)

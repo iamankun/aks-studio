@@ -228,8 +228,8 @@ export function LogsView() {
                             </div>
                         ) : (
                             <div className="space-y-2 p-4">
-                                {filteredLogs.map((log) => (
-                                    <Card key={log.id} className="bg-gray-50">
+                                {filteredLogs.map((log, index) => (
+                                    <Card key={`${log.id}-${index}`} className="bg-gray-50">
                                         <CardContent className="p-4">
                                             <div className="flex items-start justify-between mb-2">
                                                 <div className="flex items-center space-x-2">

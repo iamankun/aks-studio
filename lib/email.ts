@@ -20,24 +20,38 @@ export interface EmailDetails {
 
 const SMTP_SETTINGS_KEY = "emailSettings_v2" // Key lưu trữ trong localStorage từ SettingsView
 
-// Thông tin SMTP mặc định từ Security.md
-const DEFAULT_SMTP_SETTINGS: SmtpSettings = {
-  smtpServer: "smtp.mail.me.com",
-  smtpPort: "587",
-  smtpUsername: "ankunstudio@ankun.dev", // SMTP_USER
-  smtpPassword: "grsa-aaxz-midn-pjta", // SMTP_PASS
-  connected: false, // Mặc định là chưa kết nối cho đến khi test
+// Thông tin SMTP mặc định từ environment variables (bảo mật hơn)
+const getDefaultSmtpSettings = (): SmtpSettings => {
+  // Ưu tiên environment variables, fallback về values đã biết
+  return {
+    smtpServer: process.env.SMTP_HOST || "",
+    smtpPort: process.env.SMTP_PORT || "587",
+    smtpUsername: process.env.SMTP_USER || "",
+    smtpPassword: process.env.SMTP_PASS || undefined, // Không hardcode password
+    connected: false, // Mặc định là chưa kết nối cho đến khi test
+  };
 };
 
 function getSmtpSettingsFromStorage(): SmtpSettings | null {
   if (typeof window === "undefined") {
-    // Trên server-side hoặc nếu không có window, có thể trả về null hoặc default
-    // Tuy nhiên, sendEmail chủ yếu được gọi từ client contexts có localStorage (EmailCenterView, SettingsView)
-    // Nếu cần dùng ở server, logic này cần được xem xét lại.
-    return DEFAULT_SMTP_SETTINGS; // Sử dụng default nếu không có window, mặc dù ít khả năng xảy ra trong ngữ cảnh hiện tại
+    // Trên server-side, dùng environment variables
+    return getDefaultSmtpSettings();
   }
+
   const savedSettings = localStorage.getItem(SMTP_SETTINGS_KEY)
-  return savedSettings ? (JSON.parse(savedSettings) as SmtpSettings) : DEFAULT_SMTP_SETTINGS;
+
+  if (savedSettings) {
+    try {
+      const parsed = JSON.parse(savedSettings) as SmtpSettings;
+      // Merge với default settings để đảm bảo có đầy đủ fields
+      return { ...getDefaultSmtpSettings(), ...parsed };
+    } catch (error) {
+      console.warn("Failed to parse SMTP settings from localStorage:", error);
+      return getDefaultSmtpSettings();
+    }
+  }
+
+  return getDefaultSmtpSettings();
 }
 
 export async function sendEmail(
@@ -62,6 +76,33 @@ export async function sendEmail(
 
   } catch (error: any) {
     console.error("Client Error calling send-email API:", error);
-    return { success: false, message: "Lỗi kết nối đến API gửi email.", error: error.message || error.toString() };
+    return { success: false, message: "Lỗi kết nối đến API gửi email.", error: error.message ?? error.toString() };
   }
 }
+
+// Helper functions for UI components
+export function getCurrentSmtpSettings(): SmtpSettings {
+  return getSmtpSettingsFromStorage() ?? getDefaultSmtpSettings();
+}
+
+export function saveSmtpSettings(settings: SmtpSettings): void {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(SMTP_SETTINGS_KEY, JSON.stringify(settings));
+  }
+}
+
+export function testSmtpConnection(settings: SmtpSettings): Promise<{ success: boolean; message: string }> {
+  // Test connection bằng cách gửi email test
+  const testEmail: EmailDetails = {
+    from: settings.smtpUsername,
+    to: settings.smtpUsername, // Gửi cho chính mình
+    subject: `SMTP Test - ${new Date().toISOString()}`,
+    textBody: "This is a test email to verify SMTP configuration.",
+    htmlBody: "<p>This is a test email to verify SMTP configuration.</p>"
+  };
+
+  return sendEmail(testEmail);
+}
+
+// Export key cho các components khác sử dụng
+export { SMTP_SETTINGS_KEY };

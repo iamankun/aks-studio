@@ -1,8 +1,13 @@
+// Tôi là An Kun
+// Hỗ trợ dự án, Copilot, Gemini
+// Tác giả kiêm xuất bản bởi An Kun Studio Digital Music
+
 "use client"
 
 import { useAuth } from "@/components/auth-provider"
-import { Sidebar } from "@/components/sidebar/sidebar"
-import { UploadFormView } from "@/components/upload-form-view"
+import { TopNavBar } from "@/components/top-nav-bar"
+import { DashboardView } from "@/components/views/dashboard-view"
+import UploadFormView from "@/components/views/upload-form-view"
 import { SubmissionsView } from "@/components/views/submissions-view"
 import { MyProfileView } from "@/components/views/my-profile-view"
 import { SettingsView } from "@/components/views/settings-view"
@@ -13,129 +18,216 @@ import { DynamicBackground } from "@/components/dynamic-background"
 import { NotificationSystem } from "@/components/notification-system"
 import { SoundSystem } from "@/components/sound-system"
 import { SystemStatusProvider } from "@/components/system-status-provider"
+import { AuthFlowClient } from "@/components/auth-flow-client"
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Wifi, WifiOff, RefreshCw } from "lucide-react"
+import { dbService } from "@/lib/database-service"
+import type { Submission } from "@/types/submission"
+import { LogsView } from "@/components/views/logs-view"
+import { logger } from "@/lib/logger"
 
 export default function MainAppView() {
-  const [currentView, setCurrentView] = useState("upload")
-  const [retryCount, setRetryCount] = useState(0)
-  const [isOnline, setIsOnline] = useState(true)
-  const auth = useAuth()
+  const { user, loading, login } = useAuth()
+  const [currentView, setCurrentView] = useState("dashboard")
+  const [submissions, setSubmissions] = useState<Submission[]>([])
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [isInitialized, setIsInitialized] = useState(false)
 
-  // Add safety checks
-  if (!auth) {
-    return <div>Loading auth...</div>
-  }
-
-  const { user, loading, error, clearError } = auth
-
-  // Monitor network status
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true)
-    const handleOffline = () => setIsOnline(false)
+    logger.info('MainAppView: Component mounted', {
+      component: 'MainAppView',
+      action: 'mount'
+    })
 
-    window.addEventListener("online", handleOnline)
-    window.addEventListener("offline", handleOffline)
+    // Đánh dấu đã khởi tạo sau khi component mount
+    setTimeout(() => {
+      setIsInitialized(true)
+    }, 100)
 
-    return () => {
-      window.removeEventListener("online", handleOnline)
-      window.removeEventListener("offline", handleOffline)
+    if (user) {
+      logger.info('MainAppView: User logged in', {
+        userId: user.id,
+        username: user.username,
+        role: user.role,
+        component: 'MainAppView'
+      })
+      loadSubmissions()
     }
-  }, [])
+  }, [user])
 
-  // Auto-retry on network errors
-  useEffect(() => {
-    if (error && retryCount < 3) {
-      const timer = setTimeout(() => {
-        clearError()
-        setRetryCount((prev) => prev + 1)
-        window.location.reload()
-      }, 5000)
+  const loadSubmissions = async () => {
+    if (!user) return
 
-      return () => clearTimeout(timer)
+    logger.debug('MainAppView: Loading submissions', {
+      userId: user.id,
+      component: 'MainAppView',
+      action: 'loadSubmissions'
+    })
+
+    try {
+      const result = await dbService.getSubmissions({
+        username: user.role === "Label Manager" ? undefined : user.username
+      })
+
+      if (result.success && result.data) {
+        setSubmissions(result.data)
+        logger.info('MainAppView: Submissions loaded successfully', {
+          count: result.data.length,
+          userId: user.id,
+          component: 'MainAppView'
+        })
+      }
+    } catch (error) {
+      logger.error('MainAppView: Failed to load submissions', error, {
+        userId: user.id,
+        component: 'MainAppView',
+        action: 'loadSubmissions'
+      })
     }
-  }, [error, retryCount, clearError])
-
-  // Show loading with timeout
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Card className="w-full max-w-md">
-          <CardContent className="flex flex-col items-center justify-center p-8">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Loading AKs Studio...</h3>
-            <p className="text-sm text-gray-600 text-center mb-4">Please wait while we set up your dashboard</p>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              {isOnline ? (
-                <>
-                  <Wifi className="h-3 w-3" />
-                  <span>Connected</span>
-                </>
-              ) : (
-                <>
-                  <WifiOff className="h-3 w-3" />
-                  <span>Offline</span>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
   }
 
-  // Show error with retry option
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-pink-100 p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-xl font-semibold text-red-900">Connection Error</CardTitle>
-            <CardDescription className="text-red-700">{error}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button
-              onClick={() => {
-                clearError()
-                window.location.reload()
-              }}
-              className="w-full"
-              variant="default"
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Try Again
-            </Button>
-            <p className="text-xs text-gray-600 text-center">Retry attempt: {retryCount}/3</p>
-          </CardContent>
-        </Card>
-      </div>
-    )
+  const handleSubmissionAdded = async (submission: Submission) => {
+    try {
+      const result = await dbService.createSubmission(submission)
+      if (result.success) {
+        setSubmissions(prev => [submission, ...prev])
+        showNotification("Thành công", "Đã gửi submission thành công!", "success")
+      }
+    } catch (error) {
+      console.error("Failed to add submission:", error)
+      showNotification("Lỗi", "Không thể gửi submission", "error")
+    }
   }
 
-  // Main app content
+  const handleStatusUpdate = async (submissionId: string, newStatus: string) => {
+    try {
+      const result = await dbService.updateSubmissionStatus(submissionId, newStatus)
+      if (result.success) {
+        setSubmissions(prev =>
+          prev.map(sub =>
+            sub.id === submissionId ? { ...sub, status: newStatus as any } : sub
+          )
+        )
+        showNotification("Cập nhật", "Đã cập nhật trạng thái", "success")
+      }
+    } catch (error) {
+      console.error("Failed to update status:", error)
+      showNotification("Lỗi", "Không thể cập nhật trạng thái", "error")
+    }
+  }
+
+  const removeNotificationById = (notificationId: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== notificationId))
+  }
+
+  const showNotification = (title: string, messages: string[] | string, type: "success" | "error" = "success") => {
+    const message = Array.isArray(messages) ? messages.join(', ') : messages;
+    const notification = {
+      id: Date.now().toString(),
+      title,
+      message,
+      type,
+      timestamp: new Date()
+    }
+    setNotifications(prev => [notification, ...prev])
+
+    // Auto remove after 5 seconds
+    setTimeout(() => removeNotificationById(notification.id), 5000)
+  }
+
+  const removeNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id))
+  }
+
+  // Always render the main layout, but overlay loading/login if needed
+  let overlay: React.ReactNode = null;
+
+  // Chỉ hiển thị overlay khi thực sự cần và đã initialized
+  if (!isInitialized || loading) {
+    overlay = (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-blue-900/90 to-purple-900/90 backdrop-blur-sm">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="text-white text-xl font-medium">Đang tải...</div>
+          <div className="text-white/70 text-sm mt-2">AKs Studio Digital Music</div>
+        </div>
+      </div>
+    );
+  } else if (!user && isInitialized) {
+    const handleLogin = async (username: string, password: string) => {
+      const success = await login(username, password)
+      return {
+        success,
+        message: success ? "Đăng nhập thành công" : "Đăng nhập thất bại"
+      }
+    }
+    overlay = (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-sm">
+        <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-white/20">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-white mb-2">AKs Studio</h1>
+            <p className="text-white/70">Digital Music Distribution</p>
+          </div>
+          <AuthFlowClient onLogin={handleLogin} />
+        </div>
+      </div>
+    );
+  }
+
+  // Debug UI: show user, loading, currentView in sidebar for troubleshooting
   return (
     <SystemStatusProvider>
-      <div className="flex h-screen bg-gray-100 relative overflow-hidden">
+      <div className="flex h-screen bg-background relative overflow-hidden">
         <DynamicBackground />
-
-        <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-
-        <main className="flex-1 overflow-hidden relative">
-          <div className="h-full overflow-y-auto bg-white/80 backdrop-blur-sm">
-            {currentView === "upload" && <UploadFormView />}
-            {currentView === "submissions" && <SubmissionsView />}
-            {currentView === "profile" && <MyProfileView />}
-            {currentView === "settings" && <SettingsView />}
-            {currentView === "users" && user?.role === "Label Manager" && <UsersView />}
-            {currentView === "admin" && user?.role === "Label Manager" && <AdminPanelView />}
-            {currentView === "email" && <EmailCenterView />}
-          </div>
-        </main>
-
-        <NotificationSystem />
+        <TopNavBar currentView={currentView} onViewChange={setCurrentView} />
+        <div className="w-full"> {/* Full width container, no sidebar */}
+          <main className="flex-1 overflow-hidden relative">
+            <div className="h-full overflow-y-auto bg-background transition-colors duration-300">
+              {/* Main Content Views */}
+              {currentView === "dashboard" && <DashboardView />}
+              {currentView === "upload" && (
+                <UploadFormView
+                  onSubmissionAdded={handleSubmissionAdded}
+                  showModal={showNotification}
+                />
+              )}
+              {currentView === "submissions" && (
+                <SubmissionsView
+                  submissions={submissions}
+                  viewType="all"
+                  onUpdateStatus={handleStatusUpdate}
+                  showModal={showNotification}
+                />
+              )}
+              {currentView === "profile" && (
+                <MyProfileView
+                  showModal={showNotification}
+                />
+              )}
+              {currentView === "settings" && (
+                <SettingsView />
+              )}
+              {currentView === "users" && user?.role === "Label Manager" && (
+                <UsersView />
+              )}
+              {currentView === "admin" && user?.role === "Label Manager" && (
+                <AdminPanelView
+                  showModal={showNotification}
+                />
+              )}
+              {currentView === "email" && (
+                <EmailCenterView
+                  showModal={showNotification}
+                />
+              )}
+              {currentView === "logs" && user?.role === "Label Manager" && (
+                <LogsView />
+              )}
+            </div>
+          </main>
+        </div>
+        <NotificationSystem notifications={notifications} onRemove={removeNotification} />
         <SoundSystem />
+        {overlay}
       </div>
     </SystemStatusProvider>
   )

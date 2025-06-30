@@ -1,0 +1,16 @@
+/* Mobile menu transitions */
+.mobile-menu-transition {
+    transition: height 0.3s ease-in-out, opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+/* Ensure fixed nav bar doesn't flicker */
+nav.fixed {
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+}
+
+/* Prevent content shift on page load */
+body {
+    overflow-y: scroll;
+}

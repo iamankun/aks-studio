@@ -35,17 +35,17 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
   console.log("🔍 Sidebar Debug - Role Type:", typeof currentUser?.role)
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-      if (window.innerWidth < 768) {
-        setCollapsed(true)
-      }
-    }
+    // Chỉ set collapsed khi mount lần đầu, không set lại khi resize
+    const isMobileNow = window.innerWidth < 768;
+    setIsMobile(isMobileNow);
+    if (isMobileNow) setCollapsed(true);
 
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
-    return () => window.removeEventListener("resize", checkMobile)
-  }, [])
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Safe role checking
   const isLabelManager = currentUser?.role === "Label Manager"
@@ -104,8 +104,13 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
         {collapsed ? <Menu /> : <X />}
       </button>
 
+      {/* Debug trạng thái sidebar */}
+      <div style={{ position: 'fixed', top: 0, left: collapsed ? 0 : 70, zIndex: 9999, background: '#fff', color: '#000', fontSize: 12, padding: '2px 8px', border: '2px solid #f00', borderRadius: 4 }}>
+        <b>DEBUG:</b> collapsed: {String(collapsed)} | isMobile: {String(isMobile)}
+      </div>
+
       <Card
-        className={`h-full bg-gray-800 border-gray-700 rounded-none overflow-hidden transition-all duration-300 ${
+        className={`h-full bg-gray-800 border-4 border-yellow-400 border-gray-700 rounded-none overflow-hidden transition-all duration-300 ${
           collapsed ? "w-16" : "w-64"
         }`}
       >
@@ -198,7 +203,8 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
                   onClick={() => {
                     console.log("🔍 Sidebar Debug - Clicking menu item:", item.id)
                     onViewChange(item.id)
-                    if (isMobile) setCollapsed(true)
+                    // Chỉ đóng menu trên mobile nếu đang mở
+                    if (isMobile && !collapsed) setCollapsed(true)
                   }}
                 >
                   <Icon className={`h-4 w-4 ${collapsed ? "" : "mr-3"}`} />

@@ -1,11 +1,11 @@
 export type ArtistPrimaryRole =
   | "singer"
-  | "singer-songwriter"
+  | "singer-songwriter" 
   | "rapper"
   | "producer"
   | "composer"
   | "songwriter"
-  | "instrumental";
+  | "instrumental"
 
 export type AdditionalArtistRole =
   | "featuring"
@@ -14,34 +14,36 @@ export type AdditionalArtistRole =
   | "producer"
   | "composer"
   | "songwriter"
-  | "instrumental";
+  | "instrumental"
 
-export type ReleaseType = "single" | "ep" | "lp" | "album";
+export type ReleaseType = "single" | "ep" | "lp" | "album"
 
-export type MainCategory = "pop" | "singer-songwriter" | "hiphoprap" | "edm" | "rnb" | "ballad" | "acoustic" | "indie" | "other_main";
-export type SubCategory = "official" | "cover" | "vpop" | "lofi" | "chill" | "trap" | "house" | "alternative" | "folk" | "other_sub";
+export type MainCategory = "pop" | "singer-songwriter" | "hiphoprap" | "edm" | "rnb" | "ballad" | "acoustic" | "indie" | "other_main"
+export type SubCategory = "official" | "cover" | "vpop" | "lofi" | "chill" | "trap" | "house" | "alternative" | "folk" | "other_sub"
 
-export type CopyrightOwnershipStatus = "yes" | "no";
-export type ReleaseHistoryStatus = "yes" | "no";
-export type LyricsStatus = "yes" | "no";
+export type CopyrightOwnershipStatus = "yes" | "no"
+export type ReleaseHistoryStatus = "yes" | "no"
+export type LyricsStatus = "yes" | "no"
 
-export type Platform = "youtube" | "spotify" | "apple_music" | "soundcloud" | "other_platform";
+export type Platform = "youtube" | "spotify" | "apple_music" | "soundcloud" | "other_platform"
 
-export type SubmissionStatus = "pending" | "approved" | "rejected" | "processing" | "published" | "draft" | "Đã nhận, đang chờ duyệt";
+export type SubmissionStatus = "pending" | "approved" | "rejected" | "processing" | "published" | "draft" | "Đã nhận, đang chờ duyệt"
 
 export interface TrackInfo {
   fileName: string
   songTitle: string
   artistName: string
   artistFullName: string
-  additionalArtists: AdditionalArtist[];
+  additionalArtists: AdditionalArtist[]
+  title: string
+  isrc: string
 }
 
 export interface AdditionalArtist {
   name: string
   fullName?: string
   role: AdditionalArtistRole
-  percentage: number;
+  percentage: number
 }
 
 export interface TextStyle {
@@ -75,9 +77,10 @@ export interface Submission {
   notes?: string
   fullName: string
   artistRole: ArtistPrimaryRole
-  additionalArtists: AdditionalArtist[]; // This seems redundant if trackInfos has additionalArtists. Consider if this is top-level or per-track.
+  additionalArtists: AdditionalArtist[]
   trackInfos: TrackInfo[]
   releaseDate: string
   titleStyle?: TextStyle
   albumStyle?: TextStyle
+  userId: string
 }

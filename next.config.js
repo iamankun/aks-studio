@@ -1,38 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Bật chế độ nghiêm ngặt của React để phát hiện lỗi sớm
   reactStrictMode: true,
+
+  // Cấu hình các package bên ngoài cho server components
+  // (Dùng cho database và các thư viện không tương thích với React Server Components)
+  serverExternalPackages: ['@neondatabase/serverless'],
+
+  // Cấu hình thử nghiệm (experimental features)
   experimental: {
-    allowedDevOrigins: ["https://aks.ankun.dev", "https://*.aks.ankun.dev", "https://aksstudio.vercel.app"],
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  images: {
-    unoptimized: true,
-  },
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      // Don't resolve 'fs', 'net', 'tls' modules on the client-side
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-        crypto: false,
-        stream: false,
-        url: false,
-        zlib: false,
-        http: false,
-        https: false,
-        assert: false,
-        os: false,
-        path: false,
-      }
-    }
-    return config
+    // Cho phép các domain được truy cập trong môi trường development
+    // (Đã bị loại bỏ trong Next.js 15, không cần thiết nữa)
+    // allowedDevOrigins: [...] - Đã xóa vì không còn hỗ trợ
   },
 }
 

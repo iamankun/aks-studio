@@ -1,56 +1,64 @@
-"use client"
+import React, { createContext, useContext, useState, useEffect } from "react"
 
-import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
-
-export interface SystemStatusValues {
-  smtp: 'checking' | 'connected' | 'disconnected';
-  database: 'checking' | 'connected' | 'disconnected';
-  localStorage: 'checking' | 'connected' | 'disconnected';
+interface SystemStatus {
+  smtp: "connected" | "disconnected" | "checking"
+  database: "connected" | "disconnected" | "checking"
+  localStorage: "available" | "unavailable" | "checking"
 }
 
 interface SystemStatusContextType {
-  status: SystemStatusValues;
-  checkAllSystems: () => void;
+  status: SystemStatus
+  checkAllSystems: () => Promise<void>
 }
 
-const SystemStatusContext = createContext<SystemStatusContextType | undefined>(undefined);
+const SystemStatusContext = createContext<SystemStatusContextType | undefined>(undefined)
 
-interface SystemStatusProviderProps {
-  children: ReactNode;
-}
+export function SystemStatusProvider({ children }: { children: React.ReactNode }) {
+  const [status, setStatus] = useState<SystemStatus>({
+    smtp: "checking",
+    database: "checking",
+    localStorage: "checking"
+  })
 
-export const SystemStatusProvider = ({ children }: SystemStatusProviderProps) => {
-  const [status, setStatus] = useState<SystemStatusValues>({
-    smtp: 'checking',
-    database: 'checking',
-    localStorage: 'checking',
-  });
+  const checkAllSystems = async () => {
+    // Check localStorage
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("test", "test")
+        localStorage.removeItem("test")
+        setStatus(prev => ({ ...prev, localStorage: "available" }))
+      }
+    } catch {
+      setStatus(prev => ({ ...prev, localStorage: "unavailable" }))
+    }
 
-  const checkAllSystems = useCallback(() => {
-    // TODO: Implement actual checks for SMTP, Database
-    // For now, simulate checks
-    setStatus({
-      smtp: Math.random() > 0.5 ? 'connected' : 'disconnected',
-      database: Math.random() > 0.5 ? 'connected' : 'disconnected',
-      localStorage: typeof window !== 'undefined' && window.localStorage ? 'connected' : 'disconnected',
-    });
-  }, []);
+    // Check SMTP (simplified)
+    const smtpSettings = typeof window !== 'undefined' ? localStorage.getItem("emailSettings_v2") : null
+    if (smtpSettings) {
+      setStatus(prev => ({ ...prev, smtp: "connected" }))
+    } else {
+      setStatus(prev => ({ ...prev, smtp: "disconnected" }))
+    }
+
+    // Check Database (demo mode)
+    setStatus(prev => ({ ...prev, database: "disconnected" }))
+  }
 
   useEffect(() => {
-    checkAllSystems();
-  }, [checkAllSystems]);
+    checkAllSystems()
+  }, [])
 
   return (
     <SystemStatusContext.Provider value={{ status, checkAllSystems }}>
       {children}
     </SystemStatusContext.Provider>
-  );
-};
+  )
+}
 
-export const useSystemStatus = (): SystemStatusContextType => {
-  const context = useContext(SystemStatusContext);
+export function useSystemStatus() {
+  const context = useContext(SystemStatusContext)
   if (context === undefined) {
-    throw new Error('useSystemStatus must be used within a SystemStatusProvider');
+    throw new Error("useSystemStatus must be used within a SystemStatusProvider")
   }
-  return context;
-};
+  return context
+}

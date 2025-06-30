@@ -9,7 +9,7 @@ export default function TestPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
 
   if (currentUser) {
-    return <MainAppView initialUser={currentUser} />
+    return <MainAppView />
   }
 
   return (

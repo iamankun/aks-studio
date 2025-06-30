@@ -1,6 +1,6 @@
 import { POST } from './route';
 import nodemailer from 'nodemailer';
-
+import { jest } from '@jest/globals';
 // Mock the nodemailer library
 jest.mock('nodemailer', () => ({
     createTransport: jest.fn(() => ({

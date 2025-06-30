@@ -4,9 +4,9 @@
 import { useState, useEffect } from "react"
 import type { User } from "@/types/user"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Users, UserPlus, Shield } from "lucide-react"
 import { fetchUsersFromClient } from "@/lib/data" // Đổi tên hàm fetch
-import { Users, UserPlus } from "lucide-react"
 
 export function UsersView() {
   const [usersList, setUsersList] = useState<User[]>([])
@@ -27,52 +27,75 @@ export function UsersView() {
 
   return (
     <div className="p-2 md:p-6">
-      <h2 className="text-3xl font-bold text-white mb-6 flex items-center">
-        <Users className="mr-3 text-purple-400" />
-        Quản Lý Người Dùng
-      </h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-bold text-gray-900 flex items-center">
+          <Users className="mr-3 text-purple-400" />
+          Quản Lý Người Dùng
+        </h2>
+        <Button className="bg-purple-600 hover:bg-purple-700">
+          <UserPlus className="h-4 w-4 mr-2" />
+          Thêm Người Dùng
+        </Button>
+      </div>
 
-      <Card className="bg-gray-800 border border-gray-700">
-        <CardContent className="p-6">
-          <p className="text-gray-400 mb-4">
-            Đây là nơi bạn có thể quản lý người dùng. Trong bản demo này, chức năng bị hạn chế.
-          </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tổng Người Dùng</CardTitle>
+            <Users className="h-4 w-4 text-purple-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{usersList.length}</div>
+            <p className="text-xs text-gray-500">Người dùng hoạt động</p>
+          </CardContent>
+        </Card>
 
-          <Button className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-full">
-            <UserPlus className="h-5 w-5 mr-2" />
-            Thêm người dùng mới (Demo)
-          </Button>
-
-          <div className="mt-6">
-            <h4 className="text-lg font-semibold text-gray-200 mb-4">Danh sách người dùng hiện tại:</h4>
-            <div className="space-y-3">
-              {usersList.map((user: User) => (
-                <div key={user.id} className="flex items-center space-x-4 p-3 bg-gray-700 rounded-lg">
-                  <img
-                    src={user.avatar ?? `/face.png?text=${user.username.substring(0, 1).toUpperCase()}`}
-                    alt={user.username}
-                    className="w-10 h-10 rounded-full object-cover"
-                    style={{ aspectRatio: "1/1" }}
-                  />
-                  <div className="flex-grow">
-                    <p className="text-white font-medium">{user.fullName || user.username}</p>
-                    <p className="text-gray-400 text-sm">
-                      @{user.username} - {user.role}
-                    </p>
-                    <p className="text-gray-500 text-xs">{user.email}</p>
-                  </div>
-                  <div className="text-right">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        user.role === "Label Manager" ? "bg-purple-500 text-white" : "bg-green-500 text-white"
-                      }`}
-                    >
-                      {user.role}
-                    </span>
-                  </div>
-                </div>
-              ))}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Quản Lý Nhãn Hiệu</CardTitle>
+            <Shield className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {usersList.filter((u) => u.role === "Label Manager").length}
             </div>
+            <p className="text-xs text-gray-500">Người dùng quản trị</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Nghệ Sĩ</CardTitle>
+            <Users className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {usersList.filter((u) => u.role === "Artist").length}
+            </div>
+            <p className="text-xs text-gray-500">Tài khoản nghệ sĩ</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Danh Sách Người Dùng</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {usersList.map((user) => (
+              <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div>
+                  <h3 className="font-semibold">{user.fullName}</h3>
+                  <p className="text-sm text-gray-600">@{user.username} • {user.email}</p>
+                  <p className="text-xs text-gray-500">{user.role}</p>
+                </div>
+                <div className="flex space-x-2">
+                  <Button variant="outline" size="sm">Chỉnh Sửa</Button>
+                  <Button variant="destructive" size="sm">Xóa</Button>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
 
     console.log("📋 Multi-DB Get submissions for:", username || "all users")
 
-    const result = await multiDB.getSubmissions(username || undefined)
+    const result = await multiDB.getSubmission(username || undefined)
 
     if (result.success) {
       console.log("✅ Submissions retrieved via:", result.source)

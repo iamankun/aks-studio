@@ -1,160 +1,131 @@
-import { createClient } from "@supabase/supabase-js"
-import { neon } from "@neondatabase/serverless"
-import { tidbClient, authenticateUser as tidbAuth } from "./tidb-client"
+// Active: 1750877192019@@ep-mute - rice - a17ojtca - pooler.ap - southeast - 1.aws.neon.tech@5432@aksstudio
+// Tôi là An Kun
+// Hỗ trợ dự án, Copilot, Gemini
+// Tác giả kiêm xuất bản bởi An Kun Studio Digital Music
 
-// Database priority: Supabase -> Neon -> Demo Mode (TiDB optional)
+import { neon } from "@neondatabase/serverless"
+
+// Database priority: Neon -> WordPress -> Demo Mode (Supabase disabled per user request)
 export class MultiDatabaseService {
-  private supabase: any = null
   private neonSql: any = null
-  private supabaseAvailable = false
-  private neonAvailable = false
-  private tidbAvailable = false
+  private neonAvailable = true
+  private wordpressAvailable = true
 
   constructor() {
-    this.initializeDatabases()
+    // Initialize async operations separately
+  }
+
+  async initialize() {
+    await this.initializeDatabases()
   }
 
   private async initializeDatabases() {
-    // Initialize Supabase (Primary)
+  // Initialize Neon (Primary - User's preference)
     try {
-      if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        this.supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
-
-        // Test Supabase connection
-        const { data, error } = await this.supabase.from("users").select("count").limit(1)
-        if (!error) {
-          this.supabaseAvailable = true
-          console.log("✅ Supabase connected and ready")
-        }
-      }
-    } catch (error) {
-      console.log("⚠️ Supabase not available:", error.message)
-    }
-
-    // Initialize Neon (Secondary)
-    try {
-      if (process.env.DATABASE_URL) {
-        this.neonSql = neon(process.env.DATABASE_URL)
+      if (process.env.DATABASE_URL || process.env.NEON_DATABASE_URL) {
+        this.neonSql = neon(process.env.DATABASE_URL ?? process.env.NEON_DATABASE_URL)
 
         // Test Neon connection
-        await this.neonSql`SELECT 1`
+        await this.neonSql`SELECT NOW() as current_time`
         this.neonAvailable = true
         console.log("✅ Neon connected and ready")
       }
     } catch (error) {
-      console.log("⚠️ Neon not available:", error.message)
+      console.log("⚠️ Neon not available:", (error as Error).message)
     }
 
-    // TiDB is optional - only if DB_HOST is provided
-    if (process.env.DB_HOST) {
-      try {
-        const tidbTest = await tidbClient.testConnection()
-        this.tidbAvailable = tidbTest.success
-        console.log("✅ TiDB available:", this.tidbAvailable)
-      } catch (error) {
-        console.log("⚠️ TiDB not available:", error.message)
+    // WordPress check (Secondary)
+    try {
+      // Simple WordPress check via REST API
+      if (process.env.WORDPRESS_API_URL) {
+        const response = await fetch(process.env.WORDPRESS_API_URL, { method: 'HEAD' })
+        if (response.ok) {
+          this.wordpressAvailable = true
+          console.log("✅ WordPress API available")
+        }
       }
-    } else {
-      console.log("ℹ️ TiDB skipped - no DB_HOST provided")
+    } catch (error) {
+      console.log("⚠️ WordPress not available:", (error as Error).message)
     }
 
     console.log("🗄️ Database Status:", {
-      supabase: this.supabaseAvailable,
+      supabase: false, // Disabled per user request
       neon: this.neonAvailable,
-      tidb: this.tidbAvailable,
     })
   }
 
   async authenticateUser(username: string, password: string) {
     console.log("🔐 Multi-DB Authentication for:", username)
 
-    // Try Supabase first (most reliable)
-    if (this.supabaseAvailable) {
-      try {
-        // First check if users table exists, if not create it
-        await this.createTablesIfNeeded()
-
-        const { data, error } = await this.supabase
-          .from("users")
-          .select("*")
-          .or(`username.eq.${username},email.eq.${username}`)
-          .maybeSingle()
-
-        if (data && !error) {
-          // Simple password check for demo
-          const validPassword =
-            (username === "admin" && password === "admin") ||
-            (username === "artist" && password === "123456") ||
-            (username === "ankunstudio" && password === "admin")
-
-          if (validPassword) {
-            console.log("✅ Supabase authentication successful")
-            return {
-              success: true,
-              user: {
-                id: data.id,
-                username: data.username,
-                email: data.email,
-                fullName: data.full_name,
-                role: data.role,
-                avatar: data.avatar || "/face.png",
-              },
-              source: "Supabase",
-            }
-          }
-        }
-      } catch (error) {
-        console.log("⚠️ Supabase auth failed:", error.message)
-      }
+    // Ensure initialization is complete
+    if (!this.neonAvailable && !this.wordpressAvailable) {
+      await this.initialize()
     }
 
-    // Try Neon second
+    // Try Neon first (User's preference)
     if (this.neonAvailable) {
       try {
-        const result = await this.neonSql`
-          SELECT * FROM users 
-          WHERE username = ${username} OR email = ${username}
+        // Check label_manager table first (admin users)
+        const adminResult = await this.neonSql`
+          SELECT * FROM label_manager 
+          WHERE username = ${username} AND password = ${password}
           LIMIT 1
         `
 
-        if (result.length > 0) {
-          const user = result[0]
-          const validPassword =
-            (username === "admin" && password === "admin") ||
-            (username === "artist" && password === "123456") ||
-            (username === "ankunstudio" && password === "admin")
+        if (adminResult.length > 0) {
+          const user = adminResult[0]
+          console.log("✅ Neon admin authentication successful")
+          return {
+            success: true,
+            user: {
+              id: user.id,
+              username: user.username,
+              email: user.email,
+              fullName: user.fullname ?? user.username,
+              role: "Admin",
+              avatar: "/face.png",
+              table: "label_manager"
+            },
+            source: "Neon",
+          }
+        }
 
-          if (validPassword) {
-            console.log("✅ Neon authentication successful")
-            return {
-              success: true,
-              user: {
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                fullName: user.full_name,
-                role: user.role,
-                avatar: user.avatar || "/face.png",
-              },
-              source: "Neon",
-            }
+        // Check artist table (artist users)
+        const artistResult = await this.neonSql`
+          SELECT * FROM artist 
+          WHERE username = ${username} AND password = ${password}
+          LIMIT 1
+        `
+
+        if (artistResult.length > 0) {
+          const user = artistResult[0]
+          console.log("✅ Neon artist authentication successful")
+          return {
+            success: true,
+            user: {
+              id: user.id,
+              username: user.username,
+              email: user.email,
+              fullName: user.fullname ?? user.username,
+              role: "Artist",
+              avatar: user.avatar ?? "/face.png",
+              table: "artist"
+            },
+            source: "Neon",
           }
         }
       } catch (error) {
-        console.log("⚠️ Neon auth failed:", error.message)
+        console.log("⚠️ Neon auth failed:", (error as Error).message)
       }
     }
 
-    // Try TiDB if available
-    if (this.tidbAvailable) {
+    // WordPress authentication (if available)
+    if (this.wordpressAvailable) {
       try {
-        const result = await tidbAuth(username, password)
-        if (result.success) {
-          console.log("✅ TiDB authentication successful")
-          return { ...result, source: "TiDB Cloud" }
-        }
+        // TODO: Implement WordPress authentication via REST API
+        console.log("⚠️ WordPress authentication not yet implemented")
       } catch (error) {
-        console.log("⚠️ TiDB auth failed:", error.message)
+        console.log("⚠️ WordPress auth failed:", (error as Error).message)
       }
     }
 
@@ -207,59 +178,6 @@ export class MultiDatabaseService {
     }
   }
 
-  async createTablesIfNeeded() {
-    // Create tables in Supabase if they don't exist
-    if (this.supabaseAvailable) {
-      try {
-        // Check if users table exists
-        const { data: users } = await this.supabase.from("users").select("count").limit(1)
-
-        if (!users) {
-          console.log("📋 Creating users table in Supabase...")
-          // Table will be created via Supabase dashboard or SQL editor
-        }
-
-        // Insert demo users if table is empty
-        const { data: existingUsers } = await this.supabase.from("users").select("id").limit(1)
-
-        if (!existingUsers || existingUsers.length === 0) {
-          console.log("👥 Inserting demo users...")
-          await this.supabase.from("users").insert([
-            {
-              id: "admin-001",
-              username: "admin",
-              email: "admin@aksstudio.com",
-              password_hash: "admin",
-              full_name: "Administrator",
-              role: "Label Manager",
-              avatar: "/face.png",
-            },
-            {
-              id: "ankunstudio-001",
-              username: "ankunstudio",
-              email: "ankunstudio@gmail.com",
-              password_hash: "admin",
-              full_name: "An Kun Studio",
-              role: "Label Manager",
-              avatar: "/Logo-An-Kun-Studio-Black.png",
-            },
-            {
-              id: "artist-001",
-              username: "artist",
-              email: "artist@aksstudio.com",
-              password_hash: "123456",
-              full_name: "Demo Artist",
-              role: "Artist",
-              avatar: "/face.png",
-            },
-          ])
-        }
-      } catch (error) {
-        console.log("⚠️ Table creation/seeding failed:", error.message)
-      }
-    }
-  }
-
   async createUser(userData: {
     username: string
     email: string
@@ -267,83 +185,65 @@ export class MultiDatabaseService {
     fullName?: string
     role?: string
   }) {
-    console.log("📝 Multi-DB User Creation:", userData.username)
+    console.log("👤 Creating user:", userData.username)
 
-    // Try Supabase first
-    if (this.supabaseAvailable) {
+    // Try creating in Neon first
+    if (this.neonAvailable) {
       try {
-        const { data, error } = await this.supabase
-          .from("users")
-          .insert([
-            {
-              id: `user-${Date.now()}`,
-              username: userData.username,
-              email: userData.email,
-              password_hash: userData.password,
-              full_name: userData.fullName || userData.username,
-              role: userData.role || "Artist",
-              avatar: "/face.png",
-            },
-          ])
-          .select()
+        // Check if user exists
+        const existingUser = await this.neonSql`
+          SELECT id FROM artist 
+          WHERE username = ${userData.username} OR email = ${userData.email}
+          LIMIT 1
+        `
 
-        if (!error && data) {
-          console.log("✅ User created in Supabase")
+        if (existingUser.length > 0) {
+          return {
+            success: false,
+            message: "Username or email already exists",
+          }
+        }
+
+        // Create new artist
+        const result = await this.neonSql`
+          INSERT INTO artist (username, email, password, fullname, avatar, bio, facebook, youtube, spotify, applemusic, tiktok, instagram)
+          VALUES (${userData.username}, ${userData.email}, ${userData.password}, 
+                  ${userData.fullName ?? userData.username}, '/face.png', '', '', '', '', '', '', '')
+          RETURNING *
+        `
+
+        if (result.length > 0) {
+          console.log("✅ User created successfully in Neon")
           return {
             success: true,
-            message: "User created successfully",
-            userId: data[0].id,
-            source: "Supabase",
+            user: result[0],
+            source: "Neon",
           }
         }
       } catch (error) {
-        console.log("⚠️ Supabase user creation failed:", error.message)
-      }
-    }
-
-    // Try Neon second
-    if (this.neonAvailable) {
-      try {
-        const userId = `user-${Date.now()}`
-        await this.neonSql`
-          INSERT INTO users (id, username, email, password_hash, full_name, role, avatar)
-          VALUES (${userId}, ${userData.username}, ${userData.email}, 
-                  ${userData.password}, ${userData.fullName || userData.username}, 
-                  ${userData.role || "Artist"}, ${"/face.png"})
-        `
-
-        console.log("✅ User created in Neon")
-        return {
-          success: true,
-          message: "User created successfully",
-          userId,
-          source: "Neon",
-        }
-      } catch (error) {
-        console.log("⚠️ Neon user creation failed:", error.message)
+        console.log("⚠️ Neon user creation failed:", (error as Error).message)
       }
     }
 
     return {
       success: false,
-      message: "Failed to create user in any database",
+      message: "Failed to create user - no available database",
     }
   }
 
-  getStatus() {
+  async getStatus() {
+    // Ensure initialization is complete
+    if (!this.neonAvailable && !this.wordpressAvailable) {
+      await this.initialize()
+    }
+
     return {
-      supabase: this.supabaseAvailable,
       neon: this.neonAvailable,
-      tidb: this.tidbAvailable,
-      primary: this.supabaseAvailable
-        ? "Supabase"
-        : this.neonAvailable
-          ? "Neon"
-          : this.tidbAvailable
-            ? "TiDB Cloud"
-            : "Demo Mode",
+      wordpress: this.wordpressAvailable,
+      supabase: false, // Disabled per user request
     }
   }
 }
 
+// Export singleton instance
 export const multiDB = new MultiDatabaseService()

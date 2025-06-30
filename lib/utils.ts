@@ -1,34 +1,59 @@
 // Tôi là An Kun
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import type { User } from "@/types/user"
-import { format, addDays } from "date-fns"
 
-export function cn(...inputs: ClassValue[]) { // This function was already exported
+export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function generateISRC(user: User, lastCounter: number): { isrc: string; newCounter: number } {
-  // Tôi là An Kun
-  const newCounter = lastCounter + 1
-  const paddedCounter = newCounter.toString().padStart(5, "0")
-  // Sử dụng prefix từ user.isrcCodeprefix nếu có
-  const prefix = user.isrcCodePrefix || "VNA2P"
-  const isrc = `${prefix}${new Date().getFullYear()}${paddedCounter}`
-  return { isrc, newCounter }
+export function generateISRC(user: any, counter: number): { isrc: string; newCounter: number } {
+  const prefix = "VNA2P"
+  const currentYear = new Date().getFullYear().toString().slice(-2)
+  const paddedCounter = counter.toString().padStart(5, "0")
+  return {
+    isrc: `${prefix}${currentYear}${paddedCounter}`,
+    newCounter: counter + 1
+  }
 }
 
-export function getStatusColor(status: string): string { // This function was already exported
+export function validateAudioFile(file: File): { valid: boolean; errors: string[] } {
+  const errors: string[] = []
+
+  if (!file.type.startsWith("audio/")) {
+    errors.push("Chỉ chấp nhận file âm thanh")
+  }
+
+  // Check file size (50MB max)
+  if (file.size > 50 * 1024 * 1024) {
+    errors.push("File quá lớn (tối đa 50MB)")
+  }
+
+  return { valid: errors.length === 0, errors }
+}
+
+export function getMinimumReleaseDate(): string {
+  const today = new Date()
+  today.setDate(today.getDate() + 7) // Minimum 7 days from now
+  return today.toISOString().split('T')[0]
+}
+
+export function getStatusColor(status: string): string {
   switch (status.toLowerCase()) {
     case "pending":
+    case "đã nhận, đang chờ duyệt":
       return "bg-yellow-500"
     case "approved":
+    case "đã duyệt, đang chờ phát hành!":
       return "bg-green-500"
     case "rejected":
+    case "đã duyệt, từ chối phát hành":
       return "bg-red-500"
     case "processing":
+    case "đang xử lý":
       return "bg-blue-500"
     case "published":
+    case "đã phát hành, đang chờ ra mắt":
+    case "hoàn thành phát hành!":
       return "bg-purple-500"
     case "draft":
       return "bg-gray-500"
@@ -37,72 +62,69 @@ export function getStatusColor(status: string): string { // This function was al
   }
 }
 
-export function getMinimumReleaseDate(): string {
-  const today = new Date();
-  // Add 2 days for review process, ensuring immutability by creating a new date object.
-  const minimumDate = addDays(today, 2);
-  return format(minimumDate, "yyyy-MM-dd");
+// Utility function to sanitize file names
+export function sanitizeFileName(fileName: string): string {
+  return fileName.replace(/[^a-zA-Z0-9.-]/g, '_')
 }
 
-export async function validateImageFile(file: File): Promise<{ valid: boolean; errors: string[] }> {
-  const errors: string[] = []
+// Utility function to validate email addresses
+export function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
 
-  // Check file type
-  if (!file.type.includes("jpeg") && !file.type.includes("jpg")) {
-    errors.push("Chỉ chấp nhận file JPG/JPEG")
+// Utility function to validate image files
+export async function validateImageFile(file: File): Promise<{ valid: boolean; errors: string[] }> {
+  const errors: string[] = [];
+  if (!file.type.startsWith("image/")) {
+    errors.push("Chỉ chấp nhận file ảnh");
   }
 
   // Check file size (5MB max)
   if (file.size > 5 * 1024 * 1024) {
-    errors.push("File quá lớn (tối đa 5MB)")
+    errors.push("File quá lớn (tối đa 5MB)");
   }
 
-  // Check dimensions by loading the image
   return new Promise((resolve) => {
-    const imageUrl = URL.createObjectURL(file)
-    const img = new Image()
+    const imageUrl = URL.createObjectURL(file);
+    const img = new Image();
 
     const finalResolve = (result: { valid: boolean; errors: string[] }) => {
-      URL.revokeObjectURL(imageUrl) // Revoke to prevent memory leaks
-      resolve(result)
-    }
+      URL.revokeObjectURL(imageUrl);
+      resolve(result);
+    };
 
     img.onload = () => {
       if (img.width !== 4000 || img.height !== 4000) {
-        errors.push("Kích thước phải là 4000x4000px")
+        errors.push("Kích thước phải là 4000x4000px");
       }
-      finalResolve({ valid: errors.length === 0, errors })
-    }
+      finalResolve({ valid: errors.length === 0, errors });
+    };
     img.onerror = () => {
-      errors.push("File ảnh không hợp lệ")
-      finalResolve({ valid: false, errors })
-    }
-    img.src = imageUrl
-  })
+      errors.push("File ảnh không hợp lệ");
+      finalResolve({ valid: false, errors });
+    };
+    img.src = imageUrl;
+  });
 }
 
-export async function validateAudioFile(file: File): Promise<{ valid: boolean; errors: string[] }> { // This function was already exported
-  const errors: string[] = []
-
-  // Check file type
-  if (!file.type.includes("wav") && !file.name.toLowerCase().endsWith(".wav")) {
-    errors.push("Chỉ chấp nhận file WAV")
-  }
-
-  // Check file size (100MB max for audio)
-  if (file.size > 100 * 1024 * 1024) {
-    errors.push("File audio quá lớn (tối đa 100MB)")
-  }
-
-  return { valid: errors.length === 0, errors }
-}
-
-// Add export to formatFileSize function
+// Utility function to format file sizes
 export function formatFileSize(bytes: number, decimalPoint?: number): string {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024; // Or 1000 for SI units
-  const dm = decimalPoint || 2;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const dm = decimalPoint || 2
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
+}
+
+// Utility function to generate unique IDs
+export function generateId(prefix: string = 'ID'): string {
+  return `${prefix}${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+}
+
+// Utility function to truncate text
+export function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text
+  return text.slice(0, maxLength) + '...'
 }

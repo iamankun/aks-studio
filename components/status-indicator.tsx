@@ -1,15 +1,25 @@
 // components/status-indicator.tsx
 interface StatusIndicatorProps {
-  status: string;
+  status: "connected" | "disconnected" | "checking" | "available" | "unavailable"
 }
 
-export function StatusIndicator({ status: statusType }: StatusIndicatorProps) {
+export function StatusIndicator({ status }: StatusIndicatorProps) {
+  const getColor = () => {
+    switch (status) {
+      case "connected":
+      case "available":
+        return "bg-green-500"
+      case "disconnected":
+      case "unavailable":
+        return "bg-red-500"
+      case "checking":
+        return "bg-yellow-500"
+      default:
+        return "bg-gray-500"
+    }
+  }
+
   return (
-    <span className={`px-2 py-1 rounded text-sm
-        ${statusType === "connected" ? "bg-green-600 text-white" :
-            statusType === "checking" ? "bg-yellow-600 text-white" : "bg-red-600 text-white"
-        }`}>
-      {statusType === "connected" ? "Kết nối" : statusType === "checking" ? "Đang kiểm tra..." : "Chưa kết nối"}
-    </span>
-  );
+    <div className={`w-2 h-2 rounded-full ${getColor()}`} />
+  )
 }

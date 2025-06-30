@@ -1,6 +1,8 @@
-// Tôi là An Kun
+"use client"
+
 import React, { useState, useEffect } from "react"
 import { X, CheckCircle, AlertCircle, Info } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 // Định nghĩa kiểu dữ liệu cho một thông báo
 export interface NotificationData {
@@ -65,84 +67,37 @@ const playSound = (type: NotificationData["type"]) => {
 }
 
 // Component NotificationSystem
-export const NotificationSystem: React.FC<NotificationSystemProps> = ({ notifications, onRemove }) => {
+export function NotificationSystem({ notifications, onRemove }: NotificationSystemProps) {
   if (!notifications || notifications.length === 0) {
     return null
   }
 
   return (
-    <div className="fixed top-4 right-4 z-[9999] space-y-3 w-full max-w-sm">
+    <div className="fixed top-4 right-4 z-50 space-y-2">
       {notifications.map((notification) => (
-        <NotificationItem key={notification.id} notification={notification} onRemove={onRemove} />
+        <div
+          key={notification.id}
+          className={`max-w-sm p-4 rounded-lg shadow-lg backdrop-blur-md border ${notification.type === "success"
+            ? "bg-green-600/90 border-green-500"
+            : "bg-red-600/90 border-red-500"
+            }`}
+        >
+          <div className="flex items-start justify-between">
+            <div>
+              <h4 className="font-semibold text-white">{notification.title}</h4>
+              <p className="text-sm text-gray-100">{notification.message}</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onRemove(notification.id)}
+              className="p-1 h-auto text-white hover:bg-white/20"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       ))}
-    </div>
-  )
-}
-
-// Component NotificationItem (mỗi thông báo riêng lẻ)
-const NotificationItem: React.FC<{ notification: NotificationData; onRemove: (id: string) => void }> = ({
-  notification,
-  onRemove,
-}) => {
-  const [isVisible, setIsVisible] = useState(true)
-
-  useEffect(() => {
-    if (notification.sound) {
-      playSound(notification.type)
-    }
-
-    if (notification.duration) {
-      const timer = setTimeout(() => {
-        handleClose()
-      }, notification.duration)
-      return () => clearTimeout(timer)
-    }
-  }, [notification])
-
-  const handleClose = () => {
-    setIsVisible(false)
-    // Đợi animation hoàn thành rồi mới remove
-    setTimeout(() => {
-      onRemove(notification.id)
-    }, 300) // Thời gian animation
-  }
-
-  const baseClasses = "relative w-full p-4 border rounded-lg shadow-xl transition-all duration-300 ease-in-out"
-  const typeClasses = {
-    success: "bg-green-600 border-green-500 text-green-100",
-    error: "bg-red-600 border-red-500 text-red-100",
-    info: "bg-blue-600 border-blue-500 text-blue-100",
-    warning: "bg-yellow-600 border-yellow-500 text-yellow-100",
-  }
-  const animationClasses = isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-full"
-
-  const Icon = {
-    success: CheckCircle,
-    error: AlertCircle,
-    info: Info,
-    warning: AlertCircle, // Có thể dùng AlertTriangle nếu muốn khác biệt
-  }[notification.type]
-
-  return (
-    <div className={`${baseClasses} ${typeClasses[notification.type]} ${animationClasses} font-sans`}> {/* Changed font-dosis to font-sans */}
-      <div className="flex items-start">
-        <div className="flex-shrink-0 pt-0.5">
-          <Icon className="h-6 w-6" aria-hidden="true" />
-        </div>
-        <div className="ml-3 flex-1">
-          <p className="text-sm font-bold">{notification.title}</p> {/* Changed font-dosis-bold to font-bold */}
-          <p className="mt-1 text-sm font-medium">{notification.message}</p> {/* Changed font-dosis-medium to font-medium */}
-        </div>
-        <div className="ml-4 flex-shrink-0 flex">
-          <button
-            onClick={handleClose}
-            className="inline-flex rounded-md text-current opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-current focus:ring-white"
-          >
-            <span className="sr-only">Đóng</span>
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </div>
-      </div>
     </div>
   )
 }

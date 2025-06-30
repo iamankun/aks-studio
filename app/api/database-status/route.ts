@@ -3,27 +3,29 @@ import { multiDB } from "@/lib/multi-database-service"
 
 export async function GET() {
   try {
-    const status = multiDB.getStatus()
+    const status = await multiDB.getStatus()
+
+    let primary: string;
+    if (status.neon) {
+      primary = "neon";
+    } else if (status.wordpress) {
+      primary = "wordpress";
+    } 
 
     return NextResponse.json({
       success: true,
       message: "Database status retrieved",
       databases: {
-        tidb: {
-          available: status.tidb,
-          ip: "42.119.149.253",
-          description: "TiDB Cloud - Primary Database",
-        },
-        supabase: {
-          available: status.supabase,
-          description: "Supabase - Secondary Database",
-        },
         neon: {
           available: status.neon,
-          description: "Neon - Tertiary Database",
+          description: "Neon - Primary Database (User Preferred)",
+        },
+        wordpress: {
+          available: status.wordpress,
+          description: "WordPress - Secondary Database",
         },
       },
-      primary: status.primary,
+      primary,
       timestamp: new Date().toISOString(),
     })
   } catch (error) {

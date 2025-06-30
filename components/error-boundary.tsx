@@ -2,8 +2,7 @@
 
 import React from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertTriangle, RefreshCw } from "lucide-react"
+import { RefreshCw, AlertTriangle } from "lucide-react"
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -20,40 +19,28 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
     return { hasError: true, error }
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("Error Boundary caught an error:", error, errorInfo)
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    console.error("Uncaught error:", error, errorInfo)
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
-              </div>
-              <CardTitle className="text-xl font-semibold text-gray-900">Oops! Something went wrong</CardTitle>
-              <CardDescription className="text-gray-600">
-                The application encountered an unexpected error. Please try refreshing the page.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button onClick={() => window.location.reload()} className="w-full" variant="default">
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Refresh Page
-              </Button>
-              <Button onClick={() => this.setState({ hasError: false })} className="w-full" variant="outline">
-                Try Again
-              </Button>
-              {process.env.NODE_ENV === "development" && this.state.error && (
-                <details className="mt-4 text-sm text-gray-600">
-                  <summary className="cursor-pointer font-medium">Error Details</summary>
-                  <pre className="mt-2 whitespace-pre-wrap break-words">{this.state.error.toString()}</pre>
-                </details>
-              )}
-            </CardContent>
-          </Card>
+        <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-6 text-white">
+            <AlertTriangle className="h-20 w-20 text-red-500 mx-auto mb-6" />
+            <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+            <p className="mb-6 text-gray-300">
+              {this.state.error?.message || "An unexpected error occurred"}
+            </p>
+            <Button
+              onClick={() => this.setState({ hasError: false })}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Try again
+            </Button>
+          </div>
         </div>
       )
     }

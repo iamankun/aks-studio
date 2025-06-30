@@ -9,12 +9,13 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, Eye, EyeOff, CheckCircle } from "lucide-react"
+import { DynamicBackground } from "@/components/dynamic-background"
 
 interface RegistrationViewProps {
   onSwitchToLogin: () => void
 }
 
-export function RegistrationView({ onSwitchToLogin }: RegistrationViewProps) {
+export function RegistrationView({ onSwitchToLogin }: Readonly<RegistrationViewProps>) {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -95,7 +96,7 @@ export function RegistrationView({ onSwitchToLogin }: RegistrationViewProps) {
           onSwitchToLogin()
         }, 2000)
       } else {
-        setError(data.message || "Đã xảy ra lỗi khi đăng ký")
+        setError(data.message ?? "Đã xảy ra lỗi khi đăng ký")
       }
     } catch (error) {
       console.error("🚨 Registration error:", error)
@@ -107,18 +108,12 @@ export function RegistrationView({ onSwitchToLogin }: RegistrationViewProps) {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-        {/* YouTube Video Background */}
-        <div className="absolute inset-0 z-0">
-          <iframe
-            src="https://www.youtube.com/embed/videoseries?list=PLrAKWdKgX5mxuE6w5DAR5NEeQrwunsSeO&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1"
-            className="absolute top-1/2 left-1/2 w-[177.77777778vh] h-[56.25vw] min-h-full min-w-full transform -translate-x-1/2 -translate-y-1/2"
-            style={{ opacity: 0.3 }}
-            allow="autoplay; encrypted-media"
-            allowFullScreen={false}
-          />
-          <div className="absolute inset-0 bg-black/50" />
-        </div>
+      <div className="min-h-screen relative flex items-center justify-center overflow-hidden">
+        {/* Dynamic Background System */}
+        <DynamicBackground />
+
+        {/* Overlay for better readability */}
+        <div className="absolute inset-0 bg-black/30"></div>
 
         <Card className="w-full max-w-md mx-4 relative z-10 bg-white/95 backdrop-blur-sm">
           <CardContent className="pt-6">
@@ -136,18 +131,12 @@ export function RegistrationView({ onSwitchToLogin }: RegistrationViewProps) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* YouTube Video Background */}
-      <div className="absolute inset-0 z-0">
-        <iframe
-          src="https://www.youtube.com/embed/videoseries?list=PLrAKWdKgX5mxuE6w5DAR5NEeQrwunsSeO&autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1"
-          className="absolute top-1/2 left-1/2 w-[177.77777778vh] h-[56.25vw] min-h-full min-w-full transform -translate-x-1/2 -translate-y-1/2"
-          style={{ opacity: 0.3 }}
-          allow="autoplay; encrypted-media"
-          allowFullScreen={false}
-        />
-        <div className="absolute inset-0 bg-black/50" />
-      </div>
+    <div className="min-h-screen relative flex items-center justify-center overflow-hidden">
+      {/* Dynamic Background System */}
+      <DynamicBackground />
+
+      {/* Overlay for better readability */}
+      <div className="absolute inset-0 bg-black/30"></div>
 
       {/* Registration Form */}
       <Card className="w-full max-w-md mx-4 relative z-10 bg-white/95 backdrop-blur-sm">

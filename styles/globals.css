@@ -1,15 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  font-family: Dosis, sans-serif;
 }
 
 @layer base {
@@ -90,5 +80,39 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Ensure background video is visible and has correct z-index */
+.fixed.inset-0.z-0,
+.fixed.inset-0 {
+  z-index: 0;
+  position: fixed;
+}
+
+/* Ensure content is above background */
+.relative.z-10 {
+  z-index: 10;
+  position: relative;
+}
+
+/* Top navigation should be above everything */
+.fixed.top-0.z-40 {
+  z-index: 40;
+  position: fixed;
+}
+
+/* Mobile menu styles */
+@media (max-width: 768px) {
+  .top-nav-mobile-menu {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .top-nav-mobile-button {
+    justify-content: flex-start;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 0.5rem;
   }
 }

@@ -1,88 +1,266 @@
 //Tôi là An Kun
 "use client"
-import { useState, useEffect, useMemo } from "react"
-import {
-    type BackgroundSettings,
-    BACKGROUND_SETTINGS_KEY,
-    DEFAULT_BACKGROUND_SETTINGS,
-} from "@/lib/constants" // Import từ file constants
+import { useEffect, useState, useMemo } from "react"
 
-// Khai báo kiểu sự kiện toàn cục để tăng cường type safety
-declare global {
-    interface WindowEventMap {
-        "backgroundUpdate": CustomEvent<BackgroundSettings>;
-    }
+// Define or import these according to your project structure
+type BackgroundSettings = {
+    type: "video" | "color";
+    videoUrl?: string;
+    videoList?: string[];
+    randomVideo?: boolean;
+    enableSound: boolean;
+    opacity: number;
+};
+
+const DEFAULT_BACKGROUND_SETTINGS: BackgroundSettings = {
+    type: "video",
+    videoUrl: "",
+    videoList: [],
+    randomVideo: false,
+    enableSound: false,
+    opacity: 0.5,
+};
+
+const BACKGROUND_SETTINGS_KEY = "backgroundSettings";
+const FALLBACK_VIDEOS = ["dQw4w9WgXcQ"]; // Example fallback video ID
+
+function getRandomVideoId(list: string[]): string {
+    return list[Math.floor(Math.random() * list.length)];
 }
 
-// Hàm lấy ID video ngẫu nhiên từ danh sách
-const getRandomVideoId = (videoList: string[]): string => {
-    if (!videoList || videoList.length === 0) {
-        return "dQw4w9WgXcQ" // Một video mặc định an toàn
-    }
-    const randomIndex = Math.floor(Math.random() * videoList.length)
-    return videoList[randomIndex]
+function getYouTubeId(url: string): string | null {
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([\w-]{11})/);
+    return match ? match[1] : null;
 }
 
-// Hàm trích xuất ID từ URL YouTube
-const getYouTubeId = (url: string): string | null => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
-    const match = url.match(regExp)
-    return match && match[2].length === 11 ? match[2] : null
-}
+// Dummy SoundControl component for demonstration; replace with your actual implementation
+const SoundControl = ({
+    enableSound,
+    onSoundToggle,
+}: {
+    enableSound: boolean;
+    onSoundToggle: (enable: boolean) => void;
+}) => (
+    <button
+        style={{
+            position: "fixed",
+            bottom: 20,
+            right: 20,
+            zIndex: 50,
+            background: "rgba(0,0,0,0.5)",
+            color: "white",
+            border: "none",
+            borderRadius: "50%",
+            width: 40,
+            height: 40,
+            cursor: "pointer",
+        }}
+        onClick={() => onSoundToggle(!enableSound)}
+        aria-label={enableSound ? "Mute background" : "Unmute background"}
+    >
+        {enableSound ? "🔊" : "🔇"}
+    </button>
+);
 
 export function DynamicBackground() {
-    const [settings, setSettings] = useState<BackgroundSettings | null>(null)
+    // You may need to import useMemo, and define the following constants/types elsewhere:
+    // - BackgroundSettings, DEFAULT_BACKGROUND_SETTINGS, BACKGROUND_SETTINGS_KEY, FALLBACK_VIDEOS, getRandomVideoId, getYouTubeId, SoundControl
+
+    const [settings, setSettings] = useState<BackgroundSettings | null>(null);
+    const [hasUserInteracted, setHasUserInteracted] = useState(false);
+    const [iframeKey, setIframeKey] = useState(0);
+    const [hasError, setHasError] = useState(false);
 
     useEffect(() => {
         const loadSettings = () => {
             try {
-                const savedSettings = localStorage.getItem(BACKGROUND_SETTINGS_KEY)
+                const savedSettings = localStorage.getItem(BACKGROUND_SETTINGS_KEY);
                 if (savedSettings) {
-                    setSettings(JSON.parse(savedSettings))
+                    const parsed = JSON.parse(savedSettings);
+                    // Validate parsed settings có đủ fields cần thiết
+                    if (parsed && typeof parsed === 'object') {
+                        setSettings({
+                            ...DEFAULT_BACKGROUND_SETTINGS,
+                            ...parsed
+                        });
+                    } else {
+                        console.warn("Invalid background settings format, using defaults");
+                        setSettings(DEFAULT_BACKGROUND_SETTINGS);
+                    }
                 } else {
                     // Sử dụng cài đặt mặc định từ file constants
-                    setSettings(DEFAULT_BACKGROUND_SETTINGS)
+                    setSettings(DEFAULT_BACKGROUND_SETTINGS);
                 }
             } catch (error) {
-                console.error("Failed to load or parse background settings:", error)
-                setSettings(DEFAULT_BACKGROUND_SETTINGS) // Fallback về mặc định nếu có lỗi
+                console.error("Failed to load or parse background settings:", error);
+                setSettings(DEFAULT_BACKGROUND_SETTINGS); // Fallback về mặc định nếu có lỗi
             }
-        }
+        };
 
-        loadSettings()
+        loadSettings();
 
         // Lắng nghe sự kiện cập nhật background từ trang Settings
-        const handleBackgroundUpdate = (event: CustomEvent<BackgroundSettings>) => setSettings(event.detail)
-        window.addEventListener("backgroundUpdate", handleBackgroundUpdate as EventListener)
-        return () => window.removeEventListener("backgroundUpdate", handleBackgroundUpdate as EventListener)
-    }, [])
+        const handleBackgroundUpdate = (event: CustomEvent<BackgroundSettings>) => setSettings(event.detail);
+        window.addEventListener("backgroundUpdate", handleBackgroundUpdate as EventListener);
+        return () => window.removeEventListener("backgroundUpdate", handleBackgroundUpdate as EventListener);
+    }, []);
 
-    // Memoize giá trị videoId để tránh tính toán lại không cần thiết
+    const updateSoundSetting = (enableSound: boolean) => {
+        if (settings) {
+            const updatedSettings = { ...settings, enableSound };
+            setSettings(updatedSettings);
+            localStorage.setItem(BACKGROUND_SETTINGS_KEY, JSON.stringify(updatedSettings));
+
+            // Cập nhật âm thanh của video iframe hiện tại
+            const iframe = document.querySelector('iframe[title="YouTube Background Video"]') as HTMLIFrameElement;
+            if (iframe?.contentWindow) {
+                try {
+                    // Luôn giữ video bị tắt tiếng, bất kể người dùng đã chọn gì
+                    iframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', 'https://www.youtube.com');
+                } catch (e) {
+                    console.warn("Could not update video sound:", e);
+                }
+            }
+
+            // Dispatch event để cập nhật các components khác
+            window.dispatchEvent(
+                new CustomEvent("backgroundUpdate", {
+                    detail: updatedSettings,
+                }),
+            );
+        }
+    };
+
+    // Tính toán opacity class dựa trên settings
+    const getOpacityClass = (opacity: number) => {
+        const adjustedOpacity = Math.max(0.1, Math.min(0.9, 1 - opacity));
+        if (adjustedOpacity <= 0.1) return "opacity-10";
+        if (adjustedOpacity <= 0.2) return "opacity-20";
+        if (adjustedOpacity <= 0.3) return "opacity-30";
+        if (adjustedOpacity <= 0.4) return "opacity-40";
+        if (adjustedOpacity <= 0.5) return "opacity-50";
+        if (adjustedOpacity <= 0.6) return "opacity-60";
+        if (adjustedOpacity <= 0.7) return "opacity-70";
+        if (adjustedOpacity <= 0.8) return "opacity-80";
+        return "opacity-90";
+    };
+
     const videoId = useMemo(() => {
-        if (!settings) return null
-        return settings.randomVideo ? getRandomVideoId(settings.videoList) : getYouTubeId(settings.videoUrl)
-    }, [settings?.randomVideo, settings?.videoUrl, settings?.videoList])
+        if (!settings) return null;
+
+        let selectedVideoId: string | null = null;
+
+        if (settings.randomVideo && settings.videoList && settings.videoList.length > 0) {
+            selectedVideoId = getRandomVideoId(settings.videoList);
+        } else if (settings.videoUrl && settings.videoUrl.trim() !== "") {
+            selectedVideoId = getYouTubeId(settings.videoUrl);
+        } else if (settings.videoList && settings.videoList.length > 0) {
+            // Fallback: nếu không có video nào được chỉ định, dùng video đầu tiên trong list
+            selectedVideoId = settings.videoList[0];
+        }
+
+        // Final fallback: nếu vẫn không có video hợp lệ, dùng fallback video
+        if (!selectedVideoId) {
+            selectedVideoId = FALLBACK_VIDEOS[0];
+        }
+
+        return selectedVideoId;
+    }, [settings?.randomVideo, settings?.videoUrl, settings?.videoList]);
+
+    // Handler để xử lý user interaction
+    const handleUserInteraction = () => {
+        setHasUserInteracted(true);
+        setHasError(false); // Reset error state on interaction
+        // Force reload iframe với delay để đảm bảo autoplay
+        setTimeout(() => setIframeKey(prev => prev + 1), 300);
+    };
+
+    // Effect để đảm bảo video autoplay sau khi user có interaction
+    useEffect(() => {
+        if (hasUserInteracted) return;
+
+        // Listen for user interactions
+        const events = ['click', 'touchstart', 'keydown', 'mousedown', 'scroll'];
+        events.forEach(event => {
+            document.addEventListener(event, handleUserInteraction, { once: true, passive: true });
+        });
+
+        return () => {
+            events.forEach(event => {
+                document.removeEventListener(event, handleUserInteraction);
+            });
+        };
+    }, [hasUserInteracted]);
+
+    // Effect để auto-trigger interaction sau 2 giây nếu user chưa tương tác
+    useEffect(() => {
+        if (!hasUserInteracted && videoId) {
+            const timer = setTimeout(handleUserInteraction, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [hasUserInteracted, videoId]);
 
     if (!settings) {
-        // Render một background tĩnh mặc định trong khi chờ settings được tải.
-        return <div className="fixed inset-0 -z-10" style={{ background: DEFAULT_BACKGROUND_SETTINGS.gradient }} />
+        return <div className="fixed inset-0 -z-10 bg-gradient-to-br from-indigo-500 to-purple-600" />;
     }
+
     return (
-        <div className="fixed inset-0 -z-10">
-            {settings.type === "video" && videoId ? (
-                <div className="absolute inset-0 overflow-hidden">
-                    <iframe
-                        className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&autohide=1&modestbranding=1&iv_load_policy=3`}
-                        frameBorder="0"
-                        allow="autoplay; encrypted-media"
-                        title="YouTube Background Video"
-                    ></iframe>
-                </div>
-            ) : (
-                <div className="absolute inset-0" style={{ background: settings.gradient }}></div>
+        <>
+            <div className="fixed inset-0 z-0">
+                {settings.type === "video" && videoId ? (
+                    <div className="absolute inset-0 overflow-hidden">
+                        {hasError ? (
+                            <div className="absolute inset-0 bg-gradient-to-br from-red-900 to-purple-900 flex items-center justify-center">
+                                <div className="text-white text-center">
+                                    <p className="text-lg">Video loading failed</p>
+                                    <p className="text-sm opacity-75">Retrying...</p>
+                                </div>
+                            </div>
+                        ) : (
+                                <iframe
+                                    key={iframeKey} // Force re-render khi user interact
+                                    className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&fs=0&cc_load_policy=0&iv_load_policy=3&modestbranding=1&disablekb=1&enablejsapi=1&playsinline=1&start=0&end=0&volume=0&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
+                                    frameBorder="0"
+                                    allow="autoplay; encrypted-media"
+                                    title="YouTube Background Video"
+                                    loading="lazy"
+                                    onLoad={() => {
+                                        // Always ensure video is muted on load
+                                        const iframe = document.querySelector('iframe[title="YouTube Background Video"]') as HTMLIFrameElement;
+                                        if (iframe?.contentWindow) {
+                                            try {
+                                                iframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', 'https://www.youtube.com');
+                                            } catch (e) {
+                                                console.warn("Could not mute video:", e);
+                                            }
+                                        }
+                                    }}
+                                    onError={() => {
+                                        console.warn("YouTube iframe failed to load, trying fallback...");
+                                        setHasError(true);
+                                        setTimeout(() => {
+                                            setIframeKey(prev => prev + 1);
+                                            setHasError(false);
+                                        }, 2000);
+                                    }}
+                                ></iframe>
+                        )}
+                    </div>
+                ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600"></div>
+                )}
+                {/* Dynamic opacity overlay */}
+                <div className={`absolute inset-0 bg-black ${getOpacityClass(settings.opacity)}`}></div>
+            </div>
+
+            {/* Show sound control only when video is playing */}
+            {settings.type === "video" && videoId && (
+                <SoundControl
+                    enableSound={settings.enableSound}
+                    onSoundToggle={updateSoundSetting}
+                />
             )}
-            <div className="absolute inset-0 bg-black" style={{ opacity: 1 - settings.opacity }}></div>
-        </div>
-    )
+        </>
+    );
 }

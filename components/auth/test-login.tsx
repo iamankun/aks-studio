@@ -8,7 +8,7 @@ import { authenticateUser } from "@/lib/auth-service"
 import type { User } from "@/types/user"
 
 interface TestLoginProps {
-  onLoginSuccess: (user: User) => void
+  readonly onLoginSuccess: (user: User) => void
 }
 
 export function TestLogin({ onLoginSuccess }: TestLoginProps) {

@@ -1,53 +1,63 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { RichTextEditor } from "@/components/rich-text-editor"
-import {
-  Mail,
-  Send,
-  Inbox,
-  FileText,
-  Settings,
-  Plus,
-  Edit,
-  Trash2,
-  TestTube,
-  Copy,
-  FolderSyncIcon as Sync,
-  CheckCircle,
-  Download,
-} from "lucide-react"
-import { sendEmail, type EmailDetails, type SmtpSettings } from "@/lib/email" // Import SmtpSettings
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Mail, Send, Inbox, CheckCircle, RotateCw, FileText, Plus, Edit, Trash2, Copy, TestTube, Settings, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { RichTextEditor } from "@/components/rich-text-editor";
 
-interface EmailTemplate {
-  id: string
-  name: string
-  subject: string
-  content: string
-  htmlContent: string
-  type: "html" | "text"
-  variables: string[]
-}
+// Define types if not imported from elsewhere
+type EmailTemplate = {
+  id: string;
+  name: string;
+  subject: string;
+  content: string;
+  htmlContent: string;
+  type: "html" | "text";
+  variables: string[];
+};
 
-interface EmailMessage {
-  id: string
-  from: string
-  to: string
-  subject: string
-  content: string
-  date: string
-  read: boolean
-  type: "sent" | "received"
+type EmailMessage = {
+  id: string;
+  from: string;
+  to: string;
+  subject: string;
+  content: string;
+  date: string;
+  read: boolean;
+  type: "sent" | "received";
+};
+
+type EmailDetails = {
+  from: string;
+  to: string;
+  cc?: string;
+  bcc?: string;
+  subject: string;
+  textBody: string;
+  htmlBody?: string;
+};
+
+type SmtpSettings = {
+  smtpServer: string;
+  smtpPort: string;
+  smtpUsername: string;
+  smtpPassword?: string;
+  connected: boolean;
+};
+
+// Dummy sendEmail function for demonstration; replace with actual implementation
+async function sendEmail(details: EmailDetails): Promise<{ success: boolean; message: string }> {
+  // Simulate sending email
+  return new Promise((resolve) => setTimeout(() => resolve({ success: true, message: "Email sent successfully." }), 1000));
 }
 
 interface EmailCenterViewProps {
-  showModal: (title: string, messages: string[], type?: "error" | "success") => void
+  showModal: (title: string, messages: string[], type?: "error" | "success") => void;
 }
 
 export function EmailCenterView({ showModal }: EmailCenterViewProps) {
@@ -378,7 +388,7 @@ Trân trọng,
                   disabled={syncStatus === "Syncing..."}
                   className="font-medium"
                 >
-                  <Sync className="mr-2 h-4 w-4" />
+                  <RotateCw className="mr-2 h-4 w-4" />
                   {syncStatus === "Syncing..." ? "Đang đồng bộ..." : "Đồng bộ"}
                 </Button>
               </CardTitle>
@@ -571,9 +581,11 @@ Trân trọng,
               </CardHeader>
               <CardContent className="space-y-2">
                 {templates.map((template) => (
-                  <div
+                  <button
                     key={template.id}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors email-template-card ${selectedTemplate?.id === template.id ? "bg-purple-600" : "bg-gray-700 hover:bg-gray-600"
+                    type="button"
+                    aria-pressed={selectedTemplate?.id === template.id}
+                    className={`p-3 rounded-lg cursor-pointer transition-colors email-template-card text-left w-full ${selectedTemplate?.id === template.id ? "bg-purple-600" : "bg-gray-700 hover:bg-gray-600"
                       }`}
                     onClick={() => setSelectedTemplate(template)}
                   >
@@ -608,7 +620,7 @@ Trân trọng,
                         </Button>
                       </div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </CardContent>
             </Card>
@@ -742,8 +754,9 @@ Trân trọng,
                           "username",
                           "vaitro",
                         ].map((variable) => (
-                          <span
+                          <button
                             key={variable}
+                            type="button"
                             className="px-2 py-1 bg-purple-600 text-white text-xs rounded cursor-pointer hover:bg-purple-700"
                             onClick={() => {
                               if (isEditing) {
@@ -751,9 +764,18 @@ Trân trọng,
                                 setSelectedTemplate({ ...selectedTemplate, content: newContent })
                               }
                             }}
+                            onKeyDown={(e) => {
+                              if ((e.key === "Enter" || e.key === " ") && isEditing) {
+                                e.preventDefault();
+                                const newContent = selectedTemplate.content + `[${variable}]`
+                                setSelectedTemplate({ ...selectedTemplate, content: newContent })
+                              }
+                            }}
+                            tabIndex={0}
+                            aria-label={`Chèn biến ${variable}`}
                           >
                             [{variable}]
-                          </span>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -876,7 +898,7 @@ Trân trọng,
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
               <CardTitle className="flex items-center font-dosis-semibold">
-                <Sync className="mr-2" />
+                <RotateCw className="mr-2" />
                 Đồng bộ email
               </CardTitle>
             </CardHeader>
@@ -917,7 +939,7 @@ Trân trọng,
                       className="w-full bg-blue-600 hover:bg-blue-700 font-dosis-medium"
                       disabled={syncStatus === "Syncing..."}
                     >
-                      <Sync className="h-4 w-4 mr-2" />
+                      <RotateCw className="h-4 w-4 mr-2" />
                       {syncStatus === "Syncing..." ? "Đang đồng bộ..." : "Đồng bộ ngay"}
                     </Button>
                     <Button

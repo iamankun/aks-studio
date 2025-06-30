@@ -382,7 +382,7 @@ export function BackgroundSystem() {
       <>
         <div className="fixed inset-0 z-0 overflow-hidden">
           <iframe
-            src={`https://www.youtube.com/embed/${currentVideo}?autoplay=1&mute=1&loop=1&playlist=${currentVideo}&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1`}
+            src={`https://www.youtube.com/embed/${currentVideo}?autoplay=1&mute=1&loop=1&playlist=${currentVideo}&controls=0&showinfo=0&rel=0&fs=0&cc_load_policy=0&iv_load_policy=3&modestbranding=1&disablekb=1`}
             className="absolute top-1/2 left-1/2 w-[177.77777778vh] h-[56.25vw] min-h-full min-w-full transform -translate-x-1/2 -translate-y-1/2"
             style={{ opacity: backgroundSettings.opacity }}
             allow="autoplay; encrypted-media"

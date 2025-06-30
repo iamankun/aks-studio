@@ -1,171 +1,130 @@
+// Tôi là An Kun
+// Hỗ trợ dự án, Copilot, Gemini
+// Tác giả kiêm xuất bản bởi An Kun Studio Digital Music
+
 "use client"
 
-import type React from "react"
-import { createContext, useContext, useEffect, useState } from "react"
-
-interface User {
-  id: string
-  username: string
-  email?: string
-  role: string
-  full_name?: string
-}
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react"
+import type { User } from "@/types/user"
 
 interface AuthContextType {
   user: User | null
-  loading: boolean
-  error: string | null
   login: (username: string, password: string) => Promise<boolean>
   logout: () => void
-  register: (userData: any) => Promise<boolean>
-  clearError: () => void
+  loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+interface AuthProviderProps {
+  children: React.ReactNode
+}
+
+// Demo user constant - tránh tạo object mới mỗi lần
+const DEMO_USER: User = {
+  id: "demo-admin",
+  username: "ankunstudio",
+  password: "admin",
+  email: "ankunstudio@ankun.dev",
+  role: "Label Manager",
+  fullName: "An Kun Studio Digital Music Distribution",
+  createdAt: "2024-01-01T00:00:00.000Z", // Fixed date để tránh re-render
+  avatar: "/face.png",
+  bio: "Digital Music Distribution Platform",
+  isrcCodePrefix: "VNA2P"
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const checkSession = async () => {
+    const checkAuth = async () => {
       try {
-        const timeoutId = setTimeout(() => {
-          console.log("Session check timeout, proceeding without user")
+        if (typeof window === 'undefined') {
           setLoading(false)
-        }, 3000) // 3 second timeout
-
-        const savedUser = localStorage.getItem("aks_user")
-        if (savedUser) {
-          const parsedUser = JSON.parse(savedUser)
-          if (parsedUser && parsedUser.role && parsedUser.username) {
-            setUser(parsedUser)
-          } else {
-            localStorage.removeItem("aks_user")
-          }
+          return
         }
 
-        clearTimeout(timeoutId)
-        setLoading(false)
+        // Không cần delay, sử dụng requestAnimationFrame để smoother
+        await new Promise(resolve => requestAnimationFrame(resolve))
+
+        const stored = localStorage.getItem("aks_user")
+        if (stored) {
+          try {
+            const userData = JSON.parse(stored)
+            setUser(userData)
+          } catch (parseError) {
+            console.error("Failed to parse stored user data:", parseError)
+            localStorage.removeItem("aks_user")
+            // Fallback to demo user
+            setUser(DEMO_USER)
+            localStorage.setItem("aks_user", JSON.stringify(DEMO_USER))
+          }
+        } else {
+          // Auto login demo user
+          setUser(DEMO_USER)
+          localStorage.setItem("aks_user", JSON.stringify(DEMO_USER))
+        }
       } catch (error) {
-        console.error("Error checking session:", error)
-        localStorage.removeItem("aks_user")
+        console.error("Auth check error:", error)
+        // Always fallback to demo user
+        setUser(DEMO_USER)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem("aks_user", JSON.stringify(DEMO_USER))
+        }
+      } finally {
         setLoading(false)
       }
     }
 
-    checkSession()
-  }, [])
-
-  const clearError = () => setError(null)
-
-  const login = async (username: string, password: string): Promise<boolean> => {
+    checkAuth()
+  }, []) // Empty dependency - chỉ chạy 1 lần
+  const login = useCallback(async (username: string, password: string): Promise<boolean> => {
     try {
       setLoading(true)
-      setError(null)
 
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      // Simple demo authentication - sử dụng DEMO_USER constant
+      if (username === "ankunstudio" && password === "admin") {
+        setUser(DEMO_USER)
 
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-        signal: controller.signal,
-      })
-
-      clearTimeout(timeoutId)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
-
-      if (data.success && data.user && data.user.role) {
-        const validatedUser = {
-          id: data.user.id || "unknown",
-          username: data.user.username || username,
-          email: data.user.email || "",
-          role: data.user.role || "Artist",
-          full_name: data.user.full_name || data.user.username,
-          ...data.user,
+        if (typeof window !== 'undefined') {
+          localStorage.setItem("aks_user", JSON.stringify(DEMO_USER))
         }
 
-        setUser(validatedUser)
-        localStorage.setItem("aks_user", JSON.stringify(validatedUser))
         return true
-      } else {
-        setError(data.message || "Login failed")
-        return false
       }
+
+      return false
     } catch (error) {
       console.error("Login error:", error)
-      if (error.name === "AbortError") {
-        setError("Login timeout. Please try again.")
-      } else {
-        setError("Network error. Please check your connection.")
-      }
       return false
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const logout = () => {
-    setUser(null)
-    setError(null)
-    localStorage.removeItem("aks_user")
-  }
-
-  const register = async (userData: any): Promise<boolean> => {
+  const logout = useCallback(() => {
     try {
-      setLoading(true)
-      setError(null)
-
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000)
-
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-        signal: controller.signal,
-      })
-
-      clearTimeout(timeoutId)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      setUser(null)
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem("aks_user")
+        localStorage.removeItem("demo_submissions")
       }
-
-      const data = await response.json()
-
-      if (!data.success) {
-        setError(data.message || "Registration failed")
-      }
-
-      return data.success
     } catch (error) {
-      console.error("Registration error:", error)
-      if (error.name === "AbortError") {
-        setError("Registration timeout. Please try again.")
-      } else {
-        setError("Network error. Please check your connection.")
-      }
-      return false
-    } finally {
-      setLoading(false)
+      console.error("Logout error:", error)
     }
-  }
+  }, [])
+
+  const contextValue = useMemo(() => ({
+    user,
+    login,
+    logout,
+    loading
+  }), [user, login, logout, loading])
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, logout, register, clearError }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   )

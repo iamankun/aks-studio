@@ -1,17 +1,17 @@
 "use client"
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { SubmissionDetailModal } from "@/components/modals/submission-detail-modal"
+import { useAuth } from "@/components/auth-provider"
 import type { User } from "@/types/user"
 import type { Submission } from "@/types/submission"
-import { getStatusColor } from "@/lib/utils"
 import { Eye, Download, Play, Pause, Volume2, FileText, Music } from "lucide-react"
 
 interface SubmissionsViewProps {
   submissions: Submission[]
-  currentUser: User
   viewType: string
   onUpdateStatus: (submissionId: string, newStatus: string) => void
   showModal: (title: string, messages: string[], type?: "error" | "success") => void
@@ -19,14 +19,25 @@ interface SubmissionsViewProps {
 
 export function SubmissionsView({
   submissions,
-  currentUser,
   viewType,
   onUpdateStatus,
   showModal,
 }: SubmissionsViewProps) {
+  const { user: currentUser } = useAuth();
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
+
+  if (!currentUser) {
+    return (
+      <div className="p-6 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">Đang tải thông tin</h2>
+          <p className="text-gray-500">Vui lòng chờ trong giây lát...</p>
+        </div>
+      </div>
+    );
+  }
 
   const displaySubmissions =
     viewType === "mySubmissions"

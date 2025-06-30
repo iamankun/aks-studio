@@ -1,0 +1,419 @@
+/* Custom reload animation styles - NO SPINNING, only light effects */
+@keyframes reloadPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.02); }
+}
+
+@keyframes lightSweep {
+  0% { transform: translateX(-100%); opacity: 0; }
+  50% { transform: translateX(0%); opacity: 0.8; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+
+@keyframes greetingFade {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes userRoleFade {
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes binaryGlow {
+  0%, 100% { 
+    color: #6b7280; 
+    text-shadow: none; 
+  }
+  50% { 
+    color: #3b82f6; 
+    text-shadow: 0 0 8px rgba(59, 130, 246, 0.5); 
+  }
+}
+
+.reload-button {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Light sweep effect */
+.reload-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  transition: left 0.5s ease-out;
+  z-index: 1;
+}
+
+.reload-button:hover::before,
+.reload-button.light-sweep::before {
+  left: 100%;
+}
+
+/* Active light sweep (more intense) */
+.reload-button.light-sweep-active::before {
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.4), rgba(255,255,255,0.8), rgba(147, 51, 234, 0.4), transparent);
+  animation: lightSweep 0.8s ease-out;
+}
+
+.reload-pulsing {
+  animation: reloadPulse 1s ease-in-out infinite;
+}
+
+/* Dynamic greeting animations */
+.greeting-fade {
+  animation: greetingFade 0.5s ease-out;
+}
+
+.user-role-fade {
+  animation: userRoleFade 0.3s ease-out;
+}
+
+.binary-animation {
+  animation: binaryGlow 2s ease-in-out infinite, typewriter 1s ease-out;
+  transition: all 0.3s ease;
+  border-right: 2px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Company binary animation - different from user binary */
+/* Duplicate .binary-animation-company removed to avoid selector conflict */
+
+/* Glassmorphism effect for cards */
+.glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.37),
+    0 4px 16px 0 rgba(31, 38, 135, 0.2);
+}
+
+/* Floating animation for decorative elements - More dynamic GenZ style */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-15px) rotate(1deg); }
+  50% { transform: translateY(-30px) rotate(0deg); }
+  75% { transform: translateY(-15px) rotate(-1deg); }
+}
+
+@keyframes floatPulse {
+  0%, 100% { 
+    transform: scale(1) translateY(0px);
+    opacity: 0.6;
+  }
+  50% { 
+    transform: scale(1.1) translateY(-20px);
+    opacity: 0.8;
+  }
+}
+
+@keyframes colorShift {
+  0% { filter: hue-rotate(0deg); }
+  25% { filter: hue-rotate(90deg); }
+  50% { filter: hue-rotate(180deg); }
+  75% { filter: hue-rotate(270deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+.floating {
+  animation: float 6s ease-in-out infinite, colorShift 8s linear infinite;
+}
+
+.floating:nth-child(2) {
+  animation: floatPulse 4s ease-in-out infinite, colorShift 6s linear infinite;
+  animation-delay: -2s, -1s;
+}
+
+.floating:nth-child(3) {
+  animation: float 5s ease-in-out infinite, colorShift 10s linear infinite;
+  animation-delay: -4s, -3s;
+}
+
+/* New GenZ elements */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.genZ-shimmer {
+  background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Additional GenZ style animations */
+@keyframes neonGlow {
+  0%, 100% {
+    text-shadow: 
+      0 0 5px currentColor,
+      0 0 10px currentColor,
+      0 0 15px currentColor;
+  }
+  50% {
+    text-shadow: 
+      0 0 10px currentColor,
+      0 0 20px currentColor,
+      0 0 30px currentColor,
+      0 0 40px currentColor;
+  }
+}
+
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blinkCursor {
+  0%, 50% { border-right-color: currentColor; }
+  51%, 100% { border-right-color: transparent; }
+}
+
+/* Smooth transitions for text changes */
+.greeting-text, .farewell-text, .recovery-text {
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.greeting-text.opacity-0, .farewell-text.opacity-0, .recovery-text.opacity-0 {
+  opacity: 0;
+/* Enhanced binary animation for username input */
+.binary-animation:after {
+  content: '';
+  animation: blinkCursor 1s infinite;
+}
+  content: '';
+  animation: blinkCursor 1s infinite;
+}
+
+/* Company binary animation - different from user binary */
+.binary-animation-company {
+  animation: binaryGlow 0.5s ease-in-out infinite;
+  transition: all 0.2s ease;
+  color: #8b5cf6;
+  letter-spacing: 2px;
+}
+
+/* Button hover effects */
+.genZ-shimmer:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* Light sweep for login button - ONE action, 2 seconds duration */
+.login-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.login-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+/* Light sweep trigger - smooth single action */
+.login-button.light-sweep::before {
+  opacity: 1;
+  animation: lightSweepMove 2s ease-out forwards;
+}
+
+/* Intense light sweep for click action */
+.login-button.light-sweep-intense::before {
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(59, 130, 246, 0.6), 
+    rgba(255,255,255,0.9), 
+    rgba(147, 51, 234, 0.6), 
+    transparent
+  );
+  opacity: 1;
+  animation: lightSweepMove 2s ease-out forwards;
+}
+
+/* Keyframe for smooth sweep movement */
+@keyframes lightSweepMove {
+  0% { 
+    left: -100%; 
+    opacity: 1;
+  }
+  50% { 
+    left: 0%; 
+    opacity: 1;
+  }
+  100% { 
+    left: 100%; 
+    opacity: 0;
+  }
+}
+
+/* Theme toggle styles */
+.theme-toggle {
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover {
+  transform: rotate(180deg);
+}
+
+/* Fullscreen video background */
+.fullscreen-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -1;
+}
+
+/* Ensure video covers entire viewport */
+.video-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Login container adjustments for fullscreen */
+.login-container {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  width: 100vw;
+}
+
+/* Floating elements responsive behavior */
+@media (max-width: 768px) {
+  .floating {
+    display: none;
+  }
+}
+
+/* Login/Logout/Reset specific themes */
+.login-theme {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+}
+
+.logout-theme {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(245, 101, 101, 0.1));
+}
+
+.reset-theme {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(20, 184, 166, 0.1));
+}
+
+/* Enhanced glass effect for different themes */
+.glass-card.login-theme {
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.glass-card.logout-theme {
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.glass-card.reset-theme {
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+/* Technology transition effects */
+@keyframes techGlitch {
+  0%, 100% { 
+    transform: translateX(0); 
+    filter: hue-rotate(0deg);
+  }
+  10% { 
+    transform: translateX(-2px); 
+    filter: hue-rotate(90deg);
+  }
+  20% { 
+    transform: translateX(2px); 
+    filter: hue-rotate(180deg);
+  }
+  30% { 
+    transform: translateX(-1px); 
+    filter: hue-rotate(270deg);
+  }
+  40% { 
+    transform: translateX(1px); 
+    filter: hue-rotate(0deg);
+  }
+  50% { 
+    transform: translateX(0); 
+    opacity: 0.8;
+  }
+}
+
+@keyframes scanLine {
+  0% { 
+    transform: translateY(-100%); 
+    opacity: 0;
+  }
+  50% { 
+    opacity: 1;
+  }
+  100% { 
+    transform: translateY(100%); 
+    opacity: 0;
+  }
+}
+
+@keyframes matrixRain {
+  0% { opacity: 0; transform: translateY(-20px); }
+  50% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(20px); }
+}
+
+.tech-glitch {
+  animation: techGlitch 0.3s ease-in-out;
+}
+
+.tech-scan-line {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(147, 51, 234, 0.8),
+    transparent
+  );
+  height: 2px;
+  width: 100%;
+  animation: scanLine 0.3s ease-in-out;
+}
+
+/* Enhanced binary animation for large display */
+.binary-animation-company-large {
+  animation: techBinaryGlow 2s ease-in-out infinite, matrixRain 0.5s ease-out;
+  color: #a855f7;
+  letter-spacing: 4px;
+  text-shadow: 
+    0 0 10px rgba(168, 85, 247, 0.5),
+    0 0 20px rgba(168, 85, 247, 0.3),
+    0 0 30px rgba(168, 85, 247, 0.1);
+  font-weight: bold;
+}

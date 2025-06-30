@@ -3,7 +3,7 @@ import type { Submission } from "@/types/submission"
 
 export interface UploadFormViewProps {
     currentUser: User
-    onSubmissionAdded: (submission: Submission) => void // Tôi là An Kun
-    showModal: (title: string, messages: string[], type?: "success" | "error") => void // Tôi là An Kun
-    // ...existing props...
+    onSubmissionAdded: (submission: Submission) => void
+    showModal: (title: string, message: string, type?: "success" | "error") => void
 }
+

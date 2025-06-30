@@ -13,13 +13,22 @@ import { Switch } from "@/components/ui/switch"
 import { Settings, Mail, Save, ImageIcon, Globe, Database, Palette, HelpCircle } from "lucide-react"
 import { sendEmail, type EmailDetails } from "@/lib/email"
 import { useSystemStatus } from "@/components/system-status-provider"
+import { useAuth } from "@/components/auth-provider"
 import type { User } from "@/types/user"
 
-interface SettingsViewProps {
-  currentUser: User
-}
+export function SettingsView() {
+  const { user: currentUser } = useAuth();
 
-export function SettingsView({ currentUser }: SettingsViewProps) {
+  if (!currentUser) {
+    return (
+      <div className="p-6 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">Đang tải thông tin</h2>
+          <p className="text-gray-500">Vui lòng chờ trong giây lát...</p>
+        </div>
+      </div>
+    );
+  }
   const { status, checkAllSystems } = useSystemStatus()
 
   const [emailSettings, setEmailSettings] = useState({
@@ -279,7 +288,7 @@ export function SettingsView({ currentUser }: SettingsViewProps) {
                     alt="App Logo"
                     className="h-8 w-8 rounded object-cover"
                     onError={(e) => {
-                      ;(e.target as HTMLImageElement).src = appSettings.logoUrl || "/face.png"
+                      ; (e.target as HTMLImageElement).src = appSettings.logoUrl || "/face.png"
                     }}
                   />
                   <div>
@@ -732,6 +741,73 @@ export function SettingsView({ currentUser }: SettingsViewProps) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <div className="mt-8">
+        <Card className="bg-gray-800 border border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Settings className="mr-2" />
+              Cài đặt hệ thống
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Database className="mr-2" />
+                    Trạng thái hệ thống
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span>Nền tảng</span>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-sm text-green-600">Online</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Database</span>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                        <span className="text-sm text-yellow-600">Demo Mode</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Palette className="mr-2" />
+                    Giao diện
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">Cài đặt giao diện sẽ có trong bản cập nhật sau...</p>
+                </CardContent>
+              </Card>
+
+              {currentUser.role === "Label Manager" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Mail className="mr-2" />
+                      Cấu hình Email
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600">Cài đặt SMTP có sẵn trong Bảng điều khiển Quản trị</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

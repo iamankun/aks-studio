@@ -1,4 +1,9 @@
-import { tidbClient } from "./tidb-client"
+// Active: 1750877192019@@ep-mute - rice - a17ojtca - pooler.ap - southeast - 1.aws.neon.tech@5432@aksstudio
+// Tôi là An Kun 
+// Hỗ trợ dự án, Copilot, Gemini
+// Tác giả kiêm xuất bản bởi An Kun Studio Digital Music
+
+import { multiDB } from "./multi-database-service"
 import type { User } from "@/types/user"
 
 export interface AuthResult {
@@ -8,378 +13,181 @@ export interface AuthResult {
   debug?: any
 }
 
-// Tạo tables nếu chưa có
-export async function initializeTables() {
+// Mock authentication for demo purposes
+// In production, this should integrate with proper auth providers
+export async function authenticateUser(username: string, password: string): Promise<AuthResult> {
   try {
-    console.log("🔍 Initializing TiDB tables...")
+    console.log("🔐 Authenticating user:", username)
 
-    // Test connection first
-    const connectionTest = await tidbClient.testConnection()
-    if (!connectionTest.success) {
-      console.error("❌ TiDB connection failed")
-      return { success: false, error: "Database connection failed" }
-    }
-
-    // Tạo label_manager table
-    const createLabelManager = `
-      CREATE TABLE IF NOT EXISTS label_manager (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        fullname VARCHAR(255) NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        avatar TEXT DEFAULT '/face.png',
-        bio TEXT DEFAULT '',
-        createdat TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        facebook TEXT DEFAULT '',
-        youtube TEXT DEFAULT '',
-        spotify TEXT DEFAULT '',
-        applemusic TEXT DEFAULT '',
-        tiktok TEXT DEFAULT '',
-        instagram TEXT DEFAULT '',
-        background_type VARCHAR(50) DEFAULT 'video',
-        background_gradient TEXT DEFAULT 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        background_video_url TEXT DEFAULT '',
-        background_opacity DECIMAL(3,2) DEFAULT 0.3,
-        background_playlist TEXT DEFAULT 'PLrAKWdKgX5mxuE6w5DAR5NEeQrwunsSeO'
-      )
-    `
-
-    const labelResult = await tidbClient.query(createLabelManager)
-    if (!labelResult.success) {
-      return { success: false, error: labelResult.error }
-    }
-
-    // Tạo artist table
-    const createArtist = `
-      CREATE TABLE IF NOT EXISTS artist (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        fullname VARCHAR(255) NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        avatar TEXT DEFAULT '/face.png',
-        bio TEXT DEFAULT '',
-        createdat TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        facebook TEXT DEFAULT '',
-        youtube TEXT DEFAULT '',
-        spotify TEXT DEFAULT '',
-        applemusic TEXT DEFAULT '',
-        tiktok TEXT DEFAULT '',
-        instagram TEXT DEFAULT ''
-      )
-    `
-
-    const artistResult = await tidbClient.query(createArtist)
-    if (!artistResult.success) {
-      return { success: false, error: artistResult.error }
-    }
-
-    // Tạo submissions table
-    const createSubmissions = `
-      CREATE TABLE IF NOT EXISTS submissions (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        artist_id INT,
-        title VARCHAR(255) NOT NULL,
-        artist_name VARCHAR(255) NOT NULL,
-        release_type VARCHAR(50) NOT NULL,
-        genre VARCHAR(100) NOT NULL,
-        release_date DATE NOT NULL,
-        status VARCHAR(50) DEFAULT 'pending',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        tracks JSON,
-        artwork_url TEXT,
-        isrc_code VARCHAR(50),
-        copyright_info JSON
-      )
-    `
-
-    const submissionsResult = await tidbClient.query(createSubmissions)
-    if (!submissionsResult.success) {
-      return { success: false, error: submissionsResult.error }
-    }
-
-    // Insert default admin nếu chưa có
-    const checkAdmin = await tidbClient.query("SELECT id FROM label_manager WHERE username = 'ankunstudio' LIMIT 1")
-
-    if (checkAdmin.success && checkAdmin.rows.length === 0) {
-      const insertAdmin = `
-        INSERT INTO label_manager (
-          username, password, fullname, email, avatar, bio,
-          facebook, youtube, spotify, applemusic, tiktok, instagram,
-          background_playlist
-        ) VALUES (
-          'ankunstudio', 'admin', 'An Kun Studio Digital Music Distribution',
-          'admin@ankun.dev', '/face.png', 'Digital Music Distribution Platform',
-          '', '', '', '', '', '',
-          'PLrAKWdKgX5mxuE6w5DAR5NEeQrwunsSeO'
-        )
-      `
-
-      await tidbClient.query(insertAdmin)
-      console.log("✅ Default admin created")
-    }
-
-    console.log("✅ TiDB tables initialized successfully")
-    return { success: true }
-  } catch (error) {
-    console.error("🚨 Initialize tables error:", error)
-    return { success: false, error: error.message }
-  }
-}
-
-// Server-side authentication với TiDB
-export async function authenticateUserServer(username: string, password: string): Promise<AuthResult> {
-  try {
-    console.log("🔍 TiDB Authentication for:", username)
-
-    // Initialize tables first
-    const initResult = await initializeTables()
-    if (!initResult.success) {
-      console.log("❌ TiDB initialization failed, using fallback")
-      return authenticateUserLocal(username, password)
-    }
-
-    // Query label_manager
-    const labelManagerQuery = `
-      SELECT * FROM label_manager 
-      WHERE username = '${username.replace(/'/g, "''")}' AND password = '${password.replace(/'/g, "''")}' 
-      LIMIT 1
-    `
-
-    const labelResult = await tidbClient.query(labelManagerQuery)
-
-    if (labelResult.success && labelResult.rows.length > 0) {
-      const userData = labelResult.rows[0]
-      console.log("✅ Found Label Manager:", userData.username)
-
+    // For demo purposes, accept ankunstudio/admin as valid login
+    if (username === "ankunstudio" && password === "admin") {
       const user: User = {
-        id: userData.id.toString(),
-        username: userData.username,
+        id: "demo-user-1",
+        username: "ankunstudio",
+        email: "admin@ankunstudio.com",
+        fullName: "An Kun Studio Digital Music Distribution",
         role: "Label Manager",
-        full_name: userData.fullname,
-        email: userData.email,
-        avatar_url: userData.avatar || "/face.png",
-        bio: userData.bio || "",
-        social_links: {
-          facebook: userData.facebook || "",
-          youtube: userData.youtube || "",
-          spotify: userData.spotify || "",
-          appleMusic: userData.applemusic || "",
-          tiktok: userData.tiktok || "",
-          instagram: userData.instagram || "",
-        },
-        created_at: userData.createdat,
-        background_settings: {
-          type: userData.background_type || "video",
-          gradient: userData.background_gradient || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          video_url: userData.background_video_url || "",
-          opacity: userData.background_opacity || 0.3,
-          playlist: userData.background_playlist || "PLrAKWdKgX5mxuE6w5DAR5NEeQrwunsSeO",
-        },
+        avatar: "/images/avatar-placeholder.jpg",
+        password: "admin", // In production, this should be hashed
+        createdAt: new Date().toISOString()
       }
 
+      console.log("✅ Authentication successful for admin user")
       return {
         success: true,
         user,
-        debug: { source: "tidb", table: "label_manager" },
+        message: "Authentication successful"
       }
     }
 
-    // Query artist
-    const artistQuery = `
-      SELECT * FROM artist 
-      WHERE username = '${username.replace(/'/g, "''")}' AND password = '${password.replace(/'/g, "''")}' 
-      LIMIT 1
-    `
-
-    const artistResult = await tidbClient.query(artistQuery)
-
-    if (artistResult.success && artistResult.rows.length > 0) {
-      const userData = artistResult.rows[0]
-      console.log("✅ Found Artist:", userData.username)
-
-      const user: User = {
-        id: userData.id.toString(),
-        username: userData.username,
-        role: "Artist",
-        full_name: userData.fullname,
-        email: userData.email,
-        avatar_url: userData.avatar || "/face.png",
-        bio: userData.bio || "",
-        social_links: {
-          facebook: userData.facebook || "",
-          youtube: userData.youtube || "",
-          spotify: userData.spotify || "",
-          appleMusic: userData.applemusic || "",
-          tiktok: userData.tiktok || "",
-          instagram: userData.instagram || "",
-        },
-        created_at: userData.createdat,
+    // For other users, try to authenticate from database (if available)
+    try {
+      const dbResult = await multiDB.authenticateUser(username, password)
+      if (dbResult.success && dbResult.user) {
+        console.log("✅ User authenticated via database:", dbResult.user)
+        return dbResult
       }
-
-      return {
-        success: true,
-        user,
-        debug: { source: "tidb", table: "artist" },
-      }
+    } catch (dbError) {
+      console.warn("⚠️ Database authentication failed, using fallback auth:", dbError)
     }
 
-    console.log("❌ No user found in TiDB, using fallback")
-    return authenticateUserLocal(username, password)
+    console.log("❌ Authentication failed for user:", username)
+    return {
+      success: false,
+      message: "Invalid username or password"
+    }
+
   } catch (error) {
-    console.error("🚨 TiDB authentication error:", error)
-    return authenticateUserLocal(username, password)
+    console.error("❌ Authentication error:", error)
+    return {
+      success: false,
+      message: "Authentication service error",
+      debug: error instanceof Error ? error.message : String(error)
+    }
   }
 }
 
-// Fallback authentication
-export function authenticateUserLocal(username: string, password: string): AuthResult {
-  console.log("🔍 Local fallback authentication for:", username)
+// Register new user (demo implementation)
+export async function registerUser(userData: Partial<User>, password: string): Promise<AuthResult> {
+  try {
+    console.log("📝 Registering new user:", userData.username)
 
-  if (username === "ankunstudio" && password === "admin") {
-    console.log("✅ Local authentication successful")
-
-    const user: User = {
-      id: "1",
-      username: "ankunstudio",
-      role: "Label Manager",
-      full_name: "An Kun Studio Digital Music Distribution",
-      email: "admin@ankun.dev",
-      avatar_url: "/face.png",
-      bio: "Digital Music Distribution Platform",
-      social_links: {
-        facebook: "",
-        youtube: "",
-        spotify: "",
-        appleMusic: "",
-        tiktok: "",
-        instagram: "",
-      },
-      created_at: new Date().toISOString(),
-      background_settings: {
-        type: "video",
-        gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        video_url: "",
-        opacity: 0.3,
-        playlist: "PLrAKWdKgX5mxuE6w5DAR5NEeQrwunsSeO",
-      },
+    // Basic validation
+    if (!userData.username || !userData.email || !password) {
+      return {
+        success: false,
+        message: "Username, email, and password are required"
+      }
     }
+
+    // Create new user
+    const newUser: User = {
+      id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      username: userData.username,
+      email: userData.email!,
+      fullName: userData.fullName || userData.username,
+      role: userData.role || "Artist",
+      avatar: userData.avatar || "/images/avatar-placeholder.jpg",
+      password: password, // In production, this should be hashed
+      createdAt: new Date().toISOString()
+    }
+
+    // Try to save to database
+    try {
+      const saveResult = await multiDB.createUser({
+        username: newUser.username,
+        email: newUser.email,
+        fullName: newUser.fullName,
+        password: password,
+        role: newUser.role
+      })
+
+      if (saveResult.success) {
+        console.log("✅ User saved to database successfully")
+      } else {
+        console.warn("⚠️ Could not save user to database, but registration allowed")
+      }
+    } catch (error) {
+      console.warn("⚠️ Database save failed, but registration allowed:", error)
+    }
+
+    console.log("✅ User registration successful")
+    return {
+      success: true,
+      user: newUser,
+      message: "Registration successful"
+    }
+
+  } catch (error) {
+    console.error("❌ Registration error:", error)
+    return {
+      success: false,
+      message: "Registration service error",
+      debug: error instanceof Error ? error.message : String(error)
+    }
+  }
+}
+
+// Initialize auth system
+export async function initializeAuth() {
+  try {
+    console.log("🔧 Initializing auth system...")
+
+    // Test database connectivity
+    const dbStatus = await multiDB.getStatus()
+    console.log("📊 Database status:", dbStatus)
 
     return {
       success: true,
-      user,
-      debug: { source: "fallback" },
-    }
-  }
-
-  return {
-    success: false,
-    message: "Invalid credentials",
-  }
-}
-
-// Register new artist
-export async function registerArtist(userData: {
-  username: string
-  password: string
-  email: string
-  fullname: string
-}): Promise<AuthResult> {
-  try {
-    console.log("🔍 Registering new artist:", userData.username)
-
-    // Initialize tables first
-    const initResult = await initializeTables()
-    if (!initResult.success) {
-      return {
-        success: false,
-        message: "Database not available",
-      }
-    }
-
-    // Check if user exists
-    const checkQuery = `
-      SELECT id FROM artist 
-      WHERE username = '${userData.username.replace(/'/g, "''")}' OR email = '${userData.email.replace(/'/g, "''")}' 
-      LIMIT 1
-    `
-
-    const checkResult = await tidbClient.query(checkQuery)
-
-    if (checkResult.success && checkResult.rows.length > 0) {
-      return {
-        success: false,
-        message: "Username or email already exists",
-      }
-    }
-
-    // Insert new artist
-    const insertQuery = `
-      INSERT INTO artist (
-        username, password, fullname, email, avatar, bio,
-        facebook, youtube, spotify, applemusic, tiktok, instagram
-      ) VALUES (
-        '${userData.username.replace(/'/g, "''")}', 
-        '${userData.password.replace(/'/g, "''")}', 
-        '${userData.fullname.replace(/'/g, "''")}', 
-        '${userData.email.replace(/'/g, "''")}',
-        '/face.png', '', '', '', '', '', '', ''
-      )
-    `
-
-    const insertResult = await tidbClient.query(insertQuery)
-
-    if (insertResult.success) {
-      return {
-        success: true,
-        message: "Registration successful",
-      }
-    } else {
-      return {
-        success: false,
-        message: insertResult.error || "Registration failed",
-      }
+      message: "Auth system initialized",
+      debug: { dbStatus }
     }
   } catch (error) {
-    console.error("🚨 Registration error:", error)
+    console.error("❌ Auth initialization error:", error)
     return {
       success: false,
-      message: `Registration failed: ${error.message}`,
+      message: "Auth initialization failed",
+      debug: error instanceof Error ? error.message : String(error)
     }
   }
 }
 
-// Main authentication function
-export async function authenticateUser(username: string, password: string): Promise<User | null> {
+// Get user profile
+export async function getUserProfile(userId: string): Promise<AuthResult> {
   try {
-    console.log("🔍 Main authentication for:", username)
+    console.log("👤 Getting user profile:", userId)
 
-    // For client-side, call API route
-    if (typeof window !== "undefined") {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      })
-
-      const result = await response.json()
-
-      if (result.success && result.user) {
-        return result.user
+    // For demo admin user
+    if (userId === "demo-user-1") {
+      const user: User = {
+        id: "demo-user-1",
+        username: "ankunstudio",
+        email: "admin@ankunstudio.com",
+        fullName: "An Kun Studio Digital Music Distribution",
+        role: "Label Manager",
+        avatar: "/images/avatar-placeholder.jpg",
+        password: "admin", // In production, this should be hashed
+        createdAt: new Date().toISOString()
       }
-
-      return null
+      return {
+        success: true,
+        user,
+        message: "Profile retrieved"
+      }
     }
 
-    // For server-side, call directly
-    const result = await authenticateUserServer(username, password)
-    return result.success ? result.user || null : null
+    // For other users, database lookup would go here
+    return {
+      success: false,
+      message: "User not found"
+    }
+
   } catch (error) {
-    console.error("🚨 Main authentication error:", error)
-    return null
+    console.error("❌ Get profile error:", error)
+    return {
+      success: false,
+      message: "Profile service error",
+      debug: error instanceof Error ? error.message : String(error)
+    }
   }
 }

@@ -6,6 +6,7 @@ export interface BackgroundSettings {
     opacity: number;
     randomVideo: boolean;
     videoList: string[];
+    enableSound: boolean;
 }
 
 // Key lưu trữ trong localStorage
@@ -26,4 +27,5 @@ export const DEFAULT_BACKGROUND_SETTINGS: BackgroundSettings = {
     opacity: 0.3,
     randomVideo: true,
     videoList: DEFAULT_VIDEO_LIST,
+    enableSound: false, // Mặc định tắt âm thanh để tránh annoying
 };

@@ -6,7 +6,7 @@
 
 ## 🎵 Giới thiệu
 
-AKs Studio là nền tảng quản lý và phát hành âm nhạc chuyên nghiệp, được thiết kế đặc biệt cho các label và nghệ sĩ độc lập. Hệ thống cung cấp đầy đủ các tính năng từ upload nhạc, quản lý metadata, đến phân phối trên các nền tảng streaming.
+AKs Studio là nền tảng quản lý và phát hành âm nhạc chuyên nghiệp, được thiết kế đặc biệt cho các label và nghệ sĩ độc lập. Hệ thống cung cấp đầy đủ các tính năng quản lý metadata và phân phối trên các nền tảng streaming.
 
 ## 🚀 Tính năng chính
 
@@ -15,7 +15,7 @@ AKs Studio là nền tảng quản lý và phát hành âm nhạc chuyên nghi�
 - ✅ Toàn quyền quản lý hệ thống
 - ✅ Tạo và quản lý tài khoản nghệ sĩ
 - ✅ Cấu hình SMTP, Database, giao diện
-- ✅ Upload và quản lý nhạc cho tất cả nghệ sĩ
+- ✅ Quản lý nhạc cho tất cả nghệ sĩ
 - ✅ Tải xuống file nhạc và ảnh bìa
 - ✅ Quản lý ISRC và metadata
 - ✅ Backup và restore dữ liệu
@@ -24,7 +24,7 @@ AKs Studio là nền tảng quản lý và phát hành âm nhạc chuyên nghi�
 
 ### Cho Nghệ sĩ
 
-- ✅ Upload nhạc và ảnh bìa
+- ✅ Quản lý nhạc và ảnh bìa
 - ✅ Quản lý thông tin cá nhân
 - ✅ Theo dõi trạng thái phát hành
 - ✅ Tìm kiếm ISRC
@@ -107,7 +107,7 @@ Password: [App Password]
 
 ### 3. Tùy chỉnh giao diện
 
-- **Logo:** Upload và set làm favicon
+- **Logo:** Quản lý và set làm favicon
 - **Background:** Gradient CSS hoặc YouTube video playlist
 - **Footer:** Thông tin công ty và liên kết
 - **Font:** Dosis (cố định, không thay đổi)
@@ -145,7 +145,7 @@ akscms/
 - Tự động tra cứu thông tin bài hát
 - Kiểm tra trùng lặp trước khi phát hành
 
-### File Upload
+### File Management
 
 - **Audio:** WAV, 24bit+, max 100MB
 - **Image:** JPG, 4000x4000px, max 5MB
@@ -232,7 +232,7 @@ linear-gradient(135deg, #667eea 0%, #764ba2 100%)
 3. Test LocalStorage
 4. Restart ứng dụng
 
-### Upload file lỗi
+### File processing lỗi
 
 1. Kiểm tra format file
 2. Kiểm tra kích thước
@@ -329,7 +329,7 @@ MIT License - Xem file LICENSE để biết thêm chi tiết.
 
 - Next.js API routes
 - Multi-database abstraction layer
-- File upload with validation
+- File management with validation
 - Email service integration
 
 ### Database Schema

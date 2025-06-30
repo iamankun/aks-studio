@@ -4,16 +4,14 @@ import React, { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import {
-    Home, ArrowLeft, Music, Lock, Menu, X, User, LogOut,
-    ChevronUp, ChevronDown, FileText, Upload, Users,
+    Home, ArrowLeft, Music, Menu, X, User, LogOut,
+    ChevronUp, ChevronDown, FileText, Users,
     Settings, Mail, Database, Shield
 } from "lucide-react"
 import { ThemeToggle } from "./theme-toggle"
 import { Button } from "./ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
-import { useUserRole } from "@/hooks/use-user-role"
 import { useAuth } from "@/components/auth-provider"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
     DropdownMenu,
@@ -30,7 +28,6 @@ interface TopNavBarProps {
 }
 
 export function TopNavBar({ currentView, onViewChange }: TopNavBarProps) {
-    const { canUploadMusic } = useUserRole();
     const { user, logout } = useAuth();
     const isMobile = useIsMobile();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -54,7 +51,6 @@ export function TopNavBar({ currentView, onViewChange }: TopNavBarProps) {
     // Main menu items - đầy đủ navigation 
     const menuItems = [
         { id: "dashboard", label: "Dashboard", icon: Home },
-        { id: "upload", label: "Tải lên", icon: Upload },
         { id: "submissions", label: "Submissions", icon: FileText },
         { id: "profile", label: "Hồ sơ", icon: User },
         { id: "settings", label: "Cài đặt", icon: Settings },
@@ -242,32 +238,6 @@ export function TopNavBar({ currentView, onViewChange }: TopNavBarProps) {
                             <ArrowLeft className="h-[1rem] w-[1rem] mr-1" />
                             <span className="text-sm">Quay lại</span>
                         </Button>
-
-                        {/* Upload Button with Permission Check */}
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    {canUploadMusic ? (
-                                        <Button variant="ghost" size="sm" asChild className="rounded-full hover:bg-primary/10 w-full md:w-auto justify-start">
-                                            <Link href="/upload-test" className="flex items-center">
-                                                <Music className="h-[1rem] w-[1rem] mr-1" />
-                                                <span className="text-sm">Upload nhạc</span>
-                                            </Link>
-                                        </Button>
-                                    ) : (
-                                        <Button variant="ghost" size="sm" className="rounded-full hover:bg-primary/10 opacity-60 cursor-not-allowed w-full md:w-auto justify-start" disabled>
-                                            <Lock className="h-[1rem] w-[1rem] mr-1" />
-                                            <span className="text-sm">Upload nhạc</span>
-                                        </Button>
-                                    )}
-                                </TooltipTrigger>
-                                {!canUploadMusic && (
-                                    <TooltipContent>
-                                        <p>Chỉ Label Manager và Artist mới có thể upload nhạc</p>
-                                    </TooltipContent>
-                                )}
-                            </Tooltip>
-                        </TooltipProvider>
                     </div>
                 </div>
             )}

@@ -6,24 +6,36 @@ import type { User } from "@/types/user"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, UserPlus, Shield } from "lucide-react"
-import { fetchUsersFromClient } from "@/lib/data" // Đổi tên hàm fetch
 
 export function UsersView() {
   const [usersList, setUsersList] = useState<User[]>([])
-  const [isClient, setIsClient] = useState(false) // State để kiểm tra client-side
+  const [loading, setLoading] = useState(true)
+  const [artistCount, setArtistCount] = useState(0)
 
   useEffect(() => {
-    // Chỉ chạy sau khi component đã được mount trên client
-    setIsClient(true)
-    fetchUsersFromClient().then((dbUsers) => {
-      setUsersList(dbUsers)
-    })
-  }, [])
+    const fetchUsers = async () => {
+      try {
+        setLoading(true)
+        
+        // Fetch artists from API
+        const response = await fetch('/api/artists')
+        const data = await response.json()
+        
+        if (data.success && data.artists) {
+          setUsersList(data.artists)
+          setArtistCount(data.count || data.artists.length)
+        } else {
+          console.error('Failed to fetch users:', data.error)
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  if (!isClient) {
-    // Render một placeholder hoặc không gì cả trên server để tránh hydration error
-    return null
-  }
+    fetchUsers()
+  }, [])
 
   return (
     <div className="p-2 md:p-6">
@@ -45,7 +57,7 @@ export function UsersView() {
             <Users className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{usersList.length}</div>
+            <div className="text-2xl font-bold">{loading ? "..." : usersList.length}</div>
             <p className="text-xs text-gray-500">Người dùng hoạt động</p>
           </CardContent>
         </Card>

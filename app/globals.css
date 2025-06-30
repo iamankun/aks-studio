@@ -60,6 +60,15 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-dosis), "Dosis", system-ui, sans-serif;
+    overflow-x: hidden;
+      overflow-y: auto;
+      height: 100%;
+    }
+    
+    html {
+      height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
   }
 }
 

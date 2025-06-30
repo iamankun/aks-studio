@@ -55,24 +55,13 @@ interface UploadFormViewProps {
 export default function UploadFormView({ onSubmissionAdded, showModal }: Readonly<UploadFormViewProps>) {
   const { user: currentUser } = useAuth();
 
-  if (!currentUser) {
-    return (
-      <div className="p-6 min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-700 mb-2">Đang tải thông tin</h2>
-          <p className="text-gray-500">Vui lòng chờ trong giây lát...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Form state
-  const [fullName, setFullName] = useState(currentUser.fullName ?? "")
-  const [artistName, setArtistName] = useState(currentUser.role === "Artist" ? currentUser.username : "")
+  // Form state - initialize with safe defaults
+  const [fullName, setFullName] = useState("")
+  const [artistName, setArtistName] = useState("")
   const [artistRole, setArtistRole] = useState<ArtistPrimaryRole>("singer")
   const [songTitle, setSongTitle] = useState("")
   const [albumName, setAlbumName] = useState("")
-  const [userEmail, setUserEmail] = useState(currentUser.email ?? "")
+  const [userEmail, setUserEmail] = useState("")
   const [mainCategory, setMainCategory] = useState<MainCategory>("pop")
   const [subCategory, setSubCategory] = useState<SubCategory>("official")
   const [releaseType, setReleaseType] = useState<ReleaseType>("single")
@@ -94,10 +83,26 @@ export default function UploadFormView({ onSubmissionAdded, showModal }: Readonl
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null)
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({})
 
-  // Set minimum release date on component mount
+  // Set minimum release date and user data on component mount
   useEffect(() => {
     setReleaseDate(getMinimumReleaseDate())
-  }, [])
+    if (currentUser) {
+      setFullName(currentUser.fullName ?? "")
+      setArtistName(currentUser.role === "Artist" ? currentUser.username : "")
+      setUserEmail(currentUser.email ?? "")
+    }
+  }, [currentUser])
+
+  if (!currentUser) {
+    return (
+      <div className="p-6 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">Đang tải thông tin</h2>
+          <p className="text-gray-500">Vui lòng chờ trong giây lát...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Additional artist management functions
   const addAdditionalArtist = (trackId: string) => {
@@ -366,7 +371,7 @@ export default function UploadFormView({ onSubmissionAdded, showModal }: Readonl
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">🎵 Upload Nhạc Để Phát Hành Toàn Cầu</h1>
-            <p className="text-gray-600 dark:text-gray-400">Tải lên nhạc của bạn và chia sẻ với thế giới</p>
+            <p className="text-muted-foreground">Tải lên nhạc của bạn và chia sẻ với thế giới</p>
           </div>
           <div className="flex items-center">
             <ThemeToggle />
@@ -851,14 +856,14 @@ export default function UploadFormView({ onSubmissionAdded, showModal }: Readonl
                     onChange={(e) => setReleaseDate(e.target.value)}
                     min={getMinimumReleaseDate()}
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Ngày phát hành phải ít nhất 7 ngày kể từ hôm nay
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Ngày phát hành phải ít nhất 2 ngày kể từ hôm nay
                   </p>
                 </div>
 
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2">📋 Tóm tắt thông tin</h4>
-                  <div className="space-y-2 text-sm">
+                <div className="bg-secondary/50 border border-border p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2 text-foreground">📋 Tóm tắt thông tin</h4>
+                  <div className="space-y-2 text-sm text-foreground">
                     <p><strong>Nghệ sĩ:</strong> {artistName || "Chưa nhập"}</p>
                     <p><strong>Bài hát:</strong> {songTitle || "Chưa nhập"}</p>
                     <p><strong>Album:</strong> {albumName || "Không có"}</p>

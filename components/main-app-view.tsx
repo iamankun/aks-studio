@@ -1,7 +1,3 @@
-// Tôi là An Kun
-// Hỗ trợ dự án, Copilot, Gemini
-// Tác giả kiêm xuất bản bởi An Kun Studio Digital Music
-
 "use client"
 
 import { useAuth } from "@/components/auth-provider"
@@ -19,9 +15,9 @@ import { NotificationSystem } from "@/components/notification-system"
 import { SoundSystem } from "@/components/sound-system"
 import { SystemStatusProvider } from "@/components/system-status-provider"
 import { AuthFlowClient } from "@/components/auth-flow-client"
-import { useState, useEffect } from "react"
-import { dbService } from "@/lib/database-service"
-import type { Submission } from "@/types/submission"
+import { useState, useEffect, useCallback } from "react"
+import { databaseService } from "@/lib/database-service"
+import type { Submission, SubmissionStatus } from "@/types/submission"
 import { LogsView } from "@/components/views/logs-view"
 import { logger } from "@/lib/logger"
 
@@ -29,32 +25,16 @@ export default function MainAppView() {
   const { user, loading, login } = useAuth()
   const [currentView, setCurrentView] = useState("dashboard")
   const [submissions, setSubmissions] = useState<Submission[]>([])
-  const [notifications, setNotifications] = useState<any[]>([])
+  const [notifications, setNotifications] = useState<Array<{
+    id: string;
+    title: string;
+    message: string;
+    type: "success" | "error";
+    timestamp: Date;
+  }>>([])
   const [isInitialized, setIsInitialized] = useState(false)
 
-  useEffect(() => {
-    logger.info('MainAppView: Component mounted', {
-      component: 'MainAppView',
-      action: 'mount'
-    })
-
-    // Đánh dấu đã khởi tạo sau khi component mount
-    setTimeout(() => {
-      setIsInitialized(true)
-    }, 100)
-
-    if (user) {
-      logger.info('MainAppView: User logged in', {
-        userId: user.id,
-        username: user.username,
-        role: user.role,
-        component: 'MainAppView'
-      })
-      loadSubmissions()
-    }
-  }, [user])
-
-  const loadSubmissions = async () => {
+  const loadSubmissions = useCallback(async () => {
     if (!user) return
 
     logger.debug('MainAppView: Loading submissions', {
@@ -64,7 +44,7 @@ export default function MainAppView() {
     })
 
     try {
-      const result = await dbService.getSubmissions({
+      const result = await databaseService.getSubmissions({
         username: user.role === "Label Manager" ? undefined : user.username
       })
 
@@ -83,11 +63,32 @@ export default function MainAppView() {
         action: 'loadSubmissions'
       })
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    logger.info('MainAppView: Component mounted', {
+      component: 'MainAppView',
+      action: 'mount'
+    })
+
+    setTimeout(() => {
+      setIsInitialized(true)
+    }, 100)
+
+    if (user) {
+      logger.info('MainAppView: User logged in', {
+        userId: user.id,
+        username: user.username,
+        role: user.role,
+        component: 'MainAppView'
+      })
+      loadSubmissions()
+    }
+  }, [user, loadSubmissions])
 
   const handleSubmissionAdded = async (submission: Submission) => {
     try {
-      const result = await dbService.createSubmission(submission)
+      const result = await databaseService.saveSubmission(submission)
       if (result.success) {
         setSubmissions(prev => [submission, ...prev])
         showNotification("Thành công", "Đã gửi submission thành công!", "success")
@@ -100,11 +101,11 @@ export default function MainAppView() {
 
   const handleStatusUpdate = async (submissionId: string, newStatus: string) => {
     try {
-      const result = await dbService.updateSubmissionStatus(submissionId, newStatus)
+      const result = await databaseService.updateSubmissionStatus(submissionId, newStatus as SubmissionStatus)
       if (result.success) {
         setSubmissions(prev =>
           prev.map(sub =>
-            sub.id === submissionId ? { ...sub, status: newStatus as any } : sub
+            sub.id === submissionId ? { ...sub, status: newStatus as SubmissionStatus } : sub
           )
         )
         showNotification("Cập nhật", "Đã cập nhật trạng thái", "success")
@@ -130,7 +131,6 @@ export default function MainAppView() {
     }
     setNotifications(prev => [notification, ...prev])
 
-    // Auto remove after 5 seconds
     setTimeout(() => removeNotificationById(notification.id), 5000)
   }
 
@@ -138,10 +138,8 @@ export default function MainAppView() {
     setNotifications(prev => prev.filter(n => n.id !== id))
   }
 
-  // Always render the main layout, but overlay loading/login if needed
   let overlay: React.ReactNode = null;
 
-  // Chỉ hiển thị overlay khi thực sự cần và đã initialized
   if (!isInitialized || loading) {
     overlay = (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-blue-900/90 to-purple-900/90 backdrop-blur-sm">
@@ -173,17 +171,15 @@ export default function MainAppView() {
     );
   }
 
-  // Debug UI: show user, loading, currentView in sidebar for troubleshooting
   return (
     <SystemStatusProvider>
-      <div className="flex h-screen bg-background relative overflow-hidden">
+      <div className="flex min-h-screen bg-background relative main-container">
         <DynamicBackground />
         <TopNavBar currentView={currentView} onViewChange={setCurrentView} />
-        <div className="w-full"> {/* Full width container, no sidebar */}
-          <main className="flex-1 overflow-hidden relative">
-            <div className="h-full overflow-y-auto bg-background transition-colors duration-300">
-              {/* Main Content Views */}
-              {currentView === "dashboard" && <DashboardView />}
+        <div className="w-full min-h-screen">
+          <main className="flex-1 relative pt-20 min-h-screen">
+            <div className="min-h-screen bg-background transition-colors duration-300 pb-8">
+              {currentView === "dashboard" && <DashboardView onViewChange={setCurrentView} />}
               {currentView === "upload" && (
                 <UploadFormView
                   onSubmissionAdded={handleSubmissionAdded}
@@ -196,6 +192,7 @@ export default function MainAppView() {
                   viewType="all"
                   onUpdateStatus={handleStatusUpdate}
                   showModal={showNotification}
+                  onViewChange={setCurrentView}
                 />
               )}
               {currentView === "profile" && (

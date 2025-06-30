@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/components/auth-provider"
-import { loadUsersFromLocalStorage, saveUsersToLocalStorage } from "@/lib/data"
 
 interface MyProfileViewProps {
   showModal: (title: string, message: string, type?: "success" | "error") => void

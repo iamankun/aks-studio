@@ -8,13 +8,14 @@ import { SubmissionDetailModal } from "@/components/modals/submission-detail-mod
 import { useAuth } from "@/components/auth-provider"
 import type { User } from "@/types/user"
 import type { Submission } from "@/types/submission"
-import { Eye, Download, Play, Pause, Volume2, FileText, Music } from "lucide-react"
+import { Eye, Download, Play, Pause, Volume2, FileText, Music, Upload } from "lucide-react"
 
 interface SubmissionsViewProps {
   submissions: Submission[]
   viewType: string
   onUpdateStatus: (submissionId: string, newStatus: string) => void
   showModal: (title: string, messages: string[], type?: "error" | "success") => void
+  onViewChange?: (view: string) => void
 }
 
 export function SubmissionsView({
@@ -22,6 +23,7 @@ export function SubmissionsView({
   viewType,
   onUpdateStatus,
   showModal,
+  onViewChange,
 }: SubmissionsViewProps) {
   const { user: currentUser } = useAuth();
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null)
@@ -142,9 +144,18 @@ export function SubmissionsView({
       </div>
 
       <Card className="mt-6 bg-gray-800 border border-gray-700">
-        <CardHeader className="flex items-center">
-          <Volume2 className="mr-3 text-purple-400 w-8 h-8" />
-          <CardTitle className="text-white">Recent Submissions</CardTitle>
+        <CardHeader className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Volume2 className="mr-3 text-purple-400 w-8 h-8" />
+            <CardTitle className="text-white">Recent Submissions</CardTitle>
+          </div>
+          <Button
+            className="bg-purple-600 hover:bg-purple-700 text-white"
+            onClick={() => onViewChange?.("upload")}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Upload New Track
+          </Button>
         </CardHeader>
         <CardContent className="p-0">
           {displaySubmissions.length === 0 ? (
@@ -152,6 +163,13 @@ export function SubmissionsView({
               <Music className="h-12 w-12 text-gray-600 mx-auto mb-4" />
               <p className="text-gray-400">No submissions found</p>
               <p className="text-sm text-gray-500 mt-2">Upload your first track to get started</p>
+              <Button
+                className="mt-4 bg-purple-600 hover:bg-purple-700 text-white"
+                onClick={() => onViewChange?.("upload")}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Track
+              </Button>
             </div>
           ) : (
             <div className="overflow-x-auto">

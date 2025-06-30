@@ -25,7 +25,7 @@ export const APP_CONFIG = {
 // Client-side mode detection
 export const getClientMode = () => {
     if (typeof window !== 'undefined') {
-        return localStorage.getItem('APP_MODE') || 'Demo';
+        return localStorage.getItem('APP_MODE') || 'demo';
     }
     return 'demo';
 }
@@ -33,28 +33,28 @@ export const getClientMode = () => {
 // Helper functions
 export const isProductionMode = () => {
     if (typeof window !== 'undefined') {
-        return getClientMode() === 'Production';
+        return getClientMode() === 'production';
     }
-    return APP_CONFIG.MODE === 'Production';
+    return APP_CONFIG.MODE === 'production';
 }
 
 export const isDemoMode = () => {
     if (typeof window !== 'undefined') {
-        return getClientMode() === 'Demo';
+        return getClientMode() === 'demo';
     }
     return APP_CONFIG.MODE === 'demo';
 }
 
 export const shouldUseRealDatabase = () => {
     if (typeof window !== 'undefined') {
-        return getClientMode() === 'Production' || localStorage.getItem('USE_REAL_DB') === 'true';
+        return getClientMode() === 'production' || localStorage.getItem('USE_REAL_DB') === 'true';
     }
     return APP_CONFIG.DATABASE.USE_REAL_DB;
 }
 
 export const shouldUseRealSMTP = () => {
     if (typeof window !== 'undefined') {
-        return getClientMode() === 'Production' || localStorage.getItem('USE_REAL_SMTP') === 'true';
+        return getClientMode() === 'production' || localStorage.getItem('USE_REAL_SMTP') === 'true';
     }
     return APP_CONFIG.EMAIL.USE_REAL_SMTP;
 }

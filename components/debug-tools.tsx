@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { logger } from "@/lib/logger"
-import { dbService } from "@/lib/database-service"
+import { databaseService } from "@/lib/database-service"
 
 export function DebugTools() {
     const [result, setResult] = useState<string>("")
@@ -20,7 +20,7 @@ export function DebugTools() {
     }
 
     const checkDatabase = async () => {
-        const connection = await dbService.checkConnection()
+        const connection = await databaseService.testConnection()
         setResult(JSON.stringify(connection, null, 2))
 
         if (!connection.success) {

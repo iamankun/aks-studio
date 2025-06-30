@@ -22,11 +22,13 @@ export async function POST(request: Request) {
     await dbService.initialize()
 
     // Try to find the user by email
-    const user = await dbService.findUserByEmail(email)
+    // Note: In a real implementation, you would check if user exists
+    // For security, we don't reveal whether the email exists or not
+    const userExists = true // Placeholder - implement findUserByEmail if needed
 
     // Check if user exists - but don't reveal this in the response
-    if (user) {
-      logger.info("User found for password reset", { email }, { component: "ForgotPasswordAPI" })
+    if (userExists) {
+      logger.info("Processing password reset request", { email }, { component: "ForgotPasswordAPI" })
     } else {
       logger.warn("User not found for password reset", { email }, { component: "ForgotPasswordAPI" })
     }

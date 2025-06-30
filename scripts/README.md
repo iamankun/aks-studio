@@ -51,7 +51,7 @@ scripts/
 - **Mục đích:** Nghệ sĩ, musicians
 - **Quyền hạn:** Hạn chế, chỉ quản lý thông tin cá nhân
 - **Features:**
-  - Upload nhạc
+  - Quản lý nhạc
   - Chỉnh sửa profile
   - Xem submissions của mình
   - Không thể xem analytics tổng thể

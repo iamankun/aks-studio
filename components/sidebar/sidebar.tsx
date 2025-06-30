@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Home,
-  Upload,
   FileText,
   User,
   Settings,
@@ -40,7 +39,6 @@ export function Sidebar({ currentView, onViewChange, user, onLogout }: SidebarPr
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "upload", label: "Tải lên", icon: Upload },
     { id: "submissions", label: "Submissions", icon: FileText },
     { id: "profile", label: "Hồ sơ", icon: User },
     { id: "settings", label: "Cài đặt", icon: Settings },

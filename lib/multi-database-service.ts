@@ -58,8 +58,8 @@ export class MultiDatabaseService {
     console.log("🔐 Multi-DB Authentication for:", username)
 
     // Ensure initialization is complete
-    if (!this.neonAvailable && !this.wordpressAvailable) {
-      await this.initialize()
+    if (!this.neonSql) {
+      await this.initializeDatabases()
     }
 
     // Try Neon first (User's preference)
@@ -68,50 +68,80 @@ export class MultiDatabaseService {
         // Check label_manager table first (admin users)
         const adminResult = await this.neonSql`
           SELECT * FROM label_manager 
-          WHERE username = ${username} AND password = ${password}
+          WHERE username = ${username}
           LIMIT 1
         `
 
         if (adminResult.length > 0) {
           const user = adminResult[0]
-          console.log("✅ Neon admin authentication successful")
-          return {
-            success: true,
-            user: {
-              id: user.id,
-              username: user.username,
-              email: user.email,
-              fullName: user.fullname ?? user.username,
-              role: "Admin",
-              avatar: "/face.png",
-              table: "label_manager"
-            },
-            source: "Neon",
+
+          // Verify password using bcrypt or plain text fallback
+          let passwordValid = false
+
+          if (user.password_hash?.startsWith('$2b$')) {
+            // Bcrypt hashed password
+            const bcrypt = require('bcryptjs')
+            passwordValid = await bcrypt.compare(password, user.password_hash)
+          } else {
+            // Plain text password (fallback for existing data)
+            passwordValid = user.password_hash === password
+          }
+
+          if (passwordValid) {
+            console.log("✅ Neon admin authentication successful")
+            return {
+              success: true,
+              user: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                fullName: user.full_name ?? user.username,
+                role: "Admin",
+                avatar: user.avatar_url ?? "/face.png",
+                table: "label_manager"
+              },
+              source: "Neon",
+            }
           }
         }
 
         // Check artist table (artist users)
         const artistResult = await this.neonSql`
           SELECT * FROM artist 
-          WHERE username = ${username} AND password = ${password}
+          WHERE username = ${username}
           LIMIT 1
         `
 
         if (artistResult.length > 0) {
           const user = artistResult[0]
-          console.log("✅ Neon artist authentication successful")
-          return {
-            success: true,
-            user: {
-              id: user.id,
-              username: user.username,
-              email: user.email,
-              fullName: user.fullname ?? user.username,
-              role: "Artist",
-              avatar: user.avatar ?? "/face.png",
-              table: "artist"
-            },
-            source: "Neon",
+
+          // Verify password using bcrypt or plain text fallback
+          let passwordValid = false
+
+          if (user.password_hash?.startsWith('$2b$')) {
+            // Bcrypt hashed password
+            const bcrypt = require('bcryptjs')
+            passwordValid = await bcrypt.compare(password, user.password_hash)
+          } else {
+            // Plain text password (fallback for existing data)
+            passwordValid = user.password_hash === password
+          }
+
+          if (passwordValid) {
+            console.log("✅ Neon artist authentication successful")
+            return {
+              success: true,
+              user: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                fullName: user.real_name ?? user.artist_name ?? user.username,
+                role: "Artist",
+                avatar: user.avatar_url ?? "/face.png",
+                table: "artist"
+              },
+              source: "Neon",
+            }
           }
         }
       } catch (error) {
@@ -232,15 +262,122 @@ export class MultiDatabaseService {
   }
 
   async getStatus() {
-    // Ensure initialization is complete
-    if (!this.neonAvailable && !this.wordpressAvailable) {
-      await this.initialize()
-    }
+    console.log("🔍 Checking database status...")
 
-    return {
+    // Ensure initialization is complete
+    await this.initialize()
+
+    const status = {
       neon: this.neonAvailable,
       wordpress: this.wordpressAvailable,
       supabase: false, // Disabled per user request
+    }
+
+    console.log("📊 Database status result:", status)
+    return status
+  }
+
+  async getSubmissions(filters?: { username?: string }) {
+    console.log("🔍 Getting submissions with filters:", filters)
+
+    // Ensure initialization is complete
+    await this.initialize()
+
+    // Try Neon first
+    if (this.neonAvailable && this.neonSql) {
+      try {
+        let result
+        if (filters?.username) {
+          // Find artist by username first, then get their submissions
+          const artistResult = await this.neonSql`
+            SELECT id FROM artist WHERE username = ${filters.username}
+          `
+
+          if (artistResult.length > 0) {
+            const artistId = artistResult[0].id
+            result = await this.neonSql`
+              SELECT s.*, a.username, a.real_name as artist_fullname, a.artist_name
+              FROM submissions s
+              LEFT JOIN artist a ON s.submitted_by_artist_id = a.id
+              WHERE s.submitted_by_artist_id = ${artistId}
+              ORDER BY s.created_at DESC
+            `
+          } else {
+            result = []
+          }
+        } else {
+          result = await this.neonSql`
+            SELECT s.*, a.username, a.real_name as artist_fullname, a.artist_name
+            FROM submissions s
+            LEFT JOIN artist a ON s.submitted_by_artist_id = a.id
+            ORDER BY s.created_at DESC
+          `
+        }
+
+        console.log("✅ Neon submissions query result:", result.length)
+        return {
+          success: true,
+          data: result,
+          source: "Neon"
+        }
+      } catch (error) {
+        console.log("⚠️ Neon submissions query failed:", (error as Error).message)
+      }
+    }
+
+    // Return empty array if no database available
+    console.log("📭 No submissions found - returning empty array")
+    return {
+      success: true,
+      data: [],
+      source: "None"
+    }
+  }
+
+  async getArtists(filters?: { isActive?: boolean }) {
+    console.log("🎤 Getting artists with filters:", filters)
+
+    // Ensure initialization is complete
+    await this.initialize()
+
+    // Try Neon first
+    if (this.neonAvailable && this.neonSql) {
+      try {
+        let result
+        if (filters?.isActive !== undefined) {
+          result = await this.neonSql`
+            SELECT id, username, email, artist_name, stage_name, real_name, genre, bio, 
+                   is_active, email_verified, is_verified_artist, created_at, avatar_url
+            FROM artist 
+            WHERE is_active = ${filters.isActive}
+            ORDER BY created_at DESC
+          `
+        } else {
+          result = await this.neonSql`
+            SELECT id, username, email, artist_name, stage_name, real_name, genre, bio, 
+                   is_active, email_verified, is_verified_artist, created_at, avatar_url
+            FROM artist 
+            ORDER BY created_at DESC
+          `
+        }
+
+        console.log("✅ Neon artists query result:", result.length)
+        return {
+          success: true,
+          data: result,
+          source: "Neon"
+        }
+      } catch (error) {
+        console.log("⚠️ Neon artists query failed:", (error as Error).message)
+      }
+    }
+
+    // Return empty array if no database available
+    console.log("📭 No artists found - returning empty array")
+    return {
+      success: true,
+      data: [],
+      source: "None"
     }
   }
 }

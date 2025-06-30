@@ -23,6 +23,12 @@ export async function sendEmail(options: EmailOptions) {
   try {
     console.log("🔍 Sending email to:", options.to)
     console.log("🔍 Mode:", useRealSMTP ? 'Real SMTP' : 'Demo Mode')
+    console.log("🔍 Raw ENV values:", {
+      SMTP_HOST: process.env.SMTP_HOST,
+      SMTP_PORT: process.env.SMTP_PORT,
+      SMTP_USER: process.env.SMTP_USER,
+      SMTP_FROM: process.env.SMTP_FROM,
+    })
 
     if (!useRealSMTP) {
       // Demo mode: Just log the email
@@ -50,7 +56,7 @@ export async function sendEmail(options: EmailOptions) {
     // Import nodemailer dynamically
     const nodemailer = await import("nodemailer")
 
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       host: SMTP_CONFIG.host,
       port: SMTP_CONFIG.port,
       secure: SMTP_CONFIG.port === 465,

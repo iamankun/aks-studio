@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TestTerminalLogs } from "@/components/test-terminal-logs" // This import is correct and exists.
-import { dbService } from "@/lib/database-service"
+import { databaseService } from "@/lib/database-service"
 import { logger } from "@/lib/logger"
 import type { User } from "@/types/user"
 
@@ -22,7 +22,7 @@ export default function TestPage() {
         logger.info("Test login attempt", { username }, { component: "TestPage" })
 
         try {
-            const result = await dbService.authenticateUser(username, password)
+            const result = await databaseService.authenticateUser(username, password)
 
             if (result.success && result.data) {
                 logger.info("Test login successful", { userId: result.data.id }, { component: "TestPage" })

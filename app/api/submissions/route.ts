@@ -6,16 +6,15 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const username = searchParams.get("username")
 
-    console.log("📋 Multi-DB Get submissions for:", username || "all users")
+    console.log("📋 Database Get submissions for:", username || "all users")
 
-    const result = await multiDB.getSubmission(username || undefined)
+    const result = await multiDB.getSubmissions(username ? { username } : {})
 
     if (result.success) {
-      console.log("✅ Submissions retrieved via:", result.source)
+      console.log("✅ Submissions retrieved successfully")
       return NextResponse.json({
         success: true,
         data: result.data,
-        source: result.source,
         count: result.data.length,
       })
     } else {
@@ -54,21 +53,20 @@ export async function POST(request: NextRequest) {
       created_at: new Date().toISOString(),
     }
 
-    const result = await multiDB.createSubmission(submission)
+    const result = await databaseService.saveSubmission(submission)
 
     if (result.success) {
-      console.log("✅ Submission created via:", result.source)
+      console.log("✅ Submission created successfully")
       return NextResponse.json({
         success: true,
         message: "Submission created successfully",
-        source: result.source,
         id: submission.id,
       })
     } else {
       return NextResponse.json(
         {
           success: false,
-          message: result.message || "Failed to create submission",
+          message: "Failed to create submission",
         },
         { status: 500 },
       )

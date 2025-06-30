@@ -28,14 +28,12 @@ export function useUserRole() {
 
     const isLabelManager = !!user?.role?.includes('label_manager')
     const isArtist = !!user?.role?.includes('artist')
-    const canUploadMusic = isLabelManager || isArtist
 
     return {
         user,
         loading,
         isLabelManager,
         isArtist,
-        canUploadMusic,
         isLoggedIn: !!user
     }
 }

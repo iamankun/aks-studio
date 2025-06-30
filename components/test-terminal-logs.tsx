@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Terminal, AlertCircle, FileText, RefreshCw, Trash2, Database, Info } from "lucide-react"
 import { logger, type LogEntry, type LogLevel } from "@/lib/logger"
-import { dbService } from "@/lib/database-service"
+import { databaseService } from "@/lib/database-service"
 
 export function TestTerminalLogs() {
     // Terminal state
@@ -117,7 +117,11 @@ export function TestTerminalLogs() {
         logger.debug("This is a debug message", { source: "TestTerminalLogs" }, { component: "LogTest" })
         logger.info("This is an info message", { source: "TestTerminalLogs" }, { component: "LogTest" })
         logger.warn("This is a warning message", { source: "TestTerminalLogs" }, { component: "LogTest" })
-        logger.error("This is an error message", new Error("Test error"), { component: "LogTest" })
+        try {
+            throw new Error("Test error")
+        } catch (error) {
+            logger.error("This is an error message", error, { component: "LogTest" })
+        }
         refreshLogs()
     }
 
@@ -126,7 +130,7 @@ export function TestTerminalLogs() {
         setStatusMessage("Checking database connection...")
 
         try {
-            const result = await dbService.checkConnection()
+            const result = await databaseService.checkConnection()
             setDbStatus(result.success ? "connected" : "disconnected")
             setStatusMessage(result.message || (result.success ? "Connected" : "Disconnected"))
         } catch (error) {
@@ -215,7 +219,7 @@ export function TestTerminalLogs() {
                                     )}
                                 </div>
 
-                                <div className="text-xs text-gray-500 space-y-1">
+                                <div className="text-xs text-muted-foreground space-y-1">
                                     <p><strong>Common commands:</strong></p>
                                     <p>echo 'Hello World' - Display text</p>
                                     <p>ls - List files</p>
@@ -284,14 +288,14 @@ export function TestTerminalLogs() {
                                 <div className="border rounded-md h-80">
                                     <ScrollArea className="h-80 w-full">
                                         {logs.length === 0 ? (
-                                            <div className="flex flex-col items-center justify-center h-80 text-gray-400">
+                                            <div className="flex flex-col items-center justify-center h-80 text-muted-foreground">
                                                 <FileText className="h-12 w-12 mb-2 opacity-50" />
                                                 <p>No logs found</p>
                                             </div>
                                         ) : (
                                             <div className="p-4 space-y-2">
                                                 {logs.map((log, index) => (
-                                                    <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+                                                    <div key={index} className="p-3 bg-secondary/50 border border-border rounded-md">
                                                         <div className="flex items-start justify-between">
                                                             <div className="flex items-center space-x-2">
                                                                 <Badge className={getLevelColor(log.level)}>
@@ -301,15 +305,15 @@ export function TestTerminalLogs() {
                                                                     <Badge variant="outline">{log.component}</Badge>
                                                                 )}
                                                             </div>
-                                                            <span className="text-xs text-gray-500">
+                                                            <span className="text-xs text-muted-foreground">
                                                                 {new Date(log.timestamp).toLocaleString()}
                                                             </span>
                                                         </div>
                                                         <p className="mt-2 text-sm">{log.message}</p>
                                                         {log.data && (
                                                             <details className="mt-1">
-                                                                <summary className="text-xs text-gray-500 cursor-pointer">Data</summary>
-                                                                <pre className="mt-1 text-xs p-2 bg-gray-100 dark:bg-gray-900 rounded overflow-auto">
+                                                                <summary className="text-xs text-muted-foreground cursor-pointer">Data</summary>
+                                                                <pre className="mt-1 text-xs p-2 bg-muted/50 border border-border rounded overflow-auto">
                                                                     {JSON.stringify(log.data, null, 2)}
                                                                 </pre>
                                                             </details>
@@ -344,7 +348,7 @@ export function TestTerminalLogs() {
                                                         dbStatus === "disconnected" ? "Disconnected" : "Error"
                                                 }</span>
                                             </div>
-                                            <p className="text-sm text-gray-500 mt-2">{statusMessage}</p>
+                                            <p className="text-sm text-muted-foreground mt-2">{statusMessage}</p>
                                         </CardContent>
                                         <CardFooter>
                                             <Button size="sm" onClick={checkDatabaseStatus}>
@@ -364,19 +368,19 @@ export function TestTerminalLogs() {
                                         <CardContent>
                                             <div className="space-y-2">
                                                 <div className="flex justify-between">
-                                                    <span className="text-sm text-gray-500">Version:</span>
+                                                    <span className="text-sm text-muted-foreground">Version:</span>
                                                     <span className="text-sm font-medium">v2.0.0</span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span className="text-sm text-gray-500">Environment:</span>
+                                                    <span className="text-sm text-muted-foreground">Environment:</span>
                                                     <span className="text-sm font-medium">{process.env.NODE_ENV || 'development'}</span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span className="text-sm text-gray-500">Log entries:</span>
+                                                    <span className="text-sm text-muted-foreground">Log entries:</span>
                                                     <span className="text-sm font-medium">{logger.getLogs().length}</span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span className="text-sm text-gray-500">Client:</span>
+                                                    <span className="text-sm text-muted-foreground">Client:</span>
                                                     <span className="text-sm font-medium">{typeof window !== 'undefined' ? 'Browser' : 'Server'}</span>
                                                 </div>
                                             </div>
@@ -431,7 +435,7 @@ export function TestTerminalLogs() {
                 </CardContent>
             </Card>
 
-            <div className="text-center text-xs text-gray-500">
+            <div className="text-center text-xs text-muted-foreground">
                 <p>AKs Studio Terminal & Logs Utility &copy; {new Date().getFullYear()}</p>
             </div>
         </div>

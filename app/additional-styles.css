@@ -10,7 +10,29 @@ nav.fixed {
     backface-visibility: hidden;
 }
 
-/* Prevent content shift on page load */
+/* Prevent content shift on page load and ensure scrolling works */
+html,
 body {
-    overflow-y: scroll;
+    height: 100%;
+        overflow-x: hidden;
+    }
+    
+    body {
+        overflow-y: auto;
+    }
+    
+    /* Smooth scrolling for better UX */
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    /* Ensure main containers don't interfere with scrolling */
+    #__next {
+        min-height: 100vh;
+    }
+    
+    /* Make sure content can scroll properly */
+    .main-container {
+        min-height: 100vh;
+        overflow-y: auto;
 }

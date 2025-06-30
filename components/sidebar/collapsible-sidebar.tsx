@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import type { User } from "@/types/user"
 import {
-  Upload,
   Users,
   Settings,
   UserIcon,
@@ -17,7 +16,6 @@ import {
   Menu,
   X,
 } from "lucide-react"
-import { createClient } from "@/ultis/supabase/client"
 
 interface SidebarProps {
   currentUser: User
@@ -51,10 +49,9 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
   const isLabelManager = currentUser?.role === "Label Manager"
   console.log("🔍 Sidebar Debug - Is Label Manager:", isLabelManager)
 
-  // Menu items cho Label Manager (7 items)
+  // Menu items cho Label Manager (6 items)
   const labelManagerMenuItems = [
     { id: "submissions", label: "Submissions", icon: FileText },
-    { id: "upload", label: "Upload", icon: Upload },
     { id: "users", label: "Users", icon: Users },
     { id: "admin", label: "Admin Panel", icon: Shield },
     { id: "email", label: "Email Center", icon: Mail },
@@ -62,10 +59,9 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
     { id: "settings", label: "Settings", icon: Settings },
   ]
 
-  // Menu items cho Artist (4 items)
+  // Menu items cho Artist (3 items)
   const artistMenuItems = [
     { id: "submissions", label: "My Submissions", icon: FileText },
-    { id: "upload", label: "Upload", icon: Upload },
     { id: "profile", label: "My Profile", icon: UserIcon },
     { id: "settings", label: "Settings", icon: Settings },
   ]
@@ -78,8 +74,10 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
   }
 
   const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    // Simple logout - clear storage and reload
+    localStorage.clear()
+    sessionStorage.clear()
+    window.location.reload()
   }
 
   // Add null check
@@ -151,16 +149,16 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
               <div className="flex items-center space-x-3">
                 <img
                   src={
-                    currentUser?.avatar_url ||
-                    `https://placehold.co/50x50/8b5cf6/FFFFFF?text=${(currentUser?.username || "U").substring(0, 1).toUpperCase()}`
+                    currentUser?.avatar ??
+                    `https://placehold.co/50x50/8b5cf6/FFFFFF?text=${(currentUser?.username ?? "U").substring(0, 1).toUpperCase()}`
                   }
-                  alt={currentUser?.username || "User"}
+                  alt={currentUser?.username ?? "User"}
                   className="w-10 h-10 rounded-full object-cover"
                 />
                 <div>
                   <p className="text-sm text-gray-400 font-dosis-light">Welcome back,</p>
                   <p className="text-lg font-dosis-semibold text-white">
-                    {currentUser?.full_name || currentUser?.username}
+                    {currentUser?.fullName ?? currentUser?.username}
                   </p>
                   <p className="text-sm text-purple-400 font-dosis">
                     {currentUser?.role} {isLabelManager && "✓"}
@@ -178,10 +176,10 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
             <div className="mb-6 flex justify-center">
               <img
                 src={
-                  currentUser?.avatar_url ||
-                  `https://placehold.co/40x40/8b5cf6/FFFFFF?text=${(currentUser?.username || "U").substring(0, 1).toUpperCase()}`
+                  currentUser?.avatar ??
+                  `https://placehold.co/40x40/8b5cf6/FFFFFF?text=${(currentUser?.username ?? "U").substring(0, 1).toUpperCase()}`
                 }
-                alt={currentUser?.username || "User"}
+                alt={currentUser?.username ?? "User"}
                 className="w-8 h-8 rounded-full object-cover"
               />
             </div>

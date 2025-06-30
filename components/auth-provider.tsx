@@ -84,7 +84,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setLoading(true)
 
-      // Simple demo authentication - sử dụng DEMO_USER constant
+      // Call real login API
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password })
+      })
+
+      const result = await response.json()
+
+      if (result.success && result.user) {
+        // Map the API response to our User type
+        const userFromAPI: User = {
+          id: result.user.id,
+          username: result.user.username,
+          password: "", // Don't store password
+          email: result.user.email,
+          role: result.user.role,
+          fullName: result.user.fullName,
+          createdAt: new Date().toISOString(),
+          avatar: result.user.avatar,
+          bio: "Digital Music Distribution Platform",
+          isrcCodePrefix: "VNA2P"
+        }
+
+        setUser(userFromAPI)
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem("aks_user", JSON.stringify(userFromAPI))
+        }
+
+        return true
+      }
+
+      // Fallback to demo authentication if API fails
       if (username === "ankunstudio" && password === "admin") {
         setUser(DEMO_USER)
 
@@ -98,6 +133,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return false
     } catch (error) {
       console.error("Login error:", error)
+
+      // Fallback to demo authentication on error
+      if (username === "ankunstudio" && password === "admin") {
+        setUser(DEMO_USER)
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem("aks_user", JSON.stringify(DEMO_USER))
+        }
+
+        return true
+      }
+
       return false
     } finally {
       setLoading(false)

@@ -30,7 +30,7 @@ export async function GET() {
                 uptime: process.uptime(),
                 memory: process.memoryUsage(),
                 version: '2.0.0-beta',
-                environment: process.env.NODE_ENV || 'development'
+                environment: process.env.NODE_ENV || 'Production'
             }
         }
 

@@ -4,16 +4,14 @@ import "server-only"
 import type { User } from "@/types/user"
 import { sendEmail, type EmailDetails } from "@/lib/email"
 import { neon, neonConfig } from "@neondatabase/serverless"
-import bcrypt from "bcryptjs"
 
 
 export async function registerUser(newUser: User): Promise<boolean> {
-    const dbUrl = process.env.aksstudio_POSTGRES_URL || process.env.DATABASE_URL
+    const dbUrl = process.env.DATABASE_URL
     let isUserSavedSuccessfully = false
 
     if (dbUrl) {
         // Logic cho database thực
-        neonConfig.fetchOptions = { cache: "no-store" }
         const sql = neon(dbUrl)
         try {
             await sql`
@@ -73,7 +71,7 @@ export async function ensureDefaultAdminUser(): Promise<void> {
 
     // Kết nối database
     // Sử dụng biến môi trường được cung cấp trong Security.md
-    const dbUrl = process.env.aksstudio_POSTGRES_URL || process.env.DATABASE_URL
+    const dbUrl = process.env.DATABASE_URL
     if (!dbUrl) {
         console.error("Database URL not configured. Skipping default admin user check in DB.")
         return
@@ -81,7 +79,6 @@ export async function ensureDefaultAdminUser(): Promise<void> {
 
     neonConfig.fetchOptions = { cache: "no-store" } // Đảm bảo dữ liệu luôn mới
     const sql = neon(dbUrl)
-
     try {
         const existingAdmin = await sql`SELECT id FROM users WHERE username = ${adminUsername} AND role = ${adminRole} LIMIT 1`
 

@@ -1,13 +1,15 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { SubmissionDetailModal } from "@/components/modals/submission-detail-modal"
 import { useAuth } from "@/components/auth-provider"
 import type { Submission } from "@/types/submission"
-import { Eye, Download, Play, Pause, Volume2, FileText, Music, Upload } from "lucide-react"
+import { getStatusColor, getStatusText } from "@/types/submission"
+import { Eye, Download, Volume2, FileText, Music, Upload } from "lucide-react"
 
 interface SubmissionsViewProps {
   submissions: Submission[]
@@ -18,16 +20,18 @@ interface SubmissionsViewProps {
 }
 
 export function SubmissionsView({
-  submissions,
   viewType,
   onUpdateStatus,
   showModal,
   onViewChange,
-}: SubmissionsViewProps) {
+  submissions,
+}: Readonly<SubmissionsViewProps>) {
   const { user: currentUser } = useAuth();
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-  const [playingAudio, setPlayingAudio] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState("") // Thêm state tìm kiếm
+
+  console.log(submissions);
 
   if (!currentUser) {
     return (
@@ -44,6 +48,27 @@ export function SubmissionsView({
     viewType === "mySubmissions"
       ? submissions.filter((sub) => sub.uploaderUsername === currentUser.username)
       : submissions
+
+  // Lọc submissions theo từ khóa tìm kiếm
+  const filteredDisplaySubmissions = displaySubmissions.filter(submission => {
+    if (!searchTerm) return true;
+    const searchText = searchTerm.toLowerCase();
+
+    // Safely convert any property to string before checking
+    const safeIncludes = (value: string | number | undefined | null): boolean => {
+      if (value === null || value === undefined) return false;
+      return String(value).toLowerCase().includes(searchText);
+    };
+
+    return (
+      safeIncludes(submission.artistName) ||
+      safeIncludes(submission.songTitle) ||
+      safeIncludes(submission.albumName) ||
+      safeIncludes(submission.id) ||
+      safeIncludes(submission.isrc) ||
+      safeIncludes(submission.status)
+    );
+  });
 
   const handleViewDetails = (submissionId: string) => {
     const submission = submissions.find((s) => s.id === submissionId)
@@ -78,15 +103,14 @@ export function SubmissionsView({
     )
   }
 
-  const handlePlayAudio = (submissionId: string) => {
-    if (playingAudio === submissionId) {
-      setPlayingAudio(null)
-    } else {
-      setPlayingAudio(submissionId)
-      // Simulate audio playback
-      setTimeout(() => setPlayingAudio(null), 5000) // Auto stop after 5 seconds for demo
-    }
-  }
+  // Xử lý việc phát nhạc trong danh sách - sẽ được triển khai đầy đủ sau nếu cần
+  // const toggleAudio = (submissionId: string) => {
+  //   if (playingAudio === submissionId) {
+  //     setPlayingAudio(null)
+  //   } else {
+  //     setPlayingAudio(submissionId)
+  //   }
+  // }
 
   const statuses = [
     "Đã nhận, đang chờ duyệt",
@@ -96,48 +120,270 @@ export function SubmissionsView({
     "Hoàn thành phát hành!",
   ]
 
-  const totalSubmissions = submissions.length
-  const approvedSubmissions = submissions.filter((sub) => sub.status === "approved").length // Tôi là An Kun
-  const pendingSubmissions = submissions.filter((sub) => sub.status === "pending").length // Tôi là An Kun
+  // Nếu là Label Manager thì xem toàn bộ, còn artist chỉ xem số liệu của mình
+  const isLabelManager = currentUser.role === "Label Manager";
+  const filteredSubmissions = isLabelManager
+    ? submissions
+    : submissions.filter((sub) => sub.uploaderUsername === currentUser.username);
+
+  // Tính toán các số liệu thống kê
+  const totalSubmissions = filteredSubmissions.length;
+
+  // Đã duyệt (status === "Đã duyệt, đang chờ phát hành!" hoặc "Hoàn thành phát hành!" hoặc "Đã phát hành, đang chờ ra mắt")
+  const approvedSubmissions = filteredSubmissions.filter((sub) => [
+    "Đã duyệt, đang chờ phát hành!",
+    "Hoàn thành phát hành!",
+    "Đã phát hành, đang chờ ra mắt"
+  ].includes(sub.status)).length;
+
+  // Chờ duyệt (status === "Đã nhận, đang chờ duyệt")
+  const pendingSubmissions = filteredSubmissions.filter((sub) => sub.status === "Đã nhận, đang chờ duyệt").length;
+
+  // Từ chối phát hành (status === "Đã duyệt, từ chối phát hành")
+  const rejectedSubmissions = filteredSubmissions.filter((sub) => sub.status === "Đã duyệt, từ chối phát hành").length;
+
+  // Đang phát hành (status === "Đã phát hành, đang chờ ra mắt")
+  const inProgressSubmissions = filteredSubmissions.filter((sub) => sub.status === "Đã phát hành, đang chờ ra mắt").length;
+
+  // Hoàn thành phát hành (status === "Hoàn thành phát hành!")
+  const completedSubmissions = filteredSubmissions.filter((sub) => sub.status === "Hoàn thành phát hành!").length;
+
+  // Tổng số track (trackInfos)
+  const totalTracks = filteredSubmissions.reduce((sum, sub) => {
+    return sum + (Array.isArray(sub.trackInfos) ? sub.trackInfos.length : 0);
+  }, 0);
+
+  // Tổng số audio (audioUrls hoặc audioUrl)
+  const totalAudios = filteredSubmissions.reduce((sum, sub) => {
+    const audioCount = Array.isArray(sub.audioUrls)
+      ? sub.audioUrls.length
+      : (sub.audioUrl ? 1 : 0);
+    return sum + audioCount;
+  }, 0);
+
+  // Tổng hợp thông tin submissions theo thể loại
+  const submissionsByCategory = filteredSubmissions.reduce((acc, sub) => {
+    const category = sub.mainCategory || 'other_main';
+    if (!acc[category]) {
+      acc[category] = 0;
+    }
+    acc[category]++;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Tổng hợp thông tin submissions theo nền tảng
+  const submissionsByPlatform = filteredSubmissions.reduce((acc, sub) => {
+    if (Array.isArray(sub.platforms)) {
+      sub.platforms.forEach(platform => {
+        if (!acc[platform]) {
+          acc[platform] = 0;
+        }
+        acc[platform]++;
+      });
+    }
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Chuyển đổi định dạng ngày cho submissions
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    try {
+      return new Date(dateString).toLocaleDateString("vi-VN", {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Hàm chuyển đổi mã thể loại thành tên hiển thị
+  const getCategoryName = (categoryCode: string): string => {
+    const categoryNames: Record<string, string> = {
+      'pop': 'Pop',
+      'singer-songwriter': 'Singer-Songwriter',
+      'hiphoprap': 'Hip Hop/Rap',
+      'edm': 'EDM',
+      'rnb': 'R&B',
+      'ballad': 'Ballad',
+      'acoustic': 'Acoustic',
+      'indie': 'Indie',
+      'other_main': 'Khác'
+    };
+    return categoryNames[categoryCode] || categoryCode;
+  };
+
+  // Hàm chuyển đổi mã nền tảng thành tên hiển thị
+  const getPlatformName = (platformCode: string): string => {
+    const platformNames: Record<string, string> = {
+      'youtube': 'YouTube',
+      'spotify': 'Spotify',
+      'apple_music': 'Apple Music',
+      'soundcloud': 'SoundCloud',
+      'other_platform': 'Khác'
+    };
+    return platformNames[platformCode] || platformCode;
+  };
+
+  // Handle updating submission data (for UPC and distribution link)
+  const handleUpdateSubmission = async (submissionId: string, updatedData: Partial<Submission>) => {
+    try {
+      console.log(`Sending update for submission ${submissionId}:`, updatedData);
+
+      // Chỉ gửi UPC và distributionLink để tránh lỗi với dữ liệu lớn
+      const dataToSend = {
+        upc: updatedData.upc,
+        distributionLink: updatedData.distributionLink
+      };
+
+      const response = await fetch(`/api/submissions/${submissionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataToSend),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Cập nhật lại submission trong state local
+        // Note: submissions state might be managed by parent component, so we don't update it directly
+
+        // Cập nhật selectedSubmission nếu đang được xem
+        if (selectedSubmission && selectedSubmission.id === submissionId) {
+          setSelectedSubmission({ ...selectedSubmission, ...dataToSend });
+        }
+
+        showModal("Cập nhật thành công", ["Thông tin phân phối đã được cập nhật thành công"], "success");
+      } else {
+        showModal("Lỗi cập nhật", [data.error || "Không thể cập nhật thông tin"], "error");
+      }
+    } catch (error) {
+      console.error("Error updating submission:", error);
+      const errorMessage = error instanceof Error ? error.message : "Đã xảy ra lỗi khi cập nhật thông tin";
+      showModal("Lỗi cập nhật", [errorMessage], "error");
+    }
+  };
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-white mb-2">Submissions</h1>
-        <p className="text-gray-400">Manage your music submissions</p>
+    <div className="p-2 md:p-6">
+      <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Submissions</h1>
+          <p className="text-gray-600">Quản lý các bài nhạc bạn đã gửi lên hệ thống</p>
+        </div>
+        <div className="w-full md:w-64">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Tìm kiếm submissions..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
+              onClick={() => setSearchTerm("")}
+            >
+              {searchTerm ? "×" : "🔍"}
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Total Submissions</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-300">Tổng submissions</CardTitle>
             <FileText className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">{totalSubmissions}</div>
-            <p className="text-xs text-gray-400">No submissions yet</p>
+            <p className="text-xs text-gray-400">Tổng số bài gửi lên</p>
           </CardContent>
         </Card>
 
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Approved</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-300">Đã duyệt</CardTitle>
             <Music className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">{approvedSubmissions}</div>
-            <p className="text-xs text-gray-400">Ready for release</p>
+            <p className="text-xs text-gray-400">Sẵn sàng phát hành</p>
           </CardContent>
         </Card>
 
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Pending</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-300">Chờ duyệt</CardTitle>
             <FileText className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">{pendingSubmissions}</div>
-            <p className="text-xs text-gray-400">Under review</p>
+            <p className="text-xs text-gray-400">Đang chờ kiểm duyệt</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-300">Bị từ chối</CardTitle>
+            <FileText className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">{rejectedSubmissions}</div>
+            <p className="text-xs text-gray-400">Đã bị từ chối phát hành</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-300">Đang phát hành</CardTitle>
+            <Volume2 className="h-4 w-4 text-blue-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">{inProgressSubmissions}</div>
+            <p className="text-xs text-gray-400">Đang chờ ra mắt</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-300">Hoàn thành phát hành</CardTitle>
+            <Music className="h-4 w-4 text-pink-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">{completedSubmissions}</div>
+            <p className="text-xs text-gray-400">Đã hoàn thành phát hành</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-300">Tổng số track</CardTitle>
+            <Music className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">{totalTracks}</div>
+            <p className="text-xs text-gray-400">Các track đã gửi</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-300">Tổng file âm thanh</CardTitle>
+            <Music className="h-4 w-4 text-purple-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">{totalAudios}</div>
+            <p className="text-xs text-gray-400">Các file âm thanh đã gửi</p>
           </CardContent>
         </Card>
       </div>
@@ -146,7 +392,16 @@ export function SubmissionsView({
         <CardHeader className="flex items-center justify-between">
           <div className="flex items-center">
             <Volume2 className="mr-3 text-purple-400 w-8 h-8" />
-            <CardTitle className="text-white">Recent Submissions</CardTitle>
+            <div>
+              <CardTitle className="text-white">
+                {searchTerm ? "Kết quả tìm kiếm" : "Danh sách submissions"}
+              </CardTitle>
+              {searchTerm && (
+                <p className="text-xs text-gray-400 mt-1">
+                  Tìm thấy {filteredDisplaySubmissions.length} kết quả cho &ldquo;{searchTerm}&rdquo;
+                </p>
+              )}
+            </div>
           </div>
           <Button
             className="bg-purple-600 hover:bg-purple-700 text-white"
@@ -157,11 +412,15 @@ export function SubmissionsView({
           </Button>
         </CardHeader>
         <CardContent className="p-0">
-          {displaySubmissions.length === 0 ? (
+          {filteredDisplaySubmissions.length === 0 ? (
             <div className="text-center py-8">
               <Music className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">No submissions found</p>
-              <p className="text-sm text-gray-500 mt-2">Upload your first track to get started</p>
+              <p className="text-gray-400">
+                {searchTerm ? "Không tìm thấy submissions khớp với từ khóa" : "Không tìm thấy submissions nào"}
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                {searchTerm ? "Thử tìm với từ khóa khác" : "Tải lên bài hát đầu tiên của bạn để bắt đầu"}
+              </p>
               <Button
                 className="mt-4 bg-purple-600 hover:bg-purple-700 text-white"
                 onClick={() => onViewChange?.("upload")}
@@ -208,7 +467,7 @@ export function SubmissionsView({
                   </tr>
                 </thead>
                 <tbody className="bg-gray-800 divide-y divide-gray-700">
-                  {displaySubmissions.map((submission) => (
+                    {filteredDisplaySubmissions.map((submission) => (
                     <tr key={submission.id} className="hover:bg-gray-750 transition-colors duration-150">
                       <td className="px-4 py-3">
                         <span className="text-xs font-mono text-green-400">{submission.isrc || "N/A"}</span>
@@ -218,11 +477,28 @@ export function SubmissionsView({
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center space-x-2">
-                          <img
-                            src={submission.imageUrl || "https://placehold.co/40x40/1f2937/4b5563?text=Art"}
-                            alt="Cover"
-                            className="h-10 w-10 object-cover rounded-md border border-gray-600"
-                          />
+                            <div className="relative h-10 w-10 overflow-hidden rounded-md border border-gray-600">
+                              <Image
+                                src={
+                                  submission.artistName === "Various Artist"
+                                    ? "/placeholders/various-artist.jpg"
+                                    : (submission.imageUrl || "/placeholders/default-cover.jpg")
+                                }
+                                alt="Cover"
+                                width={40}
+                                height={40}
+                                className="h-10 w-10 object-cover"
+                                style={{ objectPosition: 'center' }}
+                                unoptimized={submission.imageUrl?.startsWith("data:")}
+                                onError={(e) => {
+                                  // Fallback to default image if loading fails
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = submission.artistName === "Various Artist"
+                                    ? "/placeholders/various-artist.jpg"
+                                    : "/placeholders/default-cover.jpg";
+                                }}
+                              />
+                            </div>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -242,43 +518,48 @@ export function SubmissionsView({
                         <p className="text-xs text-gray-500">{submission.audioFilesCount} track(s)</p>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handlePlayAudio(submission.id)}
-                            className="p-1"
-                            title="Nghe thử"
-                          >
-                            {playingAudio === submission.id ? (
-                              <Pause className="h-4 w-4 text-green-400" />
+                          <div className="flex flex-col gap-1">
+                            {/* Nếu là album/ep có nhiều bài, hiển thị từng player */}
+                            {Array.isArray(submission.audioUrls) && submission.audioUrls.length > 0 ? (
+                              submission.audioUrls.map((url, idx) => (
+                                <div key={url} className="flex items-center space-x-2">
+                                  <audio controls src={url} className="h-8" preload="none" style={{ maxWidth: 180 }} />
+                                  <span className="text-xs text-gray-400">Track {idx + 1}</span>
+                                </div>
+                              ))
+                            ) : submission.audioUrl ? (
+                                <div className="flex items-center space-x-2">
+                                  <audio controls src={submission.audioUrl} className="h-8" preload="none" style={{ maxWidth: 180 }} />
+                                  <span className="text-xs text-gray-400">Single</span>
+                                </div>
                             ) : (
-                              <Play className="h-4 w-4" />
+                                  <span className="text-xs text-gray-500">Không có audio</span>
                             )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDownloadAudio(submission)}
-                            className="p-1"
-                            title="Tải xuống audio"
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDownloadAudio(submission)}
+                                className="p-1"
+                                title="Tải xuống audio"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-gray-400">{submission.submissionDate}</span>
+                          <span className="text-sm text-gray-400">{formatDate(submission.submissionDate)}</span>
                       </td>
                       <td className="px-4 py-3">
                         <span className="text-sm text-gray-400">
-                          {submission.releaseDate
-                            ? new Date(submission.releaseDate).toLocaleDateString("vi-VN")
-                            : "N/A"}
+                            {submission.releaseDate ? formatDate(submission.releaseDate) : "N/A"}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`status-badge ${getStatusColor(submission.status)}`}>{submission.status}</span>
+                          <span className={`status-badge ${getStatusColor(submission.status)}`}>
+                            {getStatusText(submission.status)}
+                          </span>
                       </td>
                       <td className="px-4 py-3 text-sm space-x-2 whitespace-nowrap">
                         <Button
@@ -318,11 +599,53 @@ export function SubmissionsView({
         </CardContent>
       </Card>
 
+      {/* Card hiển thị phân tích theo thể loại */}
+      {Object.keys(submissionsByCategory).length > 0 && (
+        <Card className="bg-gray-800 border-gray-700 col-span-1 md:col-span-2 lg:col-span-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-300">Phân loại theo thể loại</CardTitle>
+            <FileText className="h-4 w-4 text-indigo-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(submissionsByCategory).map(([category, count]) => (
+                <div key={category} className="px-2 py-1 bg-gray-700 rounded-md text-xs">
+                  <span className="font-semibold">{getCategoryName(category)}</span>: {count}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Card hiển thị phân tích theo nền tảng */}
+      {Object.keys(submissionsByPlatform).length > 0 && (
+        <Card className="bg-gray-800 border-gray-700 col-span-1 md:col-span-2 lg:col-span-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-300">Phân loại theo nền tảng</CardTitle>
+            <FileText className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(submissionsByPlatform).map(([platform, count]) => (
+                <div key={platform} className="px-2 py-1 bg-gray-700 rounded-md text-xs">
+                  <span className="font-semibold">{getPlatformName(platform)}</span>: {count}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {selectedSubmission && (
         <SubmissionDetailModal
           isOpen={isDetailModalOpen}
           onClose={() => setIsDetailModalOpen(false)}
           submission={selectedSubmission}
+          onUpdateStatus={onUpdateStatus}
+          onUpdateSubmission={handleUpdateSubmission}
+          showModal={showModal}
+          isLabelManager={isLabelManager}
         />
       )}
     </div>

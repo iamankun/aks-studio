@@ -22,11 +22,14 @@ AKs Studio là nền tảng quản lý và phát hành âm nhạc chuyên nghi�
 - ✅ Admin Panel với multi-endpoint storage
 - ✅ Email Center với template system
 
+- ✅ Cập nhật hồ sơ và thông tin database nghệ sĩ/label trực tiếp từ giao diện (update database profile)
+
 ### Cho Nghệ sĩ
 
 - ✅ Quản lý nhạc và ảnh bìa
 - ✅ Quản lý thông tin cá nhân
 - ✅ Theo dõi trạng thái phát hành
+- ✅ Cập nhật hồ sơ cá nhân và đồng bộ với database
 - ✅ Tìm kiếm ISRC
 - ✅ Quản lý profile và social links
 
@@ -37,7 +40,7 @@ AKs Studio là nền tảng quản lý và phát hành âm nhạc chuyên nghi�
 - ✅ Hệ thống thông báo với âm thanh
 - ✅ Tích hợp công cụ tìm kiếm ISRC
 - ✅ Chế độ Demo/Production tự động
-- ✅ Multi-database support (Neon, Supabase, WordPress)
+- ✅ Multi-database support (Neon, WordPress)
 - ✅ File management system
 
 ## 📋 Yêu cầu hệ thống
@@ -101,7 +104,7 @@ Password: [App Password]
 ### 2. Cài đặt Database (Multi-endpoint support)
 
 - **Primary:** Neon PostgreSQL
-- **Secondary:** Supabase
+- **Secondary:** (Đã loại bỏ Supabase)
 - **Backup:** WordPress API
 - Tự động failover khi kết nối
 
@@ -130,7 +133,7 @@ akscms/
 ├── lib/                   # Utilities and data management
 │   ├── email.ts           # Email service
 │   ├── multi-database-service.ts # Database abstraction
-│   ├── supabase-config.ts # Storage configuration
+│   ├── (Đã loại bỏ supabase-config.ts)
 │   └── utils.ts           # Utility functions
 ├── types/                 # TypeScript type definitions
 ├── public/                # Static assets
@@ -163,7 +166,7 @@ akscms/
 
 \`\`\`
 Primary: Neon PostgreSQL (ep-mute-rice-a17ojtca-pooler.ap-southeast-1.aws.neon.tech)
-Secondary: Supabase (geqkpdbtuspjzjgvqsju.supabase.co)
+Secondary: (Đã loại bỏ Supabase)
 Backup: WordPress API (aks.ankun.dev)
 Storage: S3 Compatible multi-endpoint
 \`\`\`
@@ -261,10 +264,6 @@ linear-gradient(135deg, #667eea 0%, #764ba2 100%)
 
 DATABASE_URL=postgresql://...
 
-# Supabase
-
-NEXT_PUBLIC_SUPABASE_URL=https://...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 
 # WordPress Backup
 

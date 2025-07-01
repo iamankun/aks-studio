@@ -285,24 +285,86 @@ export default function UploadFormView({ onSubmissionAdded, showModal }: Readonl
   // Form submission handler
   const handleSubmit = async () => {
     // Validation
-    if (!songTitle.trim()) {
-      showModal("Lỗi", ["Vui lòng nhập tên bài hát"], "error")
-      return
-    }
-    if (!artistName.trim()) {
-      showModal("Lỗi", ["Vui lòng nhập tên nghệ sĩ"], "error")
-      return
-    }
-    if (audioTracks.length === 0) {
-      showModal("Lỗi", ["Vui lòng upload ít nhất một file nhạc"], "error")
-      return
+    const validationErrors = [];
+
+    // Check required fields
+    if (!songTitle.trim()) validationErrors.push("Vui lòng nhập tên bài hát");
+    if (!artistName.trim()) validationErrors.push("Vui lòng nhập tên nghệ sĩ");
+    if (!fullName.trim()) validationErrors.push("Vui lòng nhập họ tên đầy đủ");
+    if (!userEmail.trim()) validationErrors.push("Vui lòng nhập email");
+    if (!userEmail.includes('@')) validationErrors.push("Email không hợp lệ");
+    if (audioTracks.length === 0) validationErrors.push("Vui lòng upload ít nhất một file nhạc");
+    if (!imageFile) validationErrors.push("Vui lòng upload ảnh bìa");
+    if (!releaseDate) validationErrors.push("Vui lòng chọn ngày phát hành");
+
+    // Check for empty required fields in audio tracks
+    const invalidTracks = audioTracks.filter(track => !track.info.songTitle.trim());
+    if (invalidTracks.length > 0) {
+      validationErrors.push(`${invalidTracks.length} track chưa có tên bài hát`);
     }
 
-    setIsUploading(true)
+    // Special validation for additional artists if present
+    audioTracks.forEach(track => {
+      track.info.additionalArtists.forEach((artist, index) => {
+        if (!artist.name.trim()) {
+          validationErrors.push(`Track "${track.info.songTitle}": Nghệ sĩ phối hợp #${index + 1} chưa có tên`);
+        }
+      });
+    });
+
+    if (validationErrors.length > 0) {
+      showModal("Lỗi", validationErrors, "error");
+      return;
+    }
+
+    setIsUploading(true);
 
     try {
-      const { isrc, newCounter } = generateISRC(currentUser, lastISRCCounter)
-      setLastISRCCounter(newCounter)
+      const { isrc, newCounter } = generateISRC(currentUser, lastISRCCounter);
+      setLastISRCCounter(newCounter);
+
+      // Upload ảnh bìa
+      const imageFormData = new FormData();
+      imageFormData.append("file", imageFile);
+      imageFormData.append("type", "image");
+      imageFormData.append("userId", currentUser.id);
+      imageFormData.append("artistName", artistName);
+      imageFormData.append("songTitle", songTitle);
+      imageFormData.append("isrc", isrc);
+
+      const imageResponse = await fetch("/api/upload", {
+        method: "POST",
+        body: imageFormData,
+      });
+
+      const imageResult = await imageResponse.json();
+      if (!imageResult.success) {
+        throw new Error(`Lỗi upload ảnh: ${imageResult.message}`);
+      }
+
+      // Upload các file âm thanh
+      const audioUrls: string[] = [];
+      for (const track of audioTracks) {
+        const audioFormData = new FormData();
+        audioFormData.append("file", track.file);
+        audioFormData.append("type", "audio");
+        audioFormData.append("userId", currentUser.id);
+        audioFormData.append("artistName", artistName);
+        audioFormData.append("songTitle", songTitle);
+        audioFormData.append("isrc", track.id);
+
+        const audioResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: audioFormData,
+        });
+
+        const audioResult = await audioResponse.json();
+        if (!audioResult.success) {
+          throw new Error(`Lỗi upload âm thanh ${track.file.name}: ${audioResult.message}`);
+        }
+
+        audioUrls.push(audioResult.url);
+      }
 
       const newSubmission: Submission = {
         id: Date.now().toString(),
@@ -313,9 +375,11 @@ export default function UploadFormView({ onSubmissionAdded, showModal }: Readonl
         albumName,
         userEmail,
         imageFile: imageFile?.name ?? "",
-        imageUrl: imagePreviewUrl,
+        imageUrl: imageResult.url, // Sử dụng URL từ kết quả upload
+        audioUrl: audioUrls.length === 1 ? audioUrls[0] : undefined, // Single track
+        audioUrls: audioUrls.length > 1 ? audioUrls : undefined, // Multiple tracks
         audioFilesCount: audioTracks.length,
-        status: "pending",
+        status: "Đã nhận, đang chờ duyệt", // Sử dụng enum đúng
         submissionDate: new Date().toISOString(),
         mainCategory,
         subCategory,
@@ -329,20 +393,20 @@ export default function UploadFormView({ onSubmissionAdded, showModal }: Readonl
         artistRole,
         fullName,
         additionalArtists: [], // Required by Submission type
-        trackInfos: audioTracks.map(track => track.info) // Map audio tracks to trackInfos
-      }
+        trackInfos: audioTracks.map(track => track.info), // Map audio tracks to trackInfos
+      };
 
-      onSubmissionAdded(newSubmission)
+      onSubmissionAdded(newSubmission);
 
       // Reset form
-      resetForm()
+      resetForm();
 
-      showModal("Thành công", ["Đã gửi bài hát để chờ duyệt!"], "success")
+      showModal("Thành công", ["Đã gửi bài hát để chờ duyệt!"], "success");
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Có lỗi xảy ra khi gửi bài hát";
-      showModal("Lỗi", [errorMessage], "error")
+      showModal("Lỗi", [errorMessage], "error");
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
     }
   }
 
@@ -488,12 +552,12 @@ export default function UploadFormView({ onSubmissionAdded, showModal }: Readonl
 
                 {/* Image Upload */}
                 <div>
-                  <Label htmlFor="imageUpload">Ảnh bìa bài hát (4000x4000px, tối đa 5MB) *</Label>
+                  <Label htmlFor="imageUpload">Ảnh bìa bài hát (JPG, 4000x4000px, tối đa 10MB) *</Label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                     <input
                       id="imageUpload"
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg,image/jpg"
                       onChange={handleImageUpload}
                       className="hidden"
                     />
@@ -532,12 +596,12 @@ export default function UploadFormView({ onSubmissionAdded, showModal }: Readonl
 
                 {/* Audio Upload */}
                 <div>
-                  <Label htmlFor="audioUpload">File nhạc (WAV, tối đa 44100Hz, 24bit, 2 kênh mỗi file) *</Label>
+                  <Label htmlFor="audioUpload">File nhạc (WAV 24-bit, 2 kênh, 192kHz, tối đa 100MB mỗi file) *</Label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                     <input
                       id="audioUpload"
                       type="file"
-                      accept="audio/*"
+                      accept="audio/wav"
                       multiple
                       onChange={handleAudioUpload}
                       className="hidden"

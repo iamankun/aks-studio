@@ -1,22 +1,59 @@
-// Tôi là An Kun
-"use client"
-
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { User, Mail, Calendar, Shield, Copy, Sparkles } from "lucide-react"
-import type { User as UserType } from "@/types/user"
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/components/auth-provider"
+import Image from "next/image"
 
 interface MyProfileViewProps {
   showModal: (title: string, message: string, type?: "success" | "error") => void
 }
 
 export function MyProfileView({ showModal }: MyProfileViewProps) {
-  const { user: currentUser } = useAuth();
+  const [isUploading, setIsUploading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { user: currentUser, login } = useAuth();
+
+  const [formData, setFormData] = useState({
+    username: "",
+    fullName: "",
+    email: "",
+    bio: "",
+    socialLinks: {
+      facebook: "",
+      youtube: "",
+      spotify: "",
+      appleMusic: "",
+      tiktok: "",
+      instagram: "",
+    },
+  });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState("/face.png");
+
+  // Initialize form data when user data is available
+  useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        username: currentUser.username || "",
+        fullName: currentUser.fullName || "",
+        email: currentUser.email || "",
+        bio: currentUser.bio || "",
+        socialLinks: {
+          facebook: currentUser.socialLinks?.facebook || "",
+          youtube: currentUser.socialLinks?.youtube || "",
+          spotify: currentUser.socialLinks?.spotify || "",
+          appleMusic: currentUser.socialLinks?.appleMusic || "",
+          tiktok: currentUser.socialLinks?.tiktok || "",
+          instagram: currentUser.socialLinks?.instagram || "",
+        },
+      });
+      setAvatarPreview(currentUser.avatar || "/face.png");
+    }
+  }, [currentUser]);
 
   if (!currentUser) {
     return (
@@ -28,23 +65,6 @@ export function MyProfileView({ showModal }: MyProfileViewProps) {
       </div>
     );
   }
-
-  const [formData, setFormData] = useState({
-    username: currentUser.username,
-    fullName: currentUser.fullName,
-    email: currentUser.email,
-    bio: currentUser.bio,
-    socialLinks: {
-      facebook: currentUser.socialLinks?.facebook,
-      youtube: currentUser.socialLinks?.youtube,
-      spotify: currentUser.socialLinks?.spotify,
-      appleMusic: currentUser.socialLinks?.appleMusic,
-      tiktok: currentUser.socialLinks?.tiktok,
-      instagram: currentUser.socialLinks?.instagram,
-    },
-  })
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const [avatarPreview, setAvatarPreview] = useState(currentUser.avatar ?? "/face.png")
 
   const handleInputChange = (field: string, value: string) => {
     if (field.startsWith("socialLinks.")) {
@@ -61,28 +81,72 @@ export function MyProfileView({ showModal }: MyProfileViewProps) {
     }
   }
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        showModal("Lỗi Tải Ảnh", ["Ảnh đại diện max 2MB."])
-        e.target.value = ""
-        return
-      }
-      if (!["image/jpeg", "image/png"].includes(file.type)) {
-        showModal("Lỗi Tải Ảnh", ["Chỉ nhận JPG/PNG."])
+      // Chỉ validate loại file, không giới hạn kích thước
+      if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
+        showModal("Lỗi Tải Ảnh", "Chỉ nhận JPG/PNG.")
         e.target.value = ""
         return
       }
 
       setAvatarFile(file)
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          setAvatarPreview(e.target.result as string)
+      // Hiển thị thông báo đang xử lý
+      setIsModalOpen(true)
+      showModal("Đang Xử Lý", "Đang tải và xử lý ảnh đại diện...")
+
+      // Gửi file lên API avatar
+      const form = new FormData()
+      console.log("Uploading avatar file:", file.name, file.type, file.size);
+      form.append("file", file)
+      form.append("artistName", currentUser.username || 'default-user')
+      form.append("userId", currentUser.id || 'default-id')
+      form.append("role", currentUser.role || 'Artist') // Thêm role để xác định bảng
+
+      try {
+        // Show loading state
+        showModal("Đang xử lý", "Đang tải ảnh lên, vui lòng đợi...")
+
+        console.log("Sending request to /api/upload/avatar");
+        const res = await fetch("/api/upload/avatar", {
+          method: "POST",
+          body: form
+        })
+
+        console.log("Response status:", res.status);
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("API error response:", errorText);
+          throw new Error(`HTTP error ${res.status}: ${errorText}`);
         }
+
+        const data = await res.json()
+        console.log("API response:", data);
+
+        if (data.success && data.url) {
+          console.log("Upload successful. URL:", data.url);
+          setAvatarPreview(data.url)
+          setFormData((prev) => ({ ...prev, avatar: data.url }))
+
+          // Đóng modal thông báo
+          setIsModalOpen(false)
+          showModal("Thành công", "Ảnh đại diện đã được cập nhật", "success")
+
+          // Cập nhật lại user context bằng cách gọi lại login (nếu cần, hoặc reload user info)
+          if (currentUser) {
+            await login(currentUser.username, "") // password rỗng, backend nên bỏ qua check nếu đã login
+          }
+        } else {
+          console.error("Upload failed:", data);
+          showModal("Lỗi Upload", data.message || "Không upload được ảnh đại diện!")
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Lỗi không xác định";
+        console.error("Detailed error:", error);
+        showModal("Lỗi Upload", `Không thể kết nối server: ${errorMessage}`)
       }
-      reader.readAsDataURL(file)
     }
   }
 
@@ -189,7 +253,7 @@ export function MyProfileView({ showModal }: MyProfileViewProps) {
                 </div>
 
                 <div>
-                  <Label htmlFor="avatarFile">Ảnh đại diện (4000x4000px, JPG/PNG, max 2MB)</Label>
+                  <Label htmlFor="avatarFile">Ảnh đại diện (JPG/PNG, tự động crop về 1:1)</Label>
                   <Input
                     id="avatarFile"
                     type="file"

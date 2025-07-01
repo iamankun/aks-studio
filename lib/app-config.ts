@@ -1,7 +1,7 @@
 // Config để toggle giữa demo và production mode
 export const APP_CONFIG = {
     // Chuyển từ 'demo' sang 'production' để test thực tế
-    MODE: process.env.NODE_ENV === 'production' ? 'production' : (process.env.APP_MODE || 'demo'),
+    MODE: process.env.NODE_ENV === 'production' ? 'production' : (process.env.APP_MODE || 'Production'),
 
     // Database configuration
     DATABASE: {

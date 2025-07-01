@@ -7,6 +7,23 @@ const nextConfig = {
   // (Dùng cho database và các thư viện không tương thích với React Server Components)
   serverExternalPackages: ['@neondatabase/serverless'],
 
+  // Cấu hình hình ảnh - cho phép các domain bên ngoài
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: '**',
+      },
+    ],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
+
   // Cấu hình thử nghiệm (experimental features)
   experimental: {
     // Cho phép các domain được truy cập trong môi trường development

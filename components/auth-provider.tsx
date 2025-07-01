@@ -28,22 +28,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const checkAuth = async () => {
       try {
         setLoading(true)
+        console.log("🔍 AuthProvider: Checking authentication")
 
         // Check if user is stored in localStorage
         const storedUser = localStorage.getItem('currentUser')
+        console.log("🔍 AuthProvider: Stored user data:", storedUser ? "Found" : "Not found")
+
         if (storedUser) {
           try {
             const userData = JSON.parse(storedUser)
-            console.log('Restored user from localStorage:', userData)
+            console.log('✅ AuthProvider: Restored user from localStorage:', userData)
             setUser(userData)
           } catch (error) {
-            console.error('Error parsing stored user:', error)
+            console.error('❌ AuthProvider: Error parsing stored user:', error)
             localStorage.removeItem('currentUser')
+            console.log("🧹 AuthProvider: Cleared corrupted localStorage")
           }
         }
       } catch (error) {
-        console.error('Error checking auth:', error)
+        console.error('❌ AuthProvider: Error checking auth:', error)
       } finally {
+        console.log("🔍 AuthProvider: Authentication check completed, setting loading=false")
         setLoading(false)
       }
     }

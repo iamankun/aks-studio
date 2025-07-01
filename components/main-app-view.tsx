@@ -43,17 +43,18 @@ export default function MainAppView() {
     })
 
     try {
+      // Lấy submissions từ API Next.js (truy vấn trực tiếp database)
       const response = await fetch('/api/submissions')
       const result = await response.json()
 
-      if (result.success && result.submissions) {
-        setSubmissions(result.submissions)
-        logger.info('MainAppView: Submissions loaded successfully', {
-          count: result.submissions.length,
-          userId: user.id,
-          component: 'MainAppView'
-        })
-      }
+      // Chuẩn hóa cho cả trường hợp result.data hoặc result.submissions
+      const data = result.data ?? result.submissions ?? [];
+      setSubmissions(data)
+      logger.info('MainAppView: Submissions loaded successfully', {
+        count: data.length,
+        userId: user.id,
+        component: 'MainAppView'
+      })
     } catch (error) {
       logger.error('MainAppView: Failed to load submissions', error, {
         userId: user.id,

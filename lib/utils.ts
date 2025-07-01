@@ -19,13 +19,14 @@ export function generateISRC(user: any, counter: number): { isrc: string; newCou
 export function validateAudioFile(file: File): { valid: boolean; errors: string[] } {
   const errors: string[] = []
 
-  if (!file.type.startsWith("audio/")) {
-    errors.push("Chỉ chấp nhận file âm thanh")
+  // Chỉ chấp nhận file WAV
+  if (file.type !== "audio/wav") {
+    errors.push("Chỉ chấp nhận file WAV 24-bit, 2 kênh, 192kHz")
   }
 
-  // Check file size (50MB max)
-  if (file.size > 50 * 1024 * 1024) {
-    errors.push("File quá lớn (tối đa 50MB)")
+  // Check file size (100MB max cho file WAV chất lượng cao)
+  if (file.size > 100 * 1024 * 1024) {
+    errors.push("File quá lớn (tối đa 100MB)")
   }
 
   return { valid: errors.length === 0, errors }
@@ -76,13 +77,15 @@ export function isValidEmail(email: string): boolean {
 // Utility function to validate image files
 export async function validateImageFile(file: File): Promise<{ valid: boolean; errors: string[] }> {
   const errors: string[] = [];
-  if (!file.type.startsWith("image/")) {
-    errors.push("Chỉ chấp nhận file ảnh");
+
+  // Kiểm tra định dạng file - chỉ chấp nhận JPG
+  if (file.type !== "image/jpeg" && file.type !== "image/jpg") {
+    errors.push("Chỉ chấp nhận file ảnh JPG");
   }
 
-  // Check file size (5MB max)
-  if (file.size > 5 * 1024 * 1024) {
-    errors.push("File quá lớn (tối đa 5MB)");
+  // Check file size (10MB max)
+  if (file.size > 10 * 1024 * 1024) {
+    errors.push("File quá lớn (tối đa 10MB)");
   }
 
   return new Promise((resolve) => {

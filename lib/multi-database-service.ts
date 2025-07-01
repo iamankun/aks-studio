@@ -11,9 +11,7 @@ export class MultiDatabaseService {
   private neonAvailable = true
   private wordpressAvailable = true
 
-  constructor() {
-    // Initialize async operations separately
-  }
+  // Initialize async operations separately
 
   async initialize() {
     await this.initializeDatabases()
@@ -22,13 +20,20 @@ export class MultiDatabaseService {
   private async initializeDatabases() {
   // Initialize Neon (Primary - User's preference)
     try {
-      if (process.env.DATABASE_URL || process.env.NEON_DATABASE_URL) {
-        this.neonSql = neon(process.env.DATABASE_URL ?? process.env.NEON_DATABASE_URL)
+      // Ưu tiên dùng Neon Local nếu đang ở môi trường development
+      const isLocalDev = process.env.NODE_ENV === 'development' && process.env.USE_NEON_LOCAL === 'true';
+      const connectionString = isLocalDev
+        ? 'postgresql://postgres:postgres@localhost:5432/dmg'
+        : process.env.DATABASE_URL;
+
+      if (connectionString) {
+        console.log(`🔌 Connecting to ${isLocalDev ? 'Neon Local' : 'Neon Cloud'}`);
+        this.neonSql = neon(connectionString);
 
         // Test Neon connection
-        await this.neonSql`SELECT NOW() as current_time`
-        this.neonAvailable = true
-        console.log("✅ Neon connected and ready")
+        const result = await this.neonSql`SELECT NOW() as current_time`;
+        this.neonAvailable = true;
+        console.log(`✅ ${isLocalDev ? 'Neon Local' : 'Neon Cloud'} connected and ready:`, result[0]?.current_time);
       }
     } catch (error) {
       console.log("⚠️ Neon not available:", (error as Error).message)
@@ -55,121 +60,118 @@ export class MultiDatabaseService {
   }
 
   async authenticateUser(username: string, password: string) {
-    console.log("🔐 Multi-DB Authentication for:", username)
+    console.log("🔐 Multi-DB Authentication for:", username);
 
-    // Ensure initialization is complete
     if (!this.neonSql) {
-      await this.initializeDatabases()
+      await this.initializeDatabases();
     }
 
     // Try Neon first (User's preference)
     if (this.neonAvailable) {
-      try {
-        // Check label_manager table first (admin users)
-        const adminResult = await this.neonSql`
-          SELECT * FROM label_manager 
-          WHERE username = ${username}
-          LIMIT 1
-        `
-
-        if (adminResult.length > 0) {
-          const user = adminResult[0]
-
-          // Verify password using bcrypt or plain text fallback
-          let passwordValid = false
-
-          if (user.password_hash?.startsWith('$2b$')) {
-            // Bcrypt hashed password - use dynamic import
-            try {
-              const bcrypt = await import('bcrypt')
-              passwordValid = await bcrypt.compare(password, user.password_hash)
-            } catch (error) {
-              console.error('Failed to import bcrypt:', error)
-              passwordValid = false
-            }
-          } else {
-            // Plain text password (fallback for existing data)
-            passwordValid = user.password_hash === password
-          }
-
-          if (passwordValid) {
-            console.log("✅ Neon admin authentication successful")
-            return {
-              success: true,
-              user: {
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                fullName: user.full_name ?? user.username,
-                role: "Label Manager",
-                avatar: user.avatar ?? "/face.png",
-                table: "label_manager"
-              },
-              source: "Neon",
-            }
-          }
-        }
-
-        // Check artist table (artist users)
-        const artistResult = await this.neonSql`
-          SELECT * FROM artist 
-          WHERE username = ${username}
-          LIMIT 1
-        `
-
-        if (artistResult.length > 0) {
-          const user = artistResult[0]
-
-          // Verify password using bcrypt or plain text fallback
-          let passwordValid = false
-
-          if (user.password_hash?.startsWith('$2b$')) {
-            // Bcrypt hashed password - use dynamic import
-            try {
-              const bcrypt = await import('bcrypt')
-              passwordValid = await bcrypt.compare(password, user.password_hash)
-            } catch (error) {
-              console.error('Failed to import bcrypt:', error)
-              passwordValid = false
-            }
-          } else {
-            // Plain text password (fallback for existing data)
-            passwordValid = user.password_hash === password
-          }
-
-          if (passwordValid) {
-            console.log("✅ Neon artist authentication successful")
-            return {
-              success: true,
-              user: {
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                fullName: user.real_name ?? user.artist_name ?? user.username,
-                role: "Artist",
-                avatar: user.avatar_url ?? "/face.png",
-                table: "artist"
-              },
-              source: "Neon",
-            }
-          }
-        }
-      } catch (error) {
-        console.log("⚠️ Neon auth failed:", (error as Error).message)
-      }
+      const neonAuthResult = await this.tryNeonAuthentication(username, password);
+      if (neonAuthResult) return neonAuthResult;
     }
 
     // WordPress authentication (if available)
     if (this.wordpressAvailable) {
-      try {
-        // TODO: Implement WordPress authentication via REST API
-        console.log("⚠️ WordPress authentication not yet implemented")
-      } catch (error) {
-        console.log("⚠️ WordPress auth failed:", (error as Error).message)
-      }
+      const wpAuthResult = await this.tryWordPressAuthentication(username, password);
+      if (wpAuthResult) return wpAuthResult;
     }
 
     // Fallback to demo accounts
+    const demoAuthResult = this.tryDemoAuthentication(username, password);
+    if (demoAuthResult) return demoAuthResult;
+
+    return {
+      success: false,
+      message: "Invalid credentials",
+    };
+  }
+
+  private async tryNeonAuthentication(username: string, password: string) {
+    try {
+      // Check label_manager table first (admin users)
+      const adminResult = await this.neonSql`
+        SELECT * FROM label_manager 
+        WHERE username = ${username}
+        LIMIT 1
+      `;
+      if (adminResult.length > 0) {
+        const user = adminResult[0];
+        if (await this.isPasswordValid(password, user.password_hash)) {
+          console.log("✅ Neon admin authentication successful");
+          return {
+            success: true,
+            user: {
+              id: user.id,
+              username: user.username,
+              email: user.email,
+              fullName: user.full_name ?? user.username,
+              role: "Label Manager",
+              avatar: user.avatar ?? "/face.png",
+              table: "label_manager"
+            },
+            source: "Neon",
+          };
+        }
+      }
+
+      // Check artist table (artist users)
+      const artistResult = await this.neonSql`
+        SELECT * FROM artist 
+        WHERE username = ${username}
+        LIMIT 1
+      `;
+      if (artistResult.length > 0) {
+        const user = artistResult[0];
+        if (await this.isPasswordValid(password, user.password_hash)) {
+          console.log("✅ Neon artist authentication successful");
+          return {
+            success: true,
+            user: {
+              id: user.id,
+              username: user.username,
+              email: user.email,
+              fullName: user.real_name ?? user.artist_name ?? user.username,
+              role: "Artist",
+              avatar: user.avatar_url ?? "/face.png",
+              table: "artist"
+            },
+            source: "Neon",
+          };
+        }
+      }
+    } catch (error) {
+      console.log("⚠️ Neon auth failed:", (error as Error).message);
+    }
+    return null;
+  }
+
+  private async isPasswordValid(password: string, passwordHash: string): Promise<boolean> {
+    if (passwordHash?.startsWith('$2b$')) {
+      try {
+        const bcrypt = await import('bcrypt');
+        return await bcrypt.compare(password, passwordHash);
+      } catch (error) {
+        console.error('Failed to import bcrypt:', error);
+        return false;
+      }
+    } else {
+      return passwordHash === password;
+    }
+  }
+
+  private async tryWordPressAuthentication(username: string, password: string) {
+    try {
+  // TODO: Implement WordPress authentication via REST API
+      console.log("⚠️ WordPress authentication not yet implemented");
+    } catch (error) {
+      console.log("⚠️ WordPress auth failed:", (error as Error).message);
+    }
+    return null;
+  }
+
+  private tryDemoAuthentication(username: string, password: string) {
     const demoUsers = [
       {
         id: "admin-demo",
@@ -195,27 +197,23 @@ export class MultiDatabaseService {
         role: "Artist",
         avatar: "/face.png",
       },
-    ]
+    ];
 
-    const demoUser = demoUsers.find((u) => u.username === username)
+    const demoUser = demoUsers.find((u) => u.username === username);
     const validPassword =
       (username === "admin" && password === "admin") ||
       (username === "artist" && password === "123456") ||
-      (username === "ankunstudio" && password === "admin")
+      (username === "ankunstudio" && password === "admin");
 
     if (demoUser && validPassword) {
-      console.log("✅ Demo authentication successful")
+      console.log("✅ Demo authentication successful");
       return {
         success: true,
         user: demoUser,
         source: "Demo Fallback",
-      }
+      };
     }
-
-    return {
-      success: false,
-      message: "Invalid credentials",
-    }
+    return null;
   }
 
   async createUser(userData: {
@@ -365,6 +363,161 @@ export class MultiDatabaseService {
       success: true,
       data: [],
       source: "None"
+    }
+  }
+
+  async updateSubmission(id: string, updateData: any) {
+    if (!this.neonSql) await this.initializeDatabases();
+    try {
+      // Xử lý dữ liệu lớn như ảnh
+      const cleanedData = { ...updateData };
+
+      // Nếu có imageUrl và nó là base64, cần giới hạn kích thước hoặc lưu nó vào storage
+      if (cleanedData.imageUrl && typeof cleanedData.imageUrl === 'string' &&
+        cleanedData.imageUrl.length > 2000000) { // Nếu hình ảnh quá lớn (>2MB)
+        console.log('Image too large, using placeholder');
+        // Thay thế bằng ảnh mặc định nếu là ảnh base64 quá lớn
+        cleanedData.imageUrl = cleanedData.artistName === "Various Artist"
+          ? "/placeholders/various-artist.jpg"
+          : "/placeholders/default-cover.jpg";
+      }
+
+      // Chỉ cập nhật UPC và distributionLink nếu có thay đổi
+      // Tránh cập nhật các trường khác không cần thiết
+      const allowedFields = ['upc', 'distributionLink'];
+      const filteredData = Object.keys(cleanedData)
+        .filter(key => allowedFields.includes(key))
+        .reduce((obj, key) => {
+          obj[key] = cleanedData[key];
+          return obj;
+        }, {} as Record<string, any>);
+
+      // Kiểm tra xem có dữ liệu để cập nhật không
+      if (Object.keys(filteredData).length === 0) {
+        return { success: false, error: 'No valid fields to update' };
+      }
+
+      // Build dynamic SET clause
+      const setClauses = Object.keys(filteredData)
+        .map((key, idx) => `${key} = $${idx + 2}`)
+        .join(', ');
+      const values = [id, ...Object.values(filteredData)];
+
+      console.log('Updating submission with query:', setClauses);
+      console.log('Values:', values);
+
+      const query = `UPDATE submissions SET ${setClauses} WHERE id = $1 RETURNING *`;
+      const result = await this.neonSql(query, ...values);
+
+      if (result.length > 0) {
+        return { success: true, submission: result[0] };
+      }
+      return { success: false, error: 'Not found' };
+    } catch (error) {
+      console.error('Database update error:', error);
+      return { success: false, error: (error as Error).message };
+    }
+  }
+  // Cập nhật avatar người dùng vào cơ sở dữ liệu
+  async updateUserAvatar(fileBuffer: Buffer, userId: string, userTable: 'artist' | 'label_manager', mimeType: string = 'image/jpeg') {
+    try {
+      if (!this.neonAvailable || !this.neonSql) {
+        return {
+          success: false,
+          error: "Cơ sở dữ liệu không khả dụng"
+        };
+      }
+
+      // Lưu ảnh dưới dạng binary (BYTEA) và URL cùng lúc
+      // URL sẽ tương thích với frontend hiện tại, BYTEA cho hiệu suất tốt hơn trong tương lai
+      const base64Image = fileBuffer.toString('base64');
+      const dataUrl = `data:${mimeType};base64,${base64Image}`;
+
+      console.log(`🖼️ Lưu avatar cho ${userTable} với ID ${userId} (${fileBuffer.length} bytes)`);
+
+      // Lưu vào cơ sở dữ liệu dựa vào userTable
+      if (userTable === 'artist') {
+        await this.neonSql`
+          UPDATE artist 
+          SET 
+            avatar_url = ${dataUrl},
+            avatar_binary = ${fileBuffer},
+            avatar_mime_type = ${mimeType},
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ${userId}
+        `;
+      } else if (userTable === 'label_manager') {
+        await this.neonSql`
+          UPDATE label_manager 
+          SET 
+            avatar_url = ${dataUrl},
+            avatar_binary = ${fileBuffer},
+            avatar_mime_type = ${mimeType},
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ${userId}
+        `;
+      }
+
+      return {
+        success: true,
+        url: dataUrl,
+        key: userId
+      };
+    } catch (error) {
+      console.error('Error updating avatar in database:', error);
+      return {
+        success: false,
+        error: `Database upload failed: ${(error as Error).message}`
+      };
+    }
+  }
+
+  // Lấy avatar người dùng từ cơ sở dữ liệu
+  async getUserAvatar(userId: string, userTable: 'artist' | 'label_manager') {
+    try {
+      if (!this.neonAvailable || !this.neonSql) {
+        return {
+          success: false,
+          error: "Cơ sở dữ liệu không khả dụng"
+        };
+      }
+
+      let result;
+
+      // Lấy ảnh từ cơ sở dữ liệu dựa vào userTable
+      if (userTable === 'artist') {
+        result = await this.neonSql`
+          SELECT avatar_binary, avatar_mime_type
+          FROM artist 
+          WHERE id = ${userId}
+        `;
+      } else {
+        result = await this.neonSql`
+          SELECT avatar_binary, avatar_mime_type
+          FROM label_manager 
+          WHERE id = ${userId}
+        `;
+      }
+
+      // Nếu không tìm thấy hoặc không có dữ liệu avatar
+      if (!result || result.length === 0 || !result[0].avatar_binary) {
+        return {
+          success: false,
+          error: "Không tìm thấy avatar"
+        };
+      }
+
+      return {
+        success: true,
+        data: result[0].avatar_binary,
+        mimeType: result[0].avatar_mime_type || 'image/jpeg'
+      };
+    } catch (error) {
+      console.error('Error fetching avatar from database:', error);
+      return {
+        success: false,
+        error: `Database fetch failed: ${(error as Error).message}`
+      };
     }
   }
 }

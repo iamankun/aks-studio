@@ -23,7 +23,7 @@ export function UsersView() {
         
         if (data.success && data.artists) {
           setUsersList(data.artists)
-          setArtistCount(data.count || data.artists.length)
+          setArtistCount(data.count ?? data.artists.length)
         } else {
           console.error('Failed to fetch users:', data.error)
         }

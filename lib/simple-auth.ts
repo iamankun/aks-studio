@@ -58,8 +58,9 @@ export function clearUser(): void {
 }
 
 export function authenticateUser(username: string, password: string): User | null {
-  // Tài khoản admin mặc định
-  if (username === "ankunstudio" && password === "admin") {
+  // Tài khoản admin mặc định - chỉ dùng cho môi trường phát triển
+  // Trong môi trường production, hãy thay đổi logic này để sử dụng xác thực thực tế
+  if (username === "admin" && password === "adminpassword") {
     return {
       id: "1",
       username: "admin",
@@ -73,8 +74,8 @@ export function authenticateUser(username: string, password: string): User | nul
         youtube: "",
         spotify: "",
         appleMusic: "",
-        tiktok: "https://tiktok.com/@ankunstudio",
-        instagram: "https://instagram.com/ankunstudio",
+        tiktok: "",
+        instagram: "",
       },
       createdAt: new Date().toISOString(),
       isrcCodePrefix: "VNA2P",

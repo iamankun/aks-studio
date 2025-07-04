@@ -1,14 +1,16 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Loader2, RefreshCw, Moon, Sun } from "lucide-react"
+import { Loader2, User, Lock } from "lucide-react"
 import Image from "next/image"
-import { DynamicBackground } from "@/components/dynamic-background"
+import { logLogin, logUIInteraction } from "@/lib/client-activity-log"
+
+import "@/components/awesome/css/all.min.css"
 
 interface LoginViewProps {
   onLogin: (username: string, password: string) => Promise<{ success: boolean; message?: string }>
@@ -21,133 +23,106 @@ export function LoginView({ onLogin, onSwitchToRegister, onSwitchToForgot }: Rea
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [isReloading, setIsReloading] = useState(false)
   const [currentGreeting, setCurrentGreeting] = useState("Xin chào")
   const [greetingIndex, setGreetingIndex] = useState(0)
   const [userRole, setUserRole] = useState("")
-  const [binaryText, setBinaryText] = useState("")
-  const [companyBinary, setCompanyBinary] = useState("")
-  const [isDarkMode, setIsDarkMode] = useState(false)
-  const [showBinary, setShowBinary] = useState(false)
-  const [isTransitioning, setIsTransitioning] = useState(false)
-
-  // Light sweep throttling
-  const [lastSweepTime, setLastSweepTime] = useState(0)
-  const SWEEP_COOLDOWN = 2000 // 2 seconds cooldown
-
-  const [appSettings, setAppSettings] = useState({
-    appName: userRole || "AKs Studio",
+  const [usernameError, setUsernameError] = useState("")
+  const [passwordError, setPasswordError] = useState("")
+  const [appSettings] = useState({
+    appName: userRole ?? "An Kun Studio",
     logoUrl: "/face.png",
-    Avatars: "/wp-content/uploads/face.png"
+    logoAlt: "Face AK"
   })
 
-  // Greetings in different languages
-  const greetings = [
-    "Xin chào", "こんにちは", "Hola", "Bonjour", "Hello", "Hajimemashite", "Hola",
-    "Guten Tag", "Ciao", "Namaste", "Zdravstvuyte", "안녕하세요", "你好", "Olá", "Привет", "שלום", "Merhaba",
-    "สวัสดี", "Kamusta", "Selam", "Hej", "Привіт", "Halo", "Szia", "Здраво", "שלום", "Merhaba"
-  ]
-
-  // Binary encoding/decoding functions
-  const textToBinary = (text: string) => {
-    return text.split('').map(char =>
-      char.charCodeAt(0).toString(2).padStart(8, '0')
-    ).join(' ')
-  }
-
-  // Random binary animation for company name
-  const generateRandomBinary = (length: number) => {
-    return Array.from({ length }, () => Math.random() > 0.5 ? '1' : '0').join('')
-  }
+  // Greetings in different languages - wrapped in useMemo
+  const greetings = useMemo(() => [
+    "Xin chào", "こんにちは", "Hola", "Bonjour", "Hello", "Hajimemashite",
+    "Guten Tag", "Ciao", "Namaste", "Zdravstvuyte", "안녕하세요", "你好", "مرحبا", "Salam"
+  ], [])
 
   // User recognition based on ID pattern
-  const recognizeUser = (username: string) => {
+  const recognizeUser = useCallback((username: string) => {
     if (username.length >= 3) {
       const pattern = username.substring(0, 3).toLowerCase()
-      if (pattern === "ank" || pattern === "kun") return "An Kun" // Assuming "ank" or "kun" in username implies An Kun
-      if (pattern === "adm") return "Người quản lý"
-      if (pattern === "ngh" || pattern === "art") return "Nghệ sĩ"
-
-      return "Nghệ sĩ mới hen"
+      if (pattern === "ank" || pattern === "kun") return "An Kun"
+      if (pattern === "adm") return "Người quản lý";
+      if (pattern === "ngh" || pattern === "art") return "Nghệ sĩ";
+      return "Nghệ sĩ mới"
     }
-    return "" // Default return if no pattern matches or username is too short
-  }
-  // Throttled light sweep function - improved version
-  const triggerLightSweep = (isIntense = false) => {
-    const now = Date.now();
-    if (now - lastSweepTime < SWEEP_COOLDOWN) {
-      return; // Skip if still in cooldown
+    return ""
+  }, [])
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Validate all fields first
+    validateUsername(username)
+    validatePassword(password)
+
+    if (!username || !password) {
+      setError("Vui lòng nhập đầy đủ thông tin")
+      return
     }
 
-    setLastSweepTime(now);
-    const btn = document.querySelector('.login-button');
-    if (!btn) return;
+    if (usernameError || passwordError) {
+      setError("Vui lòng sửa các lỗi trước khi đăng nhập")
+      return
+    }
 
-    const className = isIntense ? 'light-sweep-intense' : 'light-sweep';
+    setLoading(true)
+    setError("")
 
-    // Remove any existing classes first
-    btn.classList.remove('light-sweep', 'light-sweep-intense');
+    try {
+      // Log login attempt
+      logUIInteraction('form', 'login-form', {
+        username: username,
+        attempt: 'started'
+      });
 
-    // Add new class after a small delay to ensure clean animation
-    requestAnimationFrame(() => {
-      btn.classList.add(className);
-    });
+      const result = await onLogin(username, password)
+      console.log("[Copilot Debug] API login result:", result)
 
-    // Remove class after 2 seconds
-    setTimeout(() => {
-      btn.classList.remove(className);
-    }, 2000);
-  }
+      // Log login result
+      if (!result.success) {
+        setError(result.message ?? "Đăng nhập thất bại")
 
-  // Load app settings for logo and title
-  useEffect(() => {
-    const savedApp = localStorage.getItem("appSettings_v2")
-    if (savedApp) {
-      try {
-        const parsed = JSON.parse(savedApp)
-        setAppSettings(parsed)
-      } catch (err) {
-        console.error("Failed to load app settings:", err)
+        // Log failed login
+        logLogin('password', 'failed', {
+          username: username,
+          error: result.message || 'Unknown error'
+        });
+      } else {
+        // Log successful login
+        logLogin('password', 'success', {
+          username: username,
+          role: userRole || 'user'
+        });
       }
+    } catch (err) {
+      console.error("[Copilot Debug] Login error:", err)
+      setError("Đã xảy ra lỗi không mong muốn")
+
+      // Log error during login
+      logLogin('password', 'error', {
+        username: username,
+        error: err instanceof Error ? err.message : 'Unknown error'
+      });
+    } finally {
+      setLoading(false)
     }
+  }
 
-    // Detect system theme
-    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    setIsDarkMode(systemDark)
-  }, [])
-
-  // Company binary animation with toggle
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const randomBinary = generateRandomBinary(24)
-      setCompanyBinary(randomBinary)
-    }, 150)
-    return () => clearInterval(interval)
-  }, [])
-
-  // Toggle between company name and binary every 4 seconds
-  useEffect(() => {
-    const toggleInterval = setInterval(() => {
-      setIsTransitioning(true)
-      setTimeout(() => {
-        setShowBinary(!showBinary)
-        setIsTransitioning(false)
-      }, 300) // Transition duration
-    }, 4000) // Switch every 4 seconds
-    return () => clearInterval(toggleInterval)
-  }, [showBinary])
-
-  // Cycle through greetings with smoother transition
+  // Update greeting periodically
   useEffect(() => {
     const interval = setInterval(() => {
       setGreetingIndex((prev) => (prev + 1) % greetings.length)
-    }, 3000) // Slower for better readability
+    }, 3000)
     return () => clearInterval(interval)
   }, [greetings.length])
 
   // Update greeting with fade effect
   useEffect(() => {
-    // Add fade out effect before changing
     const greetingEl = document.querySelector('.greeting-text')
     if (greetingEl) {
       greetingEl.classList.add('opacity-0')
@@ -160,259 +135,195 @@ export function LoginView({ onLogin, onSwitchToRegister, onSwitchToForgot }: Rea
     }
   }, [greetingIndex, greetings])
 
-  // Binary text animation
+  // Update user role when username changes
   useEffect(() => {
-    if (username) {
-      const role = recognizeUser(username)
-      setUserRole(role)
-      const binary = textToBinary(username)
-      setBinaryText(binary)
+    const role = recognizeUser(username)
+    setUserRole(role)
+  }, [username, recognizeUser])
+
+  // Validate username and password
+  useEffect(() => {
+    validateUsername(username)
+    validatePassword(password)
+  }, [username, password])
+
+  const validateUsername = (value: string) => {
+    if (value.length < 3) {
+      setUsernameError("Username must be at least 3 characters")
+    } else if (value.length > 20) {
+      setUsernameError("Username must be less than 20 characters")
     } else {
-      setUserRole("")
-      setBinaryText("")
-    }
-  }, [username])
-
-  // Username change detection - không trigger light sweep
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setUsername(value)
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
-
-    try {
-      const result = await onLogin(username, password)
-      if (!result.success) {
-        setError(result.message ?? "Đăng nhập thất bại")
-      }
-    } catch (err) {
-      console.error("Login error:", err)
-      setError("Đã xảy ra lỗi không mong muốn")
-    } finally {
-      setLoading(false)
+      setUsernameError("")
     }
   }
 
-  const handleReload = () => {
-    setIsReloading(true)
-    // Add light sweep effect
-    const btn = document.querySelector('.reload-button')
-    btn?.classList.add('light-sweep-active')
-
-    setTimeout(() => {
-      btn?.classList.remove('light-sweep-active')
-      window.location.reload()
-    }, 800) // Light sweep duration
+  const validatePassword = (value: string) => {
+    if (value.length < 6) {
+      setPasswordError("Password must be at least 6 characters")
+    } else {
+      setPasswordError("")
+    }
   }
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode)
-    // Apply theme to document
-    document.documentElement.classList.toggle('dark', !isDarkMode)
-  }
+  const inputTransitionClasses = "transition-all duration-300 bg-transparent border-gray-600 hover:border-gray-400 focus:border-primary focus:ring-primary/20"
+  const buttonTransitionClasses = "transition-all duration-500 bg-gradient-to-r from-primary via-purple-600 to-primary hover:scale-[1.02] hover:shadow-xl hover:shadow-primary/20 active:scale-[0.98]"
+  const linkTransitionClasses = "transition-colors duration-300 text-gray-400 hover:text-primary hover:underline underline-offset-4"
 
   return (
-    <div className="login-container min-h-screen w-full flex relative overflow-hidden">
-      {/* Dynamic Background */}
-      <DynamicBackground />
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center p-4 pt-24 relative overflow-hidden">
 
-      {/* Overlay for readability */}
-      <div className="absolute inset-0 bg-black/20 z-1"></div>
-
-      {/* Main Content Columns */}
-      <div className="relative z-10 flex flex-1">
-        {/* Left Column - Login Form */}
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="w-full max-w-md">
-            <Card className="glass-card">
-              <CardHeader className="text-center">
-                {/* Logo */}
-                <div className="flex justify-center mb-4">
-                  <div className="relative w-20 h-20 rounded-full overflow-hidden bg-white shadow-xl border-4 border-white/50 flex items-center justify-center">
-                    <Image
-                      src={`${appSettings.logoUrl}Logo`}
-                      alt={`${appSettings.appName} || ${appSettings.logoUrl}Logo`}
-                      fill
-                      className="object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = "https://ankun.dev/wp-content/uploads/2025/06/my-notion-face-transparent.png"
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Dynamic Greeting */}
-                <div className="mb-4">
-                  <p className="text-lg text-gray-600 greeting-fade">
-                    <span className="greeting-text transition-all duration-300">{currentGreeting}</span>
-                  </p>
-                  {userRole && (
-                    <p className="text-sm text-indigo-600 font-medium user-role-fade animate-pulse">✨ {userRole}</p>)}
-                </div>
-
-                <span className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">{userRole || `${appSettings.appName}`}</span>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Tên đăng nhập</Label>
-                    <Input
-                      id="username"
-                      type="text"
-                      value={username}
-                      onChange={handleUsernameChange}
-                      placeholder="ankunstudio"
-                      required
-                      className="transition-all duration-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                    {/* Binary text display */}
-                    {binaryText && (
-                      <div className="text-xs text-gray-500 font-mono p-2 bg-gray-50 rounded border overflow-hidden">
-                        <div className="binary-animation">{binaryText}</div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Mật khẩu</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="admin"
-                      required
-                    />
-                  </div>
-                  {error && <div className="text-red-500 text-sm text-center">{error}</div>}
-                  <Button
-                    type="submit"
-                    className="w-full genZ-shimmer transition-all duration-300 hover:scale-105 active:scale-95 login-button"
-                    disabled={loading}
-                    onMouseEnter={() => triggerLightSweep(false)}
-                    onClick={() => triggerLightSweep(true)}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Đang đăng nhập...
-                      </>
-                    ) : (
-                      "Đăng nhập"
-                    )}
-                  </Button>
-                </form>
-                <div className="mt-4 text-center space-y">
-                  <Button variant="link" onClick={onSwitchToForgot} className="text-sm">
-                    Quên mật khẩu?
-                  </Button>
-                  <div>
-                    <Button variant="link" onClick={onSwitchToRegister} className="text-sm">
-                      Chưa có tài khoản? Đăng ký ngay
-                    </Button>
-                  </div>
-                </div>
-                <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg text-sm text-center border border-blue-200/50">
-                  <strong className="text-blue-700">Chỉ cần bạn đăng ký tài khoản</strong>
-                  <br />
-                  <span className="text-blue-600">Là bạn đã đồng ý với hai vấn đề sau:</span>
-                  <br />
-                  <span className="text-blue-600"><a href="https://ankun.dev/terms-and-conditions" target="_blank" rel="noopener noreferrer">Điều khoản và điều kiện</a><p><a href="https://ankun.dev/privacy-policy" target="_blank" rel="noopener noreferrer">Chính sách và quyền riêng tư</a></p></span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Control Buttons - Bottom */}
-            <div className="flex justify-between items-center mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleTheme}
-                className="bg-white/80 backdrop-blur-sm border-white/30 hover:bg-white/90 transition-all duration-300"
-              >
-                {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleReload}
-                disabled={isReloading}
-                className={`reload-button bg-white/80 backdrop-blur-sm border-white/30 hover:bg-white/90 transition-all duration-300 ${isReloading ? 'reload-pulsing' : ''}`}
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                {isReloading ? 'Đang tải...' : 'Reload'}
-              </Button>
-            </div>
+      <Card className="w-full max-w-md relative z-40 border border-white/10 shadow-2xl
+        bg-background/5 backdrop-blur-2xl hover:bg-background/10 transition-all duration-500
+        before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/5 before:to-white/0 before:rounded-xl">
+        <CardHeader className="text-center relative z-10">
+          <div className="relative w-20 h-20 mx-auto mb-2">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-600/20 rounded-full blur-lg"></div>
+            <Image
+              src={appSettings.logoUrl}
+              alt={appSettings.logoAlt}
+              fill
+              className="object-cover rounded-full p-1 bg-background/10 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-300 hover:scale-105"
+              priority
+            />
           </div>
-        </div>
-
-        {/* Right Column - Company Display */}
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="w-full max-w-md text-center">
-            {/* Company Logo and Name */}
-            <div className="mb-8">
-              <div className="flex justify-center mb-6">
-                <div className="relative w-32 h-32 rounded-full overflow-hidden bg-white shadow-2xl border-4 border-white/50">
-                  <Image
-                    src={appSettings.logoUrl}
-                    alt={`${appSettings.Avatars} Logo`}
-                    fill
-                    className="object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = "/face.png"
-                    }}
-                  />
-                </div>
+          <p className="text-muted-foreground text-sm animate-fade-in">
+            {userRole || "Welcome back to AKs Studio"}
+          </p>
+          <h2 className="text-2xl font-bold bg-clip-text text-transparent 
+            bg-gradient-to-r from-indigo-500 to-pink-500 select-none">
+            {currentGreeting}
+          </h2>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2 group/username">
+              <Label htmlFor="username" className="text-sm font-medium inline-block transition-transform duration-300 group-focus-within/username:translate-x-2">
+                Username
+              </Label>
+              <div className="relative">
+                <Input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    validateUsername(e.target.value);
+                  }}
+                  className={`pl-10 bg-background/30 border-white/10 focus:border-primary/50
+                    placeholder:text-muted-foreground/50 ${inputTransitionClasses}
+                    focus:bg-background/40 focus:ring-2 focus:ring-offset-0
+                    ${usernameError ? 'border-destructive/50 focus:border-destructive' : ''}`}
+                  placeholder="Enter your username"
+                  aria-invalid={!!usernameError}
+                  aria-describedby={usernameError ? "username-error" : undefined}
+                  disabled={loading}
+                />
+                <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/50 transition-transform duration-300 group-focus-within/username:scale-110 group-focus-within/username:text-primary/70" />
+                <div className="absolute inset-0 rounded-md bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 opacity-0 group-hover/username:opacity-100 group-focus-within/username:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               </div>
-
-              {/* Company Name with Binary Animation - Technology Toggle */}
-              <div className="space-y-4">
-                <div className="relative h-16 flex items-center justify-center">
-                  {/* Company Name */}
-                  <h1
-                    className={`absolute text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent transition-all duration-500 ${showBinary ? 'opacity-0 transform scale-95 blur-sm' : 'opacity-100 transform scale-100 blur-0'
-                      } ${isTransitioning ? 'tech-glitch' : ''}`}
-                  >
-                    {appSettings.appName}
-                  </h1>
-
-                  {/* Binary Code */}
-                  <div
-                    className={`absolute font-mono text-xl text-purple-400 transition-all duration-500 ${showBinary ? 'opacity-100 transform scale-100 blur-0' : 'opacity-0 transform scale-105 blur-sm'
-                      } ${isTransitioning ? 'tech-glitch' : ''}`}
-                  >
-                    <div className="binary-animation-company-large">
-                      {companyBinary}
-                    </div>
-                  </div>
-
-                  {/* Technology transition effects */}
-                  {isTransitioning && (
-                    <div className="absolute inset-0 tech-scan-line"></div>
-                  )}
+              {usernameError && (
+                <div id="username-error" className="text-xs text-destructive mt-1 ml-1 animate-fade-in flex items-center gap-1">
+                  <i className="fas fa-exclamation-circle"></i>
+                  {usernameError}
                 </div>
-
-              </div>
+              )}
             </div>
-          </div>
-        </div>
 
-        {/* Floating decorative elements - GenZ style */}
-        <div>
-          <div className="absolute top-20 left-20 w-32 h-32 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-xl floating"></div>
-          <div className="absolute bottom-20 right-20 w-40 h-40 bg-gradient-to-r from-indigo-400/20 to-pink-400/20 rounded-full blur-xl floating"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-gradient-to-r from-purple-400/10 to-blue-400/10 rounded-full blur-2xl floating"></div>
+            <div className="space-y-2 group/password">
+              <Label htmlFor="password" className="text-sm font-medium inline-block transition-transform duration-300 group-focus-within/password:translate-x-2">
+                Password
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    validatePassword(e.target.value);
+                  }}
+                  className={`pl-10 bg-background/30 border-white/10 focus:border-primary/50
+                    placeholder:text-muted-foreground/50 ${inputTransitionClasses}
+                    focus:bg-background/40 focus:ring-2 focus:ring-offset-0
+                    ${passwordError ? 'border-destructive/50 focus:border-destructive' : ''}`}
+                  placeholder="Enter your password"
+                  aria-invalid={!!passwordError}
+                  aria-describedby={passwordError ? "password-error" : undefined}
+                  autoComplete="current-password"
+                  disabled={loading}
+                />
+                <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/50 transition-transform duration-300 group-focus-within/password:scale-110 group-focus-within/password:text-primary/70" />
+                <div className="absolute inset-0 rounded-md bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 opacity-0 group-hover/password:opacity-100 group-focus-within/password:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              </div>
+              {passwordError && (
+                <div id="password-error" className="text-xs text-destructive mt-1 ml-1 animate-fade-in flex items-center gap-1">
+                  <i className="fas fa-exclamation-circle"></i>
+                  {passwordError}
+                </div>
+              )}
+            </div>
 
-          {/* Additional GenZ floating elements */}
-          <div className="absolute top-10 right-1/3 w-16 h-16 bg-gradient-to-br from-yellow-400/30 to-orange-400/30 rounded-lg blur-lg floating rotate-45"></div>
-          <div className="absolute bottom-10 left-1/3 w-20 h-20 bg-gradient-to-br from-green-400/30 to-cyan-400/30 rounded-full blur-lg floating"></div>
-          <div className="absolute top-1/3 right-10 w-12 h-12 bg-gradient-to-br from-pink-400/40 to-purple-400/40 rounded-full blur-md floating"></div>
-        </div>
-      </div>
+            {error && (
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm animate-fade-in flex items-center gap-2">
+                <i className="fas fa-exclamation-triangle"></i>
+                <span className="flex-1">{error}</span>
+                <button
+                  type="button"
+                  onClick={() => setError("")}
+                  className="text-destructive/70 hover:text-destructive transition-colors"
+                  aria-label="Dismiss error"
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className={`w-full relative overflow-hidden group login-button ${buttonTransitionClasses}`}
+              disabled={loading}
+              variant="default"
+            >
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                  <>
+                    <span className="relative z-10">Login</span>
+                    <span className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0 
+                    translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                  </>
+              )}
+            </Button>
+
+            <div className="flex flex-col space-y-2 text-center text-sm">
+              <button
+                type="button"
+                onClick={() => {
+                  logUIInteraction('button', 'forgot-password', {
+                    source: 'login-view'
+                  });
+                  onSwitchToForgot();
+                }}
+                className={linkTransitionClasses}
+              >
+                Forgot password?
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  logUIInteraction('button', 'switch-to-register', {
+                    source: 'login-view'
+                  });
+                  onSwitchToRegister();
+                }}
+                className={linkTransitionClasses}
+              >
+                Don&apos;t have an account? Register
+              </button>
+            </div>
+          </form>
+        </CardContent>
+      </Card >
     </div>
   )
 }

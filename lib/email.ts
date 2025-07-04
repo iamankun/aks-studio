@@ -24,11 +24,10 @@ const SMTP_SETTINGS_KEY = "emailSettings_v2" // Key lưu trữ trong localStorag
 const getDefaultSmtpSettings = (): SmtpSettings => {
   // Ưu tiên environment variables, fallback về values đã biết
   return {
-    smtpServer: process.env.SMTP_HOST || "",
-    smtpPort: process.env.SMTP_PORT || "587",
-    smtpUsername: process.env.SMTP_USER || "",
-    smtpPassword: process.env.SMTP_PASS || undefined, // Không hardcode password
-    connected: false, // Mặc định là chưa kết nối cho đến khi test
+    smtpServer: process.env.SMTP_HOST,
+    smtpPort: process.env.SMTP_PORT,
+    smtpUsername: process.env.SMTP_USER,
+    smtpPassword: process.env.SMTP_PASS, // Không hardcode password
   };
 };
 

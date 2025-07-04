@@ -106,6 +106,59 @@ export interface Submission {
   }[] // Các nền tảng phân phối cụ thể với URL
 }
 
+// Additional interfaces for authorization system
+export interface SimpleSubmission {
+  id: string
+  track_title: string
+  artist_name: string
+  artist_id?: string
+  user_id?: string
+  status: SubmissionStatus
+  genre: string
+  submission_date: string
+  created_at?: string
+  updated_at?: string
+  cover_art_url?: string
+  artwork_path?: string
+  imageUrl?: string
+  audio_file_url?: string
+  file_path?: string
+  audioUrl?: string
+  release_date?: string
+  upc?: string
+  release_links?: string[]
+  comment?: string
+  rejection_reason?: string
+  isrc_code?: string
+  duration?: number
+  file_size?: number
+  language?: string
+  explicit_content?: boolean
+  mood_tags?: string[]
+  instruments?: string[]
+  bpm?: number
+  key_signature?: string
+  label?: string
+  copyright?: string
+  producer?: string
+  composer?: string
+  lyricist?: string
+}
+
+export interface SubmissionStats {
+  total: number
+  pending: number
+  approved: number
+  rejected: number
+  published: number
+  cancelled: number
+  userRole: string
+  canViewAll: boolean
+  artistName?: string
+  totalArtists?: number
+  recentSubmissions?: SimpleSubmission[]
+}
+
 // Status color helper functions
 export function getStatusColor(status: SubmissionStatus): string {
   switch (status) {

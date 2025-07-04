@@ -2,6 +2,9 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
+import { motion } from "framer-motion"
+import { Save } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
     type BackgroundSettings,
     BACKGROUND_SETTINGS_KEY,
@@ -21,286 +24,230 @@ const DEFAULT_VIDEOS = [
     "OPf0YbXqDm0", // Mark Ronson - Uptown Funk
 ]
 
-export function BackgroundSettingsPanel() {
+interface BackgroundSettingsPanelProps {
+    onClose?: () => void;
+}
+
+export function BackgroundSettingsPanel({ onClose }: Readonly<BackgroundSettingsPanelProps>) {
     const [backgroundSettings, setBackgroundSettings] = useState<BackgroundSettings>(DEFAULT_BACKGROUND_SETTINGS)
     const [showCustomPanel, setShowCustomPanel] = useState(false)
     const [youtubeUrl, setYoutubeUrl] = useState("")
-    const [imageLink, setImageLink] = useState("")
+    const [overlayOpacity, setOverlayOpacity] = useState("0.5")
 
     useEffect(() => {
         // Load background settings
         const saved = localStorage.getItem(BACKGROUND_SETTINGS_KEY)
         if (saved) {
             const settings = JSON.parse(saved)
-            setBackgroundSettings(settings)
+            // Ensure all required properties have default values
+            const mergedSettings = {
+                ...DEFAULT_BACKGROUND_SETTINGS,
+                ...settings
+            }
+            setBackgroundSettings(mergedSettings)
+            setYoutubeUrl(mergedSettings.videoUrl ?? "")
+            setOverlayOpacity(mergedSettings.opacity?.toString() ?? "0.5")
         }
     }, [])
 
-    const extractYouTubeId = (url: string) => {
-        const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)
-        return match ? match[1] : null
+    const saveSettings = () => {
+        try {
+            const newSettings = {
+                ...backgroundSettings,
+                opacity: parseFloat(overlayOpacity),
+                videoUrl: youtubeUrl || backgroundSettings.videoUrl,
+            }
+            localStorage.setItem(BACKGROUND_SETTINGS_KEY, JSON.stringify(newSettings))
+            setBackgroundSettings(newSettings)
+            window.dispatchEvent(new Event("backgroundSettingsUpdated"))
+        } catch (error) {
+            console.error("Failed to save background settings:", error)
+        }
     }
 
-    const handleYoutubeUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const url = e.target.value
-        setYoutubeUrl(url)
+    // Update video settings when URL changes
+    const handleVideoUrlChange = (url: string) => {
+        const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/
+        const match = regex.exec(url)
+        const videoId = match ? match[1] : url
 
-        const videoId = extractYouTubeId(url)
         if (videoId) {
-            const updatedSettings = {
-                ...backgroundSettings,
+            setYoutubeUrl(videoId)
+            setBackgroundSettings(prev => ({
+                ...prev,
                 type: "video" as const,
-                videoUrl: url,
-                randomVideo: false,
-            }
-            setBackgroundSettings(updatedSettings)
-            localStorage.setItem(BACKGROUND_SETTINGS_KEY, JSON.stringify(updatedSettings))
-
-            // Dispatch event to update background
-            window.dispatchEvent(
-                new CustomEvent("backgroundUpdate", {
-                    detail: updatedSettings,
-                }),
-            )
+                videoUrl: videoId,
+                randomVideo: false
+            }))
         }
     }
 
-    const handleImageLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const url = e.target.value
-        setImageLink(url)
-
-        if (url) {
-            const updatedSettings = {
-                ...backgroundSettings,
-                type: "gradient" as const,
-                gradient: `url(${url})`,
-            }
-            setBackgroundSettings(updatedSettings)
-            localStorage.setItem(BACKGROUND_SETTINGS_KEY, JSON.stringify(updatedSettings))
-
-            // Dispatch event to update background
-            window.dispatchEvent(
-                new CustomEvent("backgroundUpdate", {
-                    detail: updatedSettings,
-                }),
-            )
-        }
+    // Update background settings when opacity changes
+    const handleOpacityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newOpacity = e.target.value
+        setOverlayOpacity(newOpacity)
+        setBackgroundSettings(prev => ({
+            ...prev,
+            opacity: parseFloat(newOpacity)
+        }))
     }
 
-    const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (file) {
-            // In a real implementation, you would upload this file and get a URL
-            alert("Video đã được tải lên và sẽ được xử lý sau")
-        }
-    }
-
-    const updateGradient = (gradient: string) => {
-        const updatedSettings = {
-            ...backgroundSettings,
-            type: "gradient" as const,
-            gradient,
-        }
-        setBackgroundSettings(updatedSettings)
-        localStorage.setItem(BACKGROUND_SETTINGS_KEY, JSON.stringify(updatedSettings))
-
-        // Dispatch event to update background
-        window.dispatchEvent(
-            new CustomEvent("backgroundUpdate", {
-                detail: updatedSettings,
-            }),
-        )
-    }
-
-    const updateVideoSettings = (randomVideo: boolean, videoList?: string[]) => {
-        const updatedSettings = {
-            ...backgroundSettings,
-            type: "video" as const,
+    // Update video random mode and video list
+    const updateVideoSettings = (randomVideo: boolean) => {
+        setBackgroundSettings(prev => ({
+            ...prev,
             randomVideo,
-            videoList: videoList || backgroundSettings.videoList,
-        }
-        setBackgroundSettings(updatedSettings)
-        localStorage.setItem(BACKGROUND_SETTINGS_KEY, JSON.stringify(updatedSettings))
-
-        // Dispatch event to update background
-        window.dispatchEvent(
-            new CustomEvent("backgroundUpdate", {
-                detail: updatedSettings,
-            }),
-        )
+            videoList: randomVideo ? DEFAULT_VIDEOS : []
+        }))
     }
 
-    const updateOpacity = (opacity: number) => {
-        const updatedSettings = {
-            ...backgroundSettings,
-            opacity,
-        }
-        setBackgroundSettings(updatedSettings)
-        localStorage.setItem(BACKGROUND_SETTINGS_KEY, JSON.stringify(updatedSettings))
-
-        // Dispatch event to update background
-        window.dispatchEvent(
-            new CustomEvent("backgroundUpdate", {
-                detail: updatedSettings,
-            }),
-        )
-    }
-
+    // Update sound settings
     const updateSoundSettings = (enableSound: boolean) => {
-        const updatedSettings = {
-            ...backgroundSettings,
-            enableSound,
-        }
-        setBackgroundSettings(updatedSettings)
-        localStorage.setItem(BACKGROUND_SETTINGS_KEY, JSON.stringify(updatedSettings))
-
-        // Dispatch event to update background
-        window.dispatchEvent(
-            new CustomEvent("backgroundUpdate", {
-                detail: updatedSettings,
-            }),
-        )
+        setBackgroundSettings(prev => ({
+            ...prev,
+            enableSound
+        }))
     }
 
     return (
-        <>
-            {/* Custom Panel Button */}
-            <button
-                onClick={() => setShowCustomPanel(!showCustomPanel)}
-                className="fixed top-4 right-4 z-50 bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full shadow-lg transition-all duration-300"
-                title="Tùy chỉnh giao diện"
-            >
-                🎨
-            </button>
+        <div className="fixed top-16 right-4 z-50">
+            <div className="bg-gray-900/95 backdrop-blur-md border border-gray-700 rounded-lg p-6 w-80 max-h-[80vh] overflow-y-auto">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-white">Tùy chỉnh nền</h3>
+                    <button
+                        className="text-gray-400 hover:text-white transition-colors"
+                        onClick={() => setShowCustomPanel(!showCustomPanel)}
+                    >
+                        {showCustomPanel ? "Đơn giản" : "Nâng cao"}
+                    </button>
+                </div>
 
-            {/* Custom Panel */}
-            {showCustomPanel && (
-                <div className="fixed top-16 right-4 z-50 bg-gray-900 bg-opacity-95 backdrop-blur-md border border-gray-700 rounded-lg p-6 w-80 max-h-[80vh] overflow-y-auto">
-                    <h3 className="text-lg font-semibold text-white mb-4">🎨 Tùy Chỉnh Background</h3>
-
-                    {/* Background Type */}
-                    <div className="mb-6">
-                        <h4 className="text-sm font-medium text-gray-300 mb-3">Loại Background</h4>
-                        <div className="space-y-2">
-                            <button
-                                onClick={() => updateGradient("linear-gradient(135deg, #667eea 0%, #764ba2 100%)")}
-                                className={`w-full p-2 text-left text-sm rounded border ${backgroundSettings.type === "gradient"
-                                    ? "bg-purple-600 text-white border-purple-500"
-                                    : "bg-gray-800 text-gray-200 border-gray-600"
-                                    } hover:bg-purple-700`}
-                            >
-                                🎨 Gradient
-                            </button>
-                            <button
-                                onClick={() => updateVideoSettings(true)}
-                                className={`w-full p-2 text-left text-sm rounded border ${backgroundSettings.type === "video"
-                                    ? "bg-purple-600 text-white border-purple-500"
-                                    : "bg-gray-800 text-gray-200 border-gray-600"
-                                    } hover:bg-purple-700`}
-                            >
-                                📺 Video
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Opacity Control */}
-                    <div className="mb-6">
-                        <h4 className="text-sm font-medium text-gray-300 mb-3">Độ mờ: {backgroundSettings.opacity}</h4>
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label htmlFor="opacity" className="block text-sm font-medium text-gray-200">
+                            Độ mờ nền
+                            <span className="text-xs text-gray-400 ml-2">&nbsp;({Math.round(Number(overlayOpacity) * 100)}%)</span>
+                        </label>
                         <input
+                            id="opacity"
                             type="range"
-                            min="0.1"
+                            min="0"
                             max="1"
                             step="0.1"
-                            value={backgroundSettings.opacity}
-                            onChange={(e) => updateOpacity(parseFloat(e.target.value))}
+                            value={overlayOpacity}
+                            onChange={handleOpacityChange}
                             className="w-full"
-                            title="Điều chỉnh độ mờ background"
                         />
                     </div>
 
-                    {/* YouTube Integration */}
+                    <div className="space-y-2">
+                        <label htmlFor="backgroundType" className="block text-sm font-medium text-gray-200">
+                            Loại nền
+                        </label>
+                        <select
+                            id="backgroundType"
+                            value={backgroundSettings.type}
+                            onChange={(e) => {
+                                const newType = e.target.value as "gradient" | "video"
+                                setBackgroundSettings(prev => ({ ...prev, type: newType }))
+                            }}
+                            className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-gray-200 text-sm"
+                        >
+                            <option value="gradient">Nền gradient</option>
+                            <option value="video">Video nền</option>
+                        </select>
+                    </div>
+
                     {backgroundSettings.type === "video" && (
-                        <div className="mb-6">
-                            <h4 className="text-sm font-medium text-gray-300 mb-3">📺 YouTube Background</h4>
-                            <input
-                                type="text"
-                                value={youtubeUrl}
-                                onChange={handleYoutubeUrlChange}
-                                placeholder="https://www.youtube.com/watch?v=..."
-                                className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-gray-200 text-sm mb-2"
-                            />
-                            <div className="space-y-1">
-                                <label className="flex items-center text-sm text-gray-300">
+                        <div className="space-y-4 bg-black/30 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl p-6">
+                            <div className="space-y-2">
+                                <div className="flex items-center space-x-2">
                                     <input
+                                        id="randomVideo"
                                         type="checkbox"
                                         checked={backgroundSettings.randomVideo}
                                         onChange={(e) => updateVideoSettings(e.target.checked)}
-                                        className="mr-2"
-                                        title="Bật/tắt video ngẫu nhiên"
+                                        className="rounded border-gray-600"
                                     />
-                                    Video ngẫu nhiên từ playlist
-                                </label>
-                                <label className="flex items-center text-sm text-gray-300">
+                                    <label htmlFor="randomVideo" className="text-sm text-gray-300">
+                                        Video ngẫu nhiên
+                                    </label>
+                                </div>
+                                <div className="flex items-center space-x-2">
                                     <input
+                                        id="enableSound"
                                         type="checkbox"
                                         checked={backgroundSettings.enableSound}
                                         onChange={(e) => updateSoundSettings(e.target.checked)}
-                                        className="mr-2"
-                                        title="Bật/tắt âm thanh video"
+                                        className="rounded border-gray-600"
                                     />
-                                    🔊 Phát âm thanh video
-                                </label>
-                                {backgroundSettings.enableSound && (
-                                    <p className="text-xs text-yellow-400 mt-1">
-                                        ⚠️ Âm thanh chỉ phát khi user tương tác với trang
-                                    </p>
-                                )}
+                                    <label htmlFor="enableSound" className="text-sm text-gray-300">
+                                        Bật âm thanh
+                                    </label>
+                                </div>
                             </div>
+
+                            {showCustomPanel && (
+                                <>
+                                    <div className="space-y-2">
+                                        <label htmlFor="youtubeUrl" className="block text-sm font-medium text-gray-200">
+                                            YouTube Video ID hoặc URL
+                                        </label>
+                                        <input
+                                            id="youtubeUrl"
+                                            type="text"
+                                            value={youtubeUrl}
+                                            onChange={(e) => setYoutubeUrl(e.target.value)}
+                                            placeholder="Ví dụ: dQw4w9WgXcQ"
+                                            className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-gray-200 text-sm"
+                                        />
+                                        <Button
+                                            onClick={() => handleVideoUrlChange(youtubeUrl)}
+                                            className="w-full mt-2"
+                                            size="sm"
+                                        >
+                                            Áp dụng video
+                                        </Button>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label htmlFor="videoList" className="block text-sm font-medium text-gray-200">
+                                            Danh sách video ngẫu nhiên
+                                        </label>
+                                        <div className="max-h-32 overflow-y-auto space-y-1">
+                                            {backgroundSettings.videoList.map((id, index) => (
+                                                <div key={id} className="flex items-center gap-2 text-sm">
+                                                    <span className="text-gray-400">{index + 1}.</span>
+                                                    <code className="text-xs bg-gray-800 px-1.5 py-0.5 rounded flex-1">
+                                                        {id}
+                                                    </code>
+                                                    <button
+                                                        onClick={() => removeVideo(id)}
+                                                        className="text-red-400 hover:text-red-300 p-1"
+                                                        title="Xóa video này"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
 
-                    {/* Image Link */}
-                    <div className="mb-6">
-                        <h4 className="text-sm font-medium text-gray-300 mb-3">🔗 Link Ảnh Background</h4>
-                        <input
-                            type="text"
-                            value={imageLink}
-                            onChange={handleImageLinkChange}
-                            placeholder="https://example.com/image.jpg"
-                            className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-gray-200 text-sm"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Link trực tiếp đến file ảnh.</p>
-                    </div>
-
-                    {/* Video Upload */}
-                    <div className="mb-6">
-                        <h4 className="text-sm font-medium text-gray-300 mb-3">🎬 Video Background</h4>
-                        <input
-                            type="file"
-                            accept="video/mp4,video/mov,video/avi"
-                            onChange={handleVideoChange}
-                            className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-gray-200 text-sm"
-                            title="Tải lên video background"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">MP4, MOV, AVI. Tối đa 100MB.</p>
-                    </div>
-
-                    {/* Sound Settings */}
-                    <div className="mb-6">
-                        <h4 className="text-sm font-medium text-gray-300 mb-3">🔊 Âm Thanh</h4>
-                        <label className="flex items-center text-sm text-gray-300">
-                            <input
-                                type="checkbox"
-                                checked={backgroundSettings.enableSound}
-                                onChange={(e) => updateSoundSettings(e.target.checked)}
-                                className="mr-2"
-                                title="Bật/tắt âm thanh nền"
-                            />
-                            Bật âm thanh nền
-                        </label>
+                    <div className="pt-4">
+                        <Button
+                            onClick={saveSettings}
+                            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+                        >
+                            <Save className="w-4 h-4 mr-2" />
+                            Lưu cài đặt
+                        </Button>
                     </div>
                 </div>
-            )}
-        </>
+            </div>
+        </div>
     )
 }

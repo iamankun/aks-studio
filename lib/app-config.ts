@@ -1,7 +1,8 @@
 // Config để toggle giữa demo và production mode
 export const APP_CONFIG = {
     // Chuyển từ 'demo' sang 'production' để test thực tế
-    MODE: process.env.NODE_ENV === 'production' ? 'production' : (process.env.APP_MODE || 'Production'),
+    // Mặc định luôn là 'demo' trừ khi đặt APP_MODE rõ ràng
+    MODE: process.env.APP_MODE === 'production' ? 'production' : 'demo',
 
     // Database configuration
     DATABASE: {
@@ -25,7 +26,8 @@ export const APP_CONFIG = {
 // Client-side mode detection
 export const getClientMode = () => {
     if (typeof window !== 'undefined') {
-        return localStorage.getItem('APP_MODE') || 'demo';
+        // Đảm bảo luôn trả về 'demo' trừ khi được đặt rõ ràng là 'production'
+        return localStorage.getItem('APP_MODE') === 'production' ? 'production' : 'demo';
     }
     return 'demo';
 }

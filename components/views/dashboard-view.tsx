@@ -26,19 +26,15 @@ export function DashboardView({ onViewChange }: { readonly onViewChange?: (view:
 
     useEffect(() => {
         const fetchStats = async () => {
-            console.log('🚀 Dashboard: Starting fetchStats...')
             try {
                 setLoading(true)
 
                 // Fetch submissions with error handling
                 let submissionsData = { success: false, count: 0 }
                 try {
-                    console.log('📊 Fetching submissions...')
                     const submissionsResponse = await fetch('/api/submissions')
-                    console.log('📊 Submissions response status:', submissionsResponse.status)
                     if (submissionsResponse.ok) {
                         submissionsData = await submissionsResponse.json()
-                        console.log('📊 Submissions data:', submissionsData)
                     } else {
                         console.warn('Submissions API returned:', submissionsResponse.status)
                     }
@@ -49,12 +45,9 @@ export function DashboardView({ onViewChange }: { readonly onViewChange?: (view:
                 // Fetch artists with error handling
                 let artistsData = { success: false, count: 0 }
                 try {
-                    console.log('👥 Fetching artists...')
                     const artistsResponse = await fetch('/api/artists')
-                    console.log('👥 Artists response status:', artistsResponse.status)
                     if (artistsResponse.ok) {
                         artistsData = await artistsResponse.json()
-                        console.log('👥 Artists data:', artistsData)
                     } else {
                         console.warn('Artists API returned:', artistsResponse.status)
                     }
@@ -69,7 +62,6 @@ export function DashboardView({ onViewChange }: { readonly onViewChange?: (view:
                     totalArtists: artistsData.success ? (artistsData.count ?? 0) : 0
                 }
 
-                console.log('📈 Final stats:', newStats)
                 setStats(newStats)
 
             } catch (error) {

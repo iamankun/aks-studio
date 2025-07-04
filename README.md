@@ -8,7 +8,11 @@
 
 AKs Studio là nền tảng quản lý và phát hành âm nhạc chuyên nghiệp, được thiết kế đặc biệt cho các label và nghệ sĩ độc lập. Hệ thống cung cấp đầy đủ các tính năng quản lý metadata và phân phối trên các nền tảng streaming.
 
-## 🚀 Tính năng chính
+## � Tài liệu
+
+Tất cả tài liệu hướng dẫn của dự án đã được tổ chức trong thư mục [docs](./docs/README.md).
+
+## �🚀 Tính năng chính
 
 ### Cho Label Manager
 
@@ -264,20 +268,14 @@ linear-gradient(135deg, #667eea 0%, #764ba2 100%)
 
 DATABASE_URL=postgresql://...
 
-
 # WordPress Backup
 
 WORDPRESS_API_URL=https://...
 
-# SMTP Configuration
-
-SMTP_HOST=smtp.mail.me.com
-SMTP_USER=<admin@ankun.dev>
-SMTP_PASS=app-password
-
 # Site Configuration
 
 NEXT_PUBLIC_SITE_URL=https://...
+
 \`\`\`
 
 ## 📞 Hỗ trợ

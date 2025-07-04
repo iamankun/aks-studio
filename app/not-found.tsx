@@ -7,8 +7,6 @@ export default function NotFound() {
   return (
     <div className="min-h-screen bg-gray-900 relative flex items-center justify-center">
       <DynamicBackground />
-      <div className="absolute inset-0 bg-black/50"></div>
-
       <div className="relative z-10 text-center text-white max-w-md mx-auto p-6">
         <div className="flex justify-center mb-6">
           <div className="relative">

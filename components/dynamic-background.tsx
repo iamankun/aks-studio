@@ -208,50 +208,45 @@ export function DynamicBackground() {
         <>
             <div className="fixed inset-0 z-0">
                 {settings.type === "video" && videoId ? (
-                    <div className="absolute inset-0 overflow-hidden">
-                        {hasError ? (
-                            <div className="absolute inset-0 bg-gradient-to-br from-red-900 to-purple-900 flex items-center justify-center">
-                                <div className="text-white text-center">
-                                    <p className="text-lg">Video loading failed</p>
-                                    <p className="text-sm opacity-75">Retrying...</p>
-                                </div>
+                    hasError ? (
+                        <div className="absolute inset-0 bg-gradient-to-br from-red-900 to-purple-900 flex items-center justify-center">
+                            <div className="text-white text-center">
+                                <p className="text-lg">Video loading failed</p>
+                                <p className="text-sm opacity-75">Retrying...</p>
                             </div>
-                        ) : (
-                                <iframe
-                                    key={iframeKey} // Force re-render khi user interact
-                                    className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&fs=0&cc_load_policy=0&iv_load_policy=3&modestbranding=1&disablekb=1&enablejsapi=1&playsinline=1&start=0&end=0&volume=0&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
-                                    frameBorder="0"
-                                    allow="autoplay; encrypted-media"
-                                    title="YouTube Background Video"
-                                    loading="lazy"
-                                    onLoad={() => {
-                                        // Always ensure video is muted on load
-                                        const iframe = document.querySelector('iframe[title="YouTube Background Video"]') as HTMLIFrameElement;
-                                        if (iframe?.contentWindow) {
-                                            try {
-                                                iframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', 'https://www.youtube.com');
-                                            } catch (e) {
-                                                console.warn("Could not mute video:", e);
-                                            }
+                        </div>
+                    ) : (
+                        <iframe
+                                key={iframeKey}
+                                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}`}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+                                style={{ opacity: settings.opacity }}
+                                onLoad={(e) => {
+                                    const iframe = e.currentTarget;
+                                    if (iframe?.contentWindow) {
+                                        try {
+                                            iframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', 'https://www.youtube.com');
+                                        } catch (e) {
+                                            console.warn("Could not mute video:", e);
                                         }
-                                    }}
-                                    onError={() => {
-                                        console.warn("YouTube iframe failed to load, trying fallback...");
-                                        setHasError(true);
-                                        setTimeout(() => {
-                                            setIframeKey(prev => prev + 1);
-                                            setHasError(false);
-                                        }, 2000);
-                                    }}
-                                ></iframe>
-                        )}
-                    </div>
+                                    }
+                                }}
+                                onError={() => {
+                                    console.warn("YouTube iframe failed to load, trying `fallback...");
+                                    setHasError(true);
+                                    setTimeout(() => {
+                                        setIframeKey(prev => prev + 1);
+                                        setHasError(false);
+                                    }, 2000);
+                                }}
+                            />
+                        )
                 ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600"></div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600" />
                 )}
                 {/* Dynamic opacity overlay */}
-                <div className={`absolute inset-0 bg-black ${getOpacityClass(settings.opacity)}`}></div>
+                <div className={`absolute inset-0 bg-black ${getOpacityClass(settings.opacity)}`} />
             </div>
 
             {/* Show sound control only when video is playing */}

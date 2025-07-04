@@ -88,10 +88,13 @@ export function AdminPanelView({ showModal }: AdminPanelViewProps) {
       const data = await response.json()
       if (data.success) {
         setSubmissions(prev => prev.filter(s => s.id !== id))
-        showModal("Thành công", "Đã xóa submission", "success")
+        showModal("Thành công", "Đã xóa submission thành công", "success")
+      } else {
+        showModal("Lỗi", data.message ?? "Không thể xóa submission", "error")
       }
     } catch (error) {
-      showModal("Lỗi", "Không thể xóa submission", "error")
+      console.error("Error deleting submission:", error)
+      showModal("Lỗi", "Đã xảy ra lỗi khi xóa submission", "error")
     }
   }
 

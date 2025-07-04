@@ -1,3 +1,5 @@
+--Active: 1751325959747@@ep-mute - rice - a17ojtca - pooler.ap - southeast - 1.aws.neon.tech@5432@aksstudio
+--Active: 1751325959747@@ep-mute - rice - a17ojtca - pooler.ap - southeast - 1.aws.neon.tech@5432@aksstudio @public
 "use client"
 
 import { useState, useEffect } from "react"
@@ -26,11 +28,27 @@ import { Terminal, AlertCircle, FileText, RefreshCw, Trash2, Database, Info } fr
 import { logger, type LogEntry, type LogLevel } from "@/lib/logger"
 import { databaseService } from "@/lib/database-service"
 
+interface CommandError {
+    message: string;
+    code?: string;
+    timestamp: Date;
+}
+
+interface TerminalState {
+    output: string[];
+    errors: CommandError[];
+    isRunning: boolean;
+    hasError: boolean;
+}
+
 export function TestTerminalLogs() {
-    // Terminal state
+    // Terminal state with error handling
     const [command, setCommand] = useState("echo 'Xin chào AKs Studio!'")
     const [terminalOutput, setTerminalOutput] = useState<string[]>([])
     const [isRunning, setIsRunning] = useState(false)
+    const [terminalErrors, setTerminalErrors] = useState<CommandError[]>([])
+    const [retryCount, setRetryCount] = useState(0)
+    const maxRetries = 3
 
     // Logs state
     const [logs, setLogs] = useState<LogEntry[]>([])
@@ -152,6 +170,15 @@ export function TestTerminalLogs() {
             case 'warn': return 'bg-amber-500'
             case 'error': return 'bg-red-500'
             default: return 'bg-gray-500'
+        }
+    }
+
+    // Error handling function
+    const handleCommandError = (error: any): CommandError => {
+        return {
+            message: error?.message || "An unknown error occurred",
+            code: error?.code,
+            timestamp: new Date()
         }
     }
 

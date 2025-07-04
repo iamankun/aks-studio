@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import type { Submission } from "@/types/submission"
-import { X, Download, ExternalLink } from "lucide-react"
+import { X, Download, ExternalLink, Trash2 } from "lucide-react"
 import { getStatusColor } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
@@ -15,6 +15,7 @@ interface SubmissionDetailModalProps {
   submission: Submission | null
   onUpdateStatus?: (submissionId: string, newStatus: string) => void
   onUpdateSubmission?: (submissionId: string, updatedData: Partial<Submission>) => void
+  onDeleteSubmission?: (submissionId: string) => void
   showModal?: (title: string, messages: string[], type?: "error" | "success") => void
   isLabelManager?: boolean
 }
@@ -25,6 +26,7 @@ export function SubmissionDetailModal({
   submission,
   onUpdateStatus,
   onUpdateSubmission,
+  onDeleteSubmission,
   showModal,
   isLabelManager = false
 }: Readonly<SubmissionDetailModalProps>) {
@@ -52,7 +54,7 @@ export function SubmissionDetailModal({
     if (submission.imageUrl && submission.imageUrl.startsWith("data:")) {
       const link = document.createElement("a")
       link.href = submission.imageUrl
-      link.download = `${submission.songTitle}_cover.jpg`
+      link.download = `${submission.isrc}.jpg`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -85,6 +87,16 @@ export function SubmissionDetailModal({
       setIsEditing(false)
     }
   }
+
+  const handleDeleteSubmission = () => {
+    if (!submission || !onDeleteSubmission) return;
+
+    // Xác nhận xóa (giả lập)
+    if (window.confirm(`Bạn có chắc chắn muốn xóa bài nộp "${submission.songTitle}" không?\nHành động này không thể hoàn tác.`)) {
+      onDeleteSubmission(submission.id);
+      onClose(); // Đóng modal sau khi xóa
+    }
+  };
 
   // Extract platforms from FFM.to link (if available)
   const MusicPlatforms = () => {
@@ -463,10 +475,23 @@ export function SubmissionDetailModal({
           </div>
         </div>
 
-        <Button onClick={onClose} className="mt-6 w-full rounded-full bg-purple-600 hover:bg-purple-700">
-          <X className="h-5 w-5 mr-2" />
-          Đóng
-        </Button>
+        <div className="flex gap-3 mt-6">
+          <Button onClick={onClose} className="flex-1 rounded-full bg-purple-600 hover:bg-purple-700">
+            <X className="h-5 w-5 mr-2" />
+            Đóng
+          </Button>
+
+          {isLabelManager && onDeleteSubmission && (
+            <Button
+              onClick={handleDeleteSubmission}
+              className="rounded-full bg-red-600 hover:bg-red-700"
+              variant="destructive"
+            >
+              <Trash2 className="h-5 w-5 mr-2" />
+              Xóa
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   )

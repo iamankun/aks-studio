@@ -10,10 +10,23 @@ import { Input } from "@/components/ui/input"
 import { logger } from "@/lib/logger"
 
 export function TerminalErrorViewer() {
-    const [terminalErrors, setTerminalErrors] = useState<any[]>([])
+    interface TerminalError {
+        id: string;
+        message: string;
+        stack?: string;
+        source: 'nextjs' | 'api' | 'console';
+        timestamp: Date;
+        metadata?: Record<string, any>;
+        details?: string;
+        endpoint?: string;
+        digest?: string;
+    }
+
+    const [terminalErrors, setTerminalErrors] = useState<TerminalError[]>([])
     const [loading, setLoading] = useState(false)
     const [filter, setFilter] = useState("")
     const [expandedErrors, setExpandedErrors] = useState<Record<string, boolean>>({})
+    const [loadError, setLoadError] = useState<string | null>(null)
 
     useEffect(() => {
         loadTerminalErrors()
@@ -116,19 +129,17 @@ export function TerminalErrorViewer() {
             [index]: !prev[index]
         }))
     }
-
     const filteredErrors = terminalErrors.filter(error => {
         if (!filter) return true
         const searchText = filter.toLowerCase()
 
         return (
-            (error.message && error.message.toLowerCase().includes(searchText)) ||
-            (error.details && error.details.toLowerCase().includes(searchText)) ||
-            (error.endpoint && error.endpoint.toLowerCase().includes(searchText)) ||
-            (error.source && error.source.toLowerCase().includes(searchText))
+            error.message?.toLowerCase().includes(searchText) ||
+            error.details?.toLowerCase().includes(searchText) ||
+            error.endpoint?.toLowerCase().includes(searchText) ||
+            error.source?.toLowerCase().includes(searchText)
         )
     })
-
     const getBadgeColor = (source: string) => {
         switch (source) {
             case 'nextjs': return 'bg-red-500'

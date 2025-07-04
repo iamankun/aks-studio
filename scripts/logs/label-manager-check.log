@@ -1,0 +1,2 @@
+[2025-07-04T05:08:15.533Z] Error: DATABASE_URL không tìm thấy trong .env.local
+[2025-07-04T05:16:21.015Z] Error: DATABASE_URL không tìm thấy. Vui lòng kiểm tra lại file .env.local hoặc thiết lập DATABASE_URL trong biến môi trường.

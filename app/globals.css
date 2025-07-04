@@ -375,3 +375,25 @@ body {
     opacity: 0;
   }
 }
+
+@layer utilities {
+  @keyframes pulse-slow {
+
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.7);
+    }
+
+    50% {
+      opacity: 0.95;
+      transform: scale(1.05);
+      box-shadow: 0 0 0 10px rgba(147, 51, 234, 0);
+    }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 3s infinite;
+  }
+}

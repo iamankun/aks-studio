@@ -60,10 +60,6 @@ function GET() {
                                 wordpress: {
                                     available: status.wordpress,
                                     description: "WordPress - Secondary Database"
-                                },
-                                supabase: {
-                                    available: false,
-                                    description: "Supabase - Disabled (404 issues)"
                                 }
                             },
                             primary: status.neon ? "neon" : status.wordpress ? "wordpress" : "demo",

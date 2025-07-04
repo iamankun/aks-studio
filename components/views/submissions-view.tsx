@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { SubmissionDetailModal } from "@/components/modals/submission-detail-modal"
 import { useAuth } from "@/components/auth-provider"
+import { AuthorizationService } from "@/lib/authorization-service"
 import type { Submission } from "@/types/submission"
 import { getStatusColor, getStatusText } from "@/types/submission"
-import { Eye, Download, Volume2, FileText, Music, Upload } from "lucide-react"
+import { Eye, Download, Volume2, FileText, Music, Upload, Edit, Trash2, CheckCircle, XCircle } from "lucide-react"
 
 interface SubmissionsViewProps {
   submissions: Submission[]
@@ -30,8 +31,6 @@ export function SubmissionsView({
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("") // Thêm state tìm kiếm
-
-  console.log(submissions);
 
   if (!currentUser) {
     return (
@@ -103,14 +102,31 @@ export function SubmissionsView({
     )
   }
 
-  // Xử lý việc phát nhạc trong danh sách - sẽ được triển khai đầy đủ sau nếu cần
-  // const toggleAudio = (submissionId: string) => {
-  //   if (playingAudio === submissionId) {
-  //     setPlayingAudio(null)
-  //   } else {
-  //     setPlayingAudio(submissionId)
-  //   }
-  // }
+  // Xử lý xóa submission
+  const handleDeleteSubmission = async (submissionId: string) => {
+    try {
+      console.log(`Đang xóa submission ${submissionId}`);
+
+      const response = await fetch(`/api/submissions/${submissionId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Cập nhật state local sau khi xóa thành công
+        // Note: Có thể cần reload toàn bộ danh sách nếu được quản lý bởi component cha
+        showModal("Xóa thành công", [`Đã xóa bài nộp "${selectedSubmission?.songTitle || ''}" thành công`], "success");
+        setIsDetailModalOpen(false); // Đóng modal
+        setSelectedSubmission(null); // Xóa submission đã chọn
+      } else {
+        showModal("Lỗi xóa bài nộp", [data.message || "Không thể xóa bài nộp"], "error");
+      }
+    } catch (error) {
+      console.error("Error deleting submission:", error);
+      showModal("Lỗi xóa bài nộp", ["Đã xảy ra lỗi khi thực hiện xóa bài nộp"], "error");
+    }
+  };
 
   const statuses = [
     "Đã nhận, đang chờ duyệt",
@@ -238,7 +254,7 @@ export function SubmissionsView({
       };
 
       const response = await fetch(`/api/submissions/${submissionId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -271,6 +287,75 @@ export function SubmissionsView({
       showModal("Lỗi cập nhật", [errorMessage], "error");
     }
   };
+
+  // Handler functions for new authorization-based actions
+  const handleEditSubmission = (submission: Submission) => {
+    // For now, just open the detail modal in edit mode
+    // In a full implementation, this would open an edit form
+    setSelectedSubmission(submission)
+    setIsDetailModalOpen(true)
+    showModal("Chỉnh sửa bài nộp", [`Mở form chỉnh sửa cho "${submission.songTitle}"`], "success")
+  }
+
+  const handleApproveSubmission = async (submissionId: string) => {
+    try {
+      const response = await fetch('/api/submissions/approve-reject', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          submissionId,
+          action: 'approve',
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Update the submission status locally
+        onUpdateStatus(submissionId, 'approved')
+        showModal("Duyệt thành công", ["Bài nộp đã được duyệt"], "success")
+      } else {
+        showModal("Lỗi duyệt bài", [data.message || "Không thể duyệt bài nộp"], "error")
+      }
+    } catch (error) {
+      console.error("Error approving submission:", error)
+      showModal("Lỗi duyệt bài", ["Đã xảy ra lỗi khi duyệt bài nộp"], "error")
+    }
+  }
+
+  const handleRejectSubmission = async (submissionId: string) => {
+    // For now, reject without comment. In full implementation, would show a comment dialog
+    const comment = prompt("Nhập lý do từ chối (tùy chọn):")
+
+    try {
+      const response = await fetch('/api/submissions/approve-reject', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          submissionId,
+          action: 'reject',
+          comment: comment || undefined,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Update the submission status locally
+        onUpdateStatus(submissionId, 'rejected')
+        showModal("Từ chối thành công", ["Bài nộp đã bị từ chối"], "success")
+      } else {
+        showModal("Lỗi từ chối bài", [data.message || "Không thể từ chối bài nộp"], "error")
+      }
+    } catch (error) {
+      console.error("Error rejecting submission:", error)
+      showModal("Lỗi từ chối bài", ["Đã xảy ra lỗi khi từ chối bài nộp"], "error")
+    }
+  }
 
   return (
     <div className="p-2 md:p-6">
@@ -562,6 +647,7 @@ export function SubmissionsView({
                           </span>
                       </td>
                       <td className="px-4 py-3 text-sm space-x-2 whitespace-nowrap">
+                          {/* View button - everyone can view */}
                         <Button
                           variant="outline"
                           size="sm"
@@ -570,8 +656,65 @@ export function SubmissionsView({
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           Xem
-                        </Button>
+                          </Button>                        {/* Edit button - only for artists editing their own submissions in pending status, or label managers */}
+                          {(AuthorizationService.canEditSubmission(currentUser, {
+                            id: submission.id,
+                            track_title: submission.songTitle,
+                            artist_name: submission.artistName,
+                            user_id: submission.userId,
+                            genre: submission.mainCategory || 'pop',
+                            submission_date: submission.submissionDate,
+                            status: 'pending' // Default to pending for authorization check
+                          }).allowed) && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditSubmission(submission)}
+                                className="text-xs text-blue-400 hover:text-blue-300"
+                              >
+                                <Edit className="h-4 w-4 mr-1" />
+                                Sửa
+                              </Button>
+                            )}
 
+                          {/* Delete button - only for label managers */}
+                          {AuthorizationService.canDeleteSubmission(currentUser).allowed && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteSubmission(submission.id)}
+                              className="text-xs text-red-400 hover:text-red-300"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Xóa
+                            </Button>
+                          )}
+
+                          {/* Approve/Reject buttons - only for label managers */}
+                          {AuthorizationService.canApproveRejectSubmission(currentUser).allowed && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleApproveSubmission(submission.id)}
+                                className="text-xs text-green-400 hover:text-green-300"
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Duyệt
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleRejectSubmission(submission.id)}
+                                className="text-xs text-red-400 hover:text-red-300"
+                              >
+                                <XCircle className="h-4 w-4 mr-1" />
+                                Hủy
+                              </Button>
+                            </>
+                          )}
+
+                          {/* Status selector for label managers */}
                         {currentUser.role === "Label Manager" && (
                           <Select
                             value={submission.status}
@@ -646,6 +789,7 @@ export function SubmissionsView({
           onUpdateSubmission={handleUpdateSubmission}
           showModal={showModal}
           isLabelManager={isLabelManager}
+          onDeleteSubmission={handleDeleteSubmission}
         />
       )}
     </div>

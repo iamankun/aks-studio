@@ -26,13 +26,13 @@ export function useUserRole() {
         checkUser()
     }, [])
 
-    const isLabelManager = !!user?.role?.includes('label_manager')
-    const isArtist = !!user?.role?.includes('artist')
+    const isLabel_Manager = user?.role === 'Label Manager'
+    const isArtist = user?.role === 'Artist'
 
     return {
         user,
         loading,
-        isLabelManager,
+        isLabel_Manager,
         isArtist,
         isLoggedIn: !!user
     }

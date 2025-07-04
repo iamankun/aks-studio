@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import type { User } from "@/types/user"
@@ -23,14 +24,9 @@ interface SidebarProps {
   onViewChange: (view: string) => void
 }
 
-export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: SidebarProps) {
+export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: Readonly<SidebarProps>) {
   const [collapsed, setCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-
-  // Debug log để kiểm tra role
-  console.log("🔍 Sidebar Debug - Current User:", currentUser)
-  console.log("🔍 Sidebar Debug - User Role:", currentUser?.role)
-  console.log("🔍 Sidebar Debug - Role Type:", typeof currentUser?.role)
 
   useEffect(() => {
     // Chỉ set collapsed khi mount lần đầu, không set lại khi resize
@@ -102,10 +98,12 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
         {collapsed ? <Menu /> : <X />}
       </button>
 
-      {/* Debug trạng thái sidebar */}
-      <div style={{ position: 'fixed', top: 0, left: collapsed ? 0 : 70, zIndex: 9999, background: '#fff', color: '#000', fontSize: 12, padding: '2px 8px', border: '2px solid #f00', borderRadius: 4 }}>
-        <b>DEBUG:</b> collapsed: {String(collapsed)} | isMobile: {String(isMobile)}
-      </div>
+      {/* Debug trạng thái sidebar - chỉ hiển thị cho Label Manager trong chế độ development */}
+      {isLabelManager && process.env.NODE_ENV === 'development' && (
+        <div style={{ position: 'fixed', top: 0, left: collapsed ? 0 : 70, zIndex: 9999, background: '#fff', color: '#000', fontSize: 12, padding: '2px 8px', border: '2px solid #f00', borderRadius: 4 }}>
+          <b>DEBUG:</b> collapsed: {String(collapsed)} | isMobile: {String(isMobile)}
+        </div>
+      )}
 
       <Card
         className={`h-full bg-gray-800 border-4 border-yellow-400 border-gray-700 rounded-none overflow-hidden transition-all duration-300 ${
@@ -117,8 +115,9 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
           <div className={`flex items-center ${collapsed ? "justify-center" : "mb-8"}`}>
             {!collapsed ? (
               <>
-                <img src="/Logo-An-Kun-Studio-White.png" alt="AKs Studio" className="h-8 w-auto mr-3 flex-shrink-0" />
-                <h1 className="text-xl font-dosis-bold text-white">AKs Studio</h1>
+                <img src="/public/media.webp" alt="An Kun Studio" className="h-8 w-auto mr-3 flex-shrink-0" />
+
+                <h1 className="text-2xl font-dosis-bold text-white">An Kun Studio</h1>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -130,7 +129,7 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
               </>
             ) : (
               <div className="flex flex-col items-center">
-                <img src="/Logo-An-Kun-Studio-White.png" alt="AKs Studio" className="h-8 w-8 object-contain" />
+                  <img src="/public/media.webp" alt="An Kun Studio" className="h-8 w-8 object-contain" />
                 <Button
                   variant="ghost"
                   size="icon"
@@ -163,29 +162,32 @@ export function CollapsibleSidebar({ currentUser, currentView, onViewChange }: S
                   <p className="text-sm text-purple-400 font-dosis">
                     {currentUser?.role} {isLabelManager && "✓"}
                   </p>
-                  {/* Debug info */}
-                  <p className="text-xs text-gray-500">
-                    Menu: {menuItems.length} items | Admin: {isLabelManager ? "Yes" : "No"}
-                  </p>
+                  {/* Debug info - chỉ hiển thị cho Label Manager */}
+                  {isLabelManager && (
+                    <p className="text-xs text-gray-500">
+                      Menu: {menuItems.length} items | Admin: {isLabelManager ? "Yes" : "No"}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
           )}
 
           {collapsed && (
-            <div className="mb-6 flex justify-center">
-              <img
-                src={
-                  currentUser?.avatar ??
+            <Image
+              src={currentUser?.avatar ??
                   `https://placehold.co/40x40/8b5cf6/FFFFFF?text=${(currentUser?.username ?? "U").substring(0, 1).toUpperCase()}`
                 }
                 alt={currentUser?.username ?? "User"}
+              width={40}
+              height={40}
                 className="w-8 h-8 rounded-full object-cover"
+              unoptimized={!!currentUser?.avatar}
+              priority
               />
-            </div>
-          )}
-
-          {/* Navigation Menu */}
+            </div> {/* This closing div was misplaced */}
+          }
+        {/* Collapsed state toggle button */}
           <nav className="space-y-2 flex-1">
             {menuItems.map((item) => {
               const Icon = item.icon

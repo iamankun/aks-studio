@@ -4,10 +4,13 @@ import { TerminalErrorViewer } from "@/components/terminal-error-viewer"
 import { TestTerminalLogs } from "@/components/test-terminal-logs"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Terminal, Bug, Info } from "lucide-react"
+import { Terminal, Bug, Info, XCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { logger } from "@/lib/logger"
 import { useEffect } from "react"
 import { fixSupabaseDependency } from "@/lib/migration-utils"
+
+import { TerminalErrorBoundary } from "@/components/terminal-error-boundary"
 
 export default function TerminalPage() {
     useEffect(() => {
@@ -19,14 +22,30 @@ export default function TerminalPage() {
     }, [])
 
     return (
-        <div className="container py-8 space-y-8">
-            <h1 className="text-3xl font-bold tracking-tight">Terminal & Error Logs</h1>
+        <TerminalErrorBoundary>
+            <div className="container py-8 space-y-8">
+                <h1 className="text-3xl font-bold tracking-tight">Terminal & Error Logs</h1>
             <p className="text-muted-foreground">
                 View and debug application errors, check terminal logs, and monitor system status
             </p>
 
-            <Card className="bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
+                <Card className="bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800 relative">
                 <CardHeader className="pb-2">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-2 top-2 text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100"
+                            onClick={() => {
+                                const notice = document.querySelector('.migration-notice');
+                                notice?.classList.add('animate-fade-out');
+                                setTimeout(() => {
+                                    notice?.remove();
+                                }, 300);
+                            }}
+                        >
+                            <XCircle className="h-5 w-5" />
+                            <span className="sr-only">Close migration notice</span>
+                        </Button>
                     <CardTitle className="flex items-center text-amber-700 dark:text-amber-300">
                         <Info className="h-5 w-5 mr-2" />
                         Supabase Migration Notice
@@ -69,6 +88,7 @@ export default function TerminalPage() {
                     <TestTerminalLogs />
                 </TabsContent>
             </Tabs>
-        </div>
+            </div>
+        </TerminalErrorBoundary>
     )
 }

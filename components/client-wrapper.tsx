@@ -8,7 +8,7 @@ import { SystemStatusProvider } from "@/components/system-status-provider"
 import { AuthProvider } from "@/components/auth-provider"
 
 interface ClientWrapperProps {
-  children: React.ReactNode
+  readonly children: React.ReactNode
 }
 
 export function ClientWrapper({ children }: ClientWrapperProps) {

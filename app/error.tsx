@@ -46,8 +46,6 @@ export default function ErrorPage({
     <div className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-950 to-purple-950">
       <DynamicBackground />
 
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
-
       <div className="relative z-10 text-center text-white max-w-md mx-auto p-6">
         <div className="flex justify-center mb-6">
           <div className="relative">

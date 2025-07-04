@@ -12,9 +12,6 @@ export default function TestErrorPage() {
             {/* Dynamic Background System */}
             <DynamicBackground />
 
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-black/30"></div>
-
             <div className="relative z-10 text-center text-white backdrop-blur-sm bg-black/20 p-8 rounded-lg">
                 <h1 className="text-4xl font-bold mb-4">Test Error Page</h1>
                 <p className="mb-8">Click button below to test 505 error page</p>

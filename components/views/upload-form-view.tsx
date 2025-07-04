@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { logUIInteraction, logSubmissionActivity } from "@/lib/client-activity-log"
 import type { User } from "@/types/user"
 import type {
   Submission,
@@ -320,6 +321,15 @@ export default function UploadFormView({ onSubmissionAdded, showModal }: Readonl
     setIsUploading(true);
 
     try {
+      // Log the start of submission process
+      logUIInteraction('form', 'upload-submission-form', {
+        trackCount: audioTracks.length,
+        hasImage: !!imageFile,
+        mainCategory,
+        subCategory,
+        releaseType
+      });
+
       const { isrc, newCounter } = generateISRC(currentUser, lastISRCCounter);
       setLastISRCCounter(newCounter);
 
@@ -398,12 +408,32 @@ export default function UploadFormView({ onSubmissionAdded, showModal }: Readonl
 
       onSubmissionAdded(newSubmission);
 
+      // Log the successful submission
+      logSubmissionActivity('create', newSubmission.id, 'success', {
+        artistName,
+        songTitle,
+        trackCount: audioTracks.length,
+        mainCategory,
+        subCategory,
+        releaseType,
+        releaseDate
+      });
+
       // Reset form
       resetForm();
 
       showModal("Thành công", ["Đã gửi bài hát để chờ duyệt!"], "success");
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Có lỗi xảy ra khi gửi bài hát";
+
+      // Log the submission error
+      logSubmissionActivity('create', 'unknown', 'error', {
+        artistName,
+        songTitle,
+        error: errorMessage,
+        trackCount: audioTracks.length
+      });
+
       showModal("Lỗi", [errorMessage], "error");
     } finally {
       setIsUploading(false);
@@ -442,7 +472,15 @@ export default function UploadFormView({ onSubmissionAdded, showModal }: Readonl
           </div>
         </div>
 
-        <Tabs defaultValue="basic" className="w-full">
+        <Tabs
+          defaultValue="basic"
+          className="w-full"
+          onValueChange={(value) => {
+            logUIInteraction('tab', `upload-form-${value}-tab`, {
+              formStep: value
+            });
+          }}
+        >
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="basic" className="flex items-center gap-2">
               <UserIcon className="h-4 w-4" />

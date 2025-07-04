@@ -37,3 +37,14 @@ Thumbs.db
 # IDE files
 .idea
 .vscode
+
+# Storage directories - Keep structure but ignore content
+/public/uploads/*
+!/public/uploads/.gitkeep
+/logs/*
+!/logs/.gitkeep
+/storage/cache/*
+/storage/sessions/*
+
+# But keep specific files
+!**/.gitkeep

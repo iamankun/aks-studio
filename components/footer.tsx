@@ -8,7 +8,7 @@ export function Footer() {
     version: "1.2.0-beta",
     logoUrl: "/favicon.ico",
     websiteUrl: "/",
-    description: "Digital Music Distribution",
+    description: "Phân phối Nhạc Kỹ thuật số",
   })
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export function Footer() {
             }}
           />
           <p className="text-gray-400 text-sm font-dosis">
-            Copyright © 2025{" "}
+            Bản quyền © 2025{" "}
             <a
               href={footerSettings.websiteUrl}
               target="_blank"
@@ -55,7 +55,7 @@ export function Footer() {
           </p>
         </div>
         <p className="text-gray-500 text-xs font-dosis-light">
-          Powered by{" "}
+          Được phát triển bởi{" "}
           <a
             href={footerSettings.websiteUrl}
             target="_blank"

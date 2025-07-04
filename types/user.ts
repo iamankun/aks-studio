@@ -52,5 +52,5 @@ export interface DbUser {
 }
 
 // Legacy compatibility
-export interface LabelManager extends User { }
+export interface Label_Manager extends User { }
 export interface Artist extends User { }

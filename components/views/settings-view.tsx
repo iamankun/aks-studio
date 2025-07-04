@@ -10,22 +10,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { StatusIndicator } from "@/components/status-indicator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Settings, Mail, Save, ImageIcon, Globe, Database, Palette, HelpCircle } from "lucide-react"
-import { sendEmail, type EmailDetails } from "@/lib/email"
+import { Settings, Save, ImageIcon, Globe, Palette, HelpCircle, Mail, Database } from "lucide-react"
 import { useSystemStatus } from "@/components/system-status-provider"
 import { useAuth } from "@/components/auth-provider"
-import type { User } from "@/types/user"
+import Image from "next/image"
 
 export function SettingsView() {
   const { user: currentUser } = useAuth();
   const { status, checkAllSystems } = useSystemStatus()
 
-  const [emailSettings, setEmailSettings] = useState({
-    smtpServer: "",
-    smtpPort: "587",
-    smtpUsername: "",
-    smtpPassword: "",
-  })
+  // Email settings removed - managed through environment variables
 
   const [appSettings, setAppSettings] = useState({
     appName: "AKs Studio",
@@ -64,13 +58,7 @@ export function SettingsView() {
     description: "Digital Music Distribution",
   })
 
-  const [databaseSettings, setDatabaseSettings] = useState({
-    connected: false,
-    host: "",
-    database: "",
-    username: "",
-    password: "",
-  })
+  // Database settings removed - managed through environment variables
 
   useEffect(() => {
     // Load all settings
@@ -95,11 +83,7 @@ export function SettingsView() {
       setAppMode(savedMode)
     }
 
-    // Load email settings
-    const savedEmail = localStorage.getItem("emailSettings_v2")
-    if (savedEmail) {
-      setEmailSettings(JSON.parse(savedEmail))
-    }
+    // Email settings are now managed through environment variables
 
     // Load app settings
     const savedApp = localStorage.getItem("appSettings_v2")
@@ -131,18 +115,10 @@ export function SettingsView() {
       }
     }
 
-    // Load database settings
-    const savedDatabase = localStorage.getItem("databaseSettings_v2")
-    if (savedDatabase) {
-      setDatabaseSettings(JSON.parse(savedDatabase))
-    }
+    // Database settings are now managed through environment variables
   }
 
-  const handleSaveEmailSettings = () => {
-    localStorage.setItem("emailSettings_v2", JSON.stringify(emailSettings))
-    showModal("Lưu thành công", ["Đã lưu cài đặt SMTP!"], "success")
-    checkAllSystems()
-  }
+  // Email settings handlers removed - now managed through environment variables
 
   const handleSaveAppSettings = () => {
     localStorage.setItem("appSettings_v2", JSON.stringify(appSettings))
@@ -168,34 +144,7 @@ export function SettingsView() {
     showModal("Lưu thành công", ["Đã lưu cài đặt footer!"], "success")
   }
 
-  const handleSaveDatabaseSettings = () => {
-    localStorage.setItem("databaseSettings_v2", JSON.stringify(databaseSettings))
-    showModal("Lưu thành công", ["Đã lưu cài đặt database!"], "success")
-    checkAllSystems()
-  }
-
-  const handleTestSMTP = async () => {
-    if (!emailSettings.smtpServer || !emailSettings.smtpUsername || !emailSettings.smtpPassword) {
-      showModal("Lỗi Test SMTP", ["Vui lòng điền đầy đủ thông tin cấu hình SMTP trước khi test."], "error")
-      return
-    }
-    // Lưu cài đặt hiện tại trước khi test để đảm bảo sendEmail đọc được
-    localStorage.setItem("emailSettings_v2", JSON.stringify(emailSettings))
-
-    const testEmailDetails: EmailDetails = {
-      from: emailSettings.smtpUsername, // Gửi từ chính email cấu hình
-      to: emailSettings.smtpUsername, // Gửi đến chính email cấu hình để test
-      subject: `Test Email - ${appSettings.appName} - ${new Date().toISOString()}`,
-      textBody: `Đây là email test từ hệ thống ${appSettings.appName}.\nCấu hình SMTP của bạn hoạt động bình thường!`,
-      htmlBody: `<p>Đây là email test từ hệ thống <strong>${appSettings.appName}</strong>.</p><p>Cấu hình SMTP của bạn hoạt động bình thường!</p>`,
-    }
-    const result = await sendEmail(testEmailDetails)
-    showModal(
-      result.success ? "Test SMTP Thành Công" : "Test SMTP Thất Bại",
-      [result.message],
-      result.success ? "success" : "error",
-    )
-  }
+  // Database and SMTP handlers removed - now managed through environment variables
 
   // Helper function to show modal (can be moved to a context or prop if needed more globally)
   const showModal = (title: string, messages: string[], type: "error" | "success" = "error") => {
@@ -230,11 +179,9 @@ export function SettingsView() {
       </div>
 
       <Tabs defaultValue="app" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="app">Name App</TabsTrigger>
           <TabsTrigger value="mode">Mode</TabsTrigger>
-          <TabsTrigger value="smtp">SMTP</TabsTrigger>
-          <TabsTrigger value="database">Database</TabsTrigger>
           <TabsTrigger value="background">Background</TabsTrigger>
           <TabsTrigger value="footer">Footer</TabsTrigger>
           <TabsTrigger value="guide">Guide</TabsTrigger>
@@ -293,7 +240,7 @@ export function SettingsView() {
                 <h4 className="text-sm font-semibold mb-2">Xem trước:</h4>
                 <div className="flex items-center space-x-4">
                   <img
-                    src={appSettings.logoUrl || "/face.png"}
+                    src={appSettings.logoUrl || "/movies.webp"}
                     alt="App Logo"
                     className="h-8 w-8 rounded object-cover"
                     onError={(e) => {
@@ -319,143 +266,7 @@ export function SettingsView() {
         </TabsContent>
 
         {/* SMTP Settings */}
-        <TabsContent value="smtp">
-          <Card className="bg-gray-800 border border-gray-700">
-            <CardHeader>
-              {" "}
-              {/* Removed font-dosis-semibold */}
-              <CardTitle className="flex items-center font-semibold">
-                <Mail className="mr-2" />
-                Cài đặt hộp thư SMTP || {appSettings.appName}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>SMTP</Label>
-                  <Input
-                    value={emailSettings.smtpServer}
-                    onChange={(e) => setEmailSettings({ ...emailSettings, smtpServer: e.target.value })}
-                    placeholder="smtp.domain.com"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Port</Label>
-                  <Input
-                    value={emailSettings.smtpPort}
-                    onChange={(e) => setEmailSettings({ ...emailSettings, smtpPort: e.target.value })}
-                    placeholder="587"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Account</Label>
-                  <Input
-                    value={emailSettings.smtpUsername}
-                    onChange={(e) => setEmailSettings({ ...emailSettings, smtpUsername: e.target.value })}
-                    placeholder="admin@domain.com"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Password</Label>
-                  <Input
-                    type="password"
-                    value={emailSettings.smtpPassword}
-                    onChange={(e) => setEmailSettings({ ...emailSettings, smtpPassword: e.target.value })}
-                    placeholder="Điền mật khẩu được cấp cho ứng dụng"
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-
-              <div className="flex space-x-2">
-                <Button
-                  onClick={handleSaveEmailSettings}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-full"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Lưu cài đặt SMTP
-                </Button>
-                <Button onClick={handleTestSMTP} variant="outline" className="rounded-full">
-                  Test kết nối
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Database Settings */}
-        <TabsContent value="database">
-          <Card className="bg-gray-800 border border-gray-700">
-            <CardHeader>
-              {" "}
-              {/* Removed font-dosis-semibold */}
-              <CardTitle className="flex items-center font-semibold">
-                <Database className="mr-2" />
-                Database
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Host</Label>
-                  <Input
-                    value={databaseSettings.host}
-                    onChange={(e) => setDatabaseSettings({ ...databaseSettings, host: e.target.value })}
-                    placeholder="localhost"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Database_Name</Label>
-                  <Input
-                    value={databaseSettings.database}
-                    onChange={(e) => setDatabaseSettings({ ...databaseSettings, database: e.target.value })}
-                    placeholder="music_db"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Username</Label>
-                  <Input
-                    value={databaseSettings.username}
-                    onChange={(e) => setDatabaseSettings({ ...databaseSettings, username: e.target.value })}
-                    placeholder="user"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Password</Label>
-                  <Input
-                    type="password"
-                    value={databaseSettings.password}
-                    onChange={(e) => setDatabaseSettings({ ...databaseSettings, password: e.target.value })}
-                    placeholder="db_password"
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={databaseSettings.connected}
-                  onCheckedChange={(checked) => setDatabaseSettings({ ...databaseSettings, connected: checked })}
-                />
-                <Label>Kích hoạt</Label>
-              </div>
-
-              <Button
-                onClick={handleSaveDatabaseSettings}
-                className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-full"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Lưu cài đặt
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* SMTP and Database tabs have been removed */}
 
         {/* Background Settings */}
         <TabsContent value="background">

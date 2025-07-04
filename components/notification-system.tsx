@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { X, CheckCircle, AlertCircle, Info } from "lucide-react"
+import React from "react"
+import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 // Định nghĩa kiểu dữ liệu cho một thông báo
@@ -21,66 +21,84 @@ interface NotificationSystemProps {
 }
 
 // Âm thanh cho các loại thông báo
-const playSound = (type: NotificationData["type"]) => {
+export const playSound = (type: NotificationData["type"]) => {
   if (typeof window === "undefined" || !window.AudioContext) return
 
-  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-  if (!audioContext) return
+  try {
+    // Use explicit type to avoid 'any'
+    const AudioContextClass = window.AudioContext || ((window as unknown) as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+    const audioContext = new AudioContextClass()
+    if (!audioContext) return
 
-  const playNote = (frequency: number, startTime: number, duration: number, volume = 0.1, waveType: OscillatorType = "sine") => {
-    const oscillator = audioContext.createOscillator()
-    const gainNode = audioContext.createGain()
+    const playNote = (frequency: number, startTime: number, duration: number, volume = 0.1, waveType: OscillatorType = "sine") => {
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
 
-    oscillator.connect(gainNode)
-    gainNode.connect(audioContext.destination)
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
 
-    oscillator.type = waveType
-    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + startTime)
-    gainNode.gain.setValueAtTime(volume, audioContext.currentTime + startTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + startTime + duration)
+      oscillator.type = waveType
+      oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + startTime)
+      gainNode.gain.setValueAtTime(volume, audioContext.currentTime + startTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + startTime + duration)
 
-    oscillator.start(audioContext.currentTime + startTime)
-    oscillator.stop(audioContext.currentTime + startTime + duration)
-  }
+      oscillator.start(audioContext.currentTime + startTime)
+      oscillator.stop(audioContext.currentTime + startTime + duration)
+    }
 
-  switch (type) {
-    case "success":
-      playNote(523.25, 0, 0.1, 0.08, "triangle") // C5
-      playNote(659.25, 0.07, 0.1, 0.08, "triangle") // E5
-      playNote(783.99, 0.14, 0.1, 0.08, "triangle") // G5
-      playNote(1046.5, 0.21, 0.15, 0.08, "triangle") // C6
-      break
-    case "error":
-      playNote(220, 0, 0.15, 0.07, "sawtooth") // A3
-      playNote(164.81, 0.1, 0.2, 0.07, "sawtooth") // E3
-      break
-    case "warning":
-      playNote(440, 0, 0.1, 0.06, "square") // A4
-      playNote(440, 0.15, 0.1, 0.06, "square") // A4
-      playNote(440, 0.3, 0.1, 0.06, "square") // A4
-      break
-    case "info":
-      playNote(698.46, 0, 0.1, 0.05, "sine") // F5
-      playNote(880.0, 0.08, 0.15, 0.05, "sine") // A5
-      break
+    switch (type) {
+      case "success":
+        playNote(523.25, 0, 0.1, 0.08, "triangle") // C5
+        playNote(659.25, 0.07, 0.1, 0.08, "triangle") // E5
+        playNote(783.99, 0.14, 0.1, 0.08, "triangle") // G5
+        playNote(1046.5, 0.21, 0.15, 0.08, "triangle") // C6
+        break
+      case "error":
+        playNote(220, 0, 0.15, 0.07, "sawtooth") // A3
+        playNote(164.81, 0.1, 0.2, 0.07, "sawtooth") // E3
+        break
+      case "warning":
+        playNote(440, 0, 0.1, 0.06, "square") // A4
+        playNote(440, 0.15, 0.1, 0.06, "square") // A4
+        playNote(440, 0.3, 0.1, 0.06, "square") // A4
+        break
+      case "info":
+        playNote(698.46, 0, 0.1, 0.05, "sine") // F5
+        playNote(880.0, 0.08, 0.15, 0.05, "sine") // A5
+        break
+    }
+  } catch (error) {
+    console.error("Error playing sound:", error);
   }
 }
 
 // Component NotificationSystem
-export function NotificationSystem({ notifications, onRemove }: NotificationSystemProps) {
+export function NotificationSystem({ notifications, onRemove }: Readonly<NotificationSystemProps>) {
   if (!notifications || notifications.length === 0) {
     return null
   }
+
+  // Helper function to get notification styles based on type
+  const getNotificationStyles = (type: NotificationData["type"]) => {
+    switch (type) {
+      case "success":
+        return "bg-green-600/90 border-green-500";
+      case "info":
+        return "bg-blue-600/90 border-blue-500";
+      case "warning":
+        return "bg-yellow-600/90 border-yellow-500";
+      case "error":
+      default:
+        return "bg-red-600/90 border-red-500";
+    }
+  };
 
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2">
       {notifications.map((notification) => (
         <div
           key={notification.id}
-          className={`max-w-sm p-4 rounded-lg shadow-lg backdrop-blur-md border ${notification.type === "success"
-            ? "bg-green-600/90 border-green-500"
-            : "bg-red-600/90 border-red-500"
-            }`}
+          className={`max-w-sm p-4 rounded-lg shadow-lg backdrop-blur-md border ${getNotificationStyles(notification.type)}`}
         >
           <div className="flex items-start justify-between">
             <div>

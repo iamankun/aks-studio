@@ -1,10 +1,6 @@
 import type { Metadata } from "next"
-import React from "react"
 import { Dosis } from "next/font/google"
-import { AuthProvider } from "@/components/auth-provider"
-import { ThemeProvider } from "@/components/theme-provider"
-import { MainContentLayout } from "@/components/main-content-layout"
-import { DynamicBackground } from "@/components/dynamic-background"
+import { RootLayoutClient } from "@/components/root-layout-client"
 import "./globals.css"
 import "./additional-styles.css"
 
@@ -27,18 +23,11 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/face.png" />
+        <link rel="icon" href="/media.webp" />
       </head>
-      <body className={dosis.className} suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AuthProvider>
-            <DynamicBackground />
-            <MainContentLayout>
-              {children}
-            </MainContentLayout>
-          </AuthProvider>
-        </ThemeProvider>
-      </body>
+      <RootLayoutClient className={dosis.className}>
+        {children}
+      </RootLayoutClient>
     </html>
   )
 }

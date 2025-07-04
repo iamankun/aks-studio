@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AuthorizedComponent } from "@/components/authorized-component"
 import { logger } from "@/lib/logger"
 import { databaseService } from "@/lib/database-service"
 
@@ -49,45 +50,50 @@ export function DebugTools() {
     }
 
     return (
-        <Card className="shadow-md">
-            <CardHeader>
-                <CardTitle>Debug Tools</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Tabs defaultValue="logs">
-                    <TabsList className="mb-4">
-                        <TabsTrigger value="logs">Logs</TabsTrigger>
-                        <TabsTrigger value="db">Database</TabsTrigger>
-                        <TabsTrigger value="storage">Storage</TabsTrigger>
-                    </TabsList>
+        <AuthorizedComponent
+            requirePermission="debugTools"
+            fallbackMessage="Debug tools are only available for Label Managers."
+        >
+            <Card className="shadow-md">
+                <CardHeader>
+                    <CardTitle>Debug Tools</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Tabs defaultValue="logs">
+                        <TabsList className="mb-4">
+                            <TabsTrigger value="logs">Logs</TabsTrigger>
+                            <TabsTrigger value="db">Database</TabsTrigger>
+                            <TabsTrigger value="storage">Storage</TabsTrigger>
+                        </TabsList>
 
-                    <TabsContent value="logs">
-                        <div className="space-y-4">
-                            <Button onClick={generateTestLogs}>Generate Test Logs</Button>
-                            <Button variant="outline" onClick={() => logger.clearLogs()}>Clear Logs</Button>
+                        <TabsContent value="logs">
+                            <div className="space-y-4">
+                                <Button onClick={generateTestLogs}>Generate Test Logs</Button>
+                                <Button variant="outline" onClick={() => logger.clearLogs()}>Clear Logs</Button>
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="db">
+                            <div className="space-y-4">
+                                <Button onClick={checkDatabase}>Check Database Connection</Button>
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="storage">
+                            <div className="space-y-4">
+                                <Button variant="destructive" onClick={clearAllData}>Clear All Data</Button>
+                                <p className="text-xs text-gray-500">Warning: This will clear all localStorage data including logs and submissions</p>
+                            </div>
+                        </TabsContent>
+                    </Tabs>
+
+                    {result && (
+                        <div className="mt-4 p-4 bg-gray-100 rounded-md">
+                            <pre className="text-xs overflow-auto max-h-40">{result}</pre>
                         </div>
-                    </TabsContent>
-
-                    <TabsContent value="db">
-                        <div className="space-y-4">
-                            <Button onClick={checkDatabase}>Check Database Connection</Button>
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="storage">
-                        <div className="space-y-4">
-                            <Button variant="destructive" onClick={clearAllData}>Clear All Data</Button>
-                            <p className="text-xs text-gray-500">Warning: This will clear all localStorage data including logs and submissions</p>
-                        </div>
-                    </TabsContent>
-                </Tabs>
-
-                {result && (
-                    <div className="mt-4 p-4 bg-gray-100 rounded-md">
-                        <pre className="text-xs overflow-auto max-h-40">{result}</pre>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
+                    )}
+                </CardContent>
+            </Card>
+        </AuthorizedComponent>
     )
 }

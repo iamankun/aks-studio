@@ -1,0 +1,47 @@
+{
+  "directories": [
+    "F:\\Dev\\DMG\\public",
+    "F:\\Dev\\DMG\\public\\uploads",
+    "F:\\Dev\\DMG\\public\\uploads\\audio",
+    "F:\\Dev\\DMG\\public\\uploads\\images",
+    "F:\\Dev\\DMG\\public\\uploads\\temp",
+    "F:\\Dev\\DMG\\public\\uploads\\submissions",
+    "F:\\Dev\\DMG\\public\\uploads\\avatars",
+    "F:\\Dev\\DMG\\logs",
+    "F:\\Dev\\DMG\\storage",
+    "F:\\Dev\\DMG\\storage\\cache",
+    "F:\\Dev\\DMG\\storage\\sessions"
+  ],
+  "maxFileSize": {
+    "audio": "50MB",
+    "image": "5MB",
+    "general": "10MB"
+  },
+  "allowedTypes": {
+    "audio": [
+      ".mp3",
+      ".wav",
+      ".flac",
+      ".m4a",
+      ".aac"
+    ],
+    "image": [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".gif",
+      ".webp"
+    ],
+    "document": [
+      ".pdf",
+      ".txt",
+      ".doc",
+      ".docx"
+    ]
+  },
+  "cleanup": {
+    "tempFilesAfter": "24h",
+    "failedUploadsAfter": "1h",
+    "logFilesAfter": "30d"
+  }
+}

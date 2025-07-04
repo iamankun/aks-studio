@@ -131,8 +131,10 @@ export default function MainAppView() {
 
   const showNotification = (title: string, messages: string[] | string, type: "success" | "error" = "success") => {
     const message = Array.isArray(messages) ? messages.join(', ') : messages;
+    // Generate a unique ID using timestamp + random string
+    const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const notification = {
-      id: Date.now().toString(),
+      id: uniqueId,
       title,
       message,
       type,

@@ -62,8 +62,8 @@ export async function ensureDefaultAdminUser(): Promise<void> {
         id: "admin-001", // ID này có thể cần được tạo tự động bởi DB
         username: adminUsername,
         // Trong thực tế, password nên được hash trước khi lưu vào DB
-        password: "admin",
-        email: "admin@example.com", // Sử dụng email từ SMTP_USER nếu muốn: "admin@ankun.dev"
+        password: "adminpassword",
+        email: "admin@example.com",
         role: adminRole,
         fullName: "Admin User",
         createdAt: new Date().toISOString(),

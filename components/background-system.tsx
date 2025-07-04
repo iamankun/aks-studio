@@ -144,7 +144,8 @@ export function BackgroundSystem() {
     // Dispatch custom event to update background
     window.dispatchEvent(
       new CustomEvent("backgroundUpdate", {
-        detail: {
+        detail:
+        {
           ...backgroundSettings,
           type: "video",
           videoUrl: videoUrl,
@@ -206,7 +207,7 @@ export function BackgroundSystem() {
     ]
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
         <div className="bg-gray-800 border border-gray-700 rounded-lg max-w-md w-full p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-white">
@@ -286,275 +287,37 @@ export function BackgroundSystem() {
     )
   }
 
-  // Render background based on current settings
-  if (backgroundSettings.type === "gradient") {
-    return (
-      <>
+  return (
+    <div className="fixed inset-0 -z-10">
+      {backgroundSettings.type === "video" && currentVideo && (
+        <iframe
+          src={`https://www.youtube.com/embed/${currentVideo}?autoplay=1&mute=1&controls=0&loop=1&playlist=${currentVideo}&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+          style={{ opacity: backgroundSettings.opacity }}
+        />
+      )}
+      {backgroundSettings.type === "gradient" && (
         <div
-          className="fixed inset-0 z-0"
+          className="absolute inset-0 transition-opacity duration-1000"
           style={{
             background: backgroundSettings.gradient,
             opacity: backgroundSettings.opacity,
           }}
         />
-
-        {/* Custom Panel Button */}
-        <button
-          onClick={() => setShowCustomPanel(!showCustomPanel)}
-          className="fixed top-4 right-4 z-50 bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full shadow-lg transition-all duration-300"
-          title="Tùy chỉnh giao diện"
-        >
-          🎨
-        </button>
-
-        {/* Custom Panel */}
-        {showCustomPanel && (
-          <div className="fixed top-16 right-4 z-50 bg-gray-900 bg-opacity-95 backdrop-blur-md border border-gray-700 rounded-lg p-6 w-80 max-h-[80vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold text-white mb-4">🎨 Tùy Chỉnh Giao Diện</h3>
-
-            {/* Text Styling */}
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-300 mb-3">✨ Hiệu Ứng Chữ</h4>
-              <div className="space-y-2">
-                <button
-                  onClick={() => openStyleDialog("title")}
-                  className="w-full p-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded border border-gray-600 text-sm"
-                >
-                  🎭 Style Tiêu Đề
-                </button>
-                <button
-                  onClick={() => openStyleDialog("subtitle")}
-                  className="w-full p-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded border border-gray-600 text-sm"
-                >
-                  📝 Style Phụ Đề
-                </button>
-              </div>
-            </div>
-
-            {/* YouTube Integration */}
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-300 mb-3">📺 YouTube Background</h4>
-              <input
-                type="text"
-                value={youtubeUrl}
-                onChange={handleYoutubeUrlChange}
-                placeholder="https://www.youtube.com/watch?v=..."
-                className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-gray-200 text-sm"
-              />
-              <p className="text-xs text-gray-500 mt-1">Sẽ tự động lấy thumbnail từ video YouTube.</p>
-            </div>
-
-            {/* Image Link */}
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-300 mb-3">🔗 Link Ảnh Background</h4>
-              <input
-                type="text"
-                value={imageLink}
-                onChange={handleImageLinkChange}
-                placeholder="https://example.com/image.jpg"
-                className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-gray-200 text-sm"
-              />
-              <p className="text-xs text-gray-500 mt-1">Link trực tiếp đến file ảnh.</p>
-            </div>
-
-            {/* Video Upload */}
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-300 mb-3">🎬 Video Background</h4>
-              <input
-                type="file"
-                accept="video/mp4,video/mov,video/avi"
-                onChange={handleVideoChange}
-                className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-gray-200 text-sm"
-              />
-              <p className="text-xs text-gray-500 mt-1">MP4, MOV, AVI. Tối đa 100MB.</p>
-            </div>
-          </div>
-        )}
-
-        {/* Text Style Dialog */}
-        <TextStyleDialog />
-      </>
-    )
-  }
-
-  if (backgroundSettings.type === "video" && currentVideo) {
-    return (
-      <>
-        <div className="fixed inset-0 z-0 overflow-hidden">
-          <iframe
-            src={`https://www.youtube.com/embed/${currentVideo}?autoplay=1&mute=1&loop=1&playlist=${currentVideo}&controls=0&showinfo=0&rel=0&fs=0&cc_load_policy=0&iv_load_policy=3&modestbranding=1&disablekb=1`}
-            className="absolute top-1/2 left-1/2 w-[177.77777778vh] h-[56.25vw] min-h-full min-w-full transform -translate-x-1/2 -translate-y-1/2"
-            style={{ opacity: backgroundSettings.opacity }}
-            allow="autoplay; encrypted-media"
-            allowFullScreen={false}
-          />
-        </div>
-
-        {/* Custom Panel Button */}
-        <button
-          onClick={() => setShowCustomPanel(!showCustomPanel)}
-          className="fixed top-4 right-4 z-50 bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full shadow-lg transition-all duration-300"
-          title="Tùy chỉnh giao diện"
-        >
-          🎨
-        </button>
-
-        {/* Custom Panel */}
-        {showCustomPanel && (
-          <div className="fixed top-16 right-4 z-50 bg-gray-900 bg-opacity-95 backdrop-blur-md border border-gray-700 rounded-lg p-6 w-80 max-h-[80vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold text-white mb-4">🎨 Tùy Chỉnh Giao Diện</h3>
-
-            {/* Text Styling */}
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-300 mb-3">✨ Hiệu Ứng Chữ</h4>
-              <div className="space-y-2">
-                <button
-                  onClick={() => openStyleDialog("title")}
-                  className="w-full p-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded border border-gray-600 text-sm"
-                >
-                  🎭 Style Tiêu Đề
-                </button>
-                <button
-                  onClick={() => openStyleDialog("subtitle")}
-                  className="w-full p-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded border border-gray-600 text-sm"
-                >
-                  📝 Style Phụ Đề
-                </button>
-              </div>
-            </div>
-
-            {/* YouTube Integration */}
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-300 mb-3">📺 YouTube Background</h4>
-              <input
-                type="text"
-                value={youtubeUrl}
-                onChange={handleYoutubeUrlChange}
-                placeholder="https://www.youtube.com/watch?v=..."
-                className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-gray-200 text-sm"
-              />
-              <p className="text-xs text-gray-500 mt-1">Sẽ tự động lấy thumbnail từ video YouTube.</p>
-            </div>
-
-            {/* Image Link */}
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-300 mb-3">🔗 Link Ảnh Background</h4>
-              <input
-                type="text"
-                value={imageLink}
-                onChange={handleImageLinkChange}
-                placeholder="https://example.com/image.jpg"
-                className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-gray-200 text-sm"
-              />
-              <p className="text-xs text-gray-500 mt-1">Link trực tiếp đến file ảnh.</p>
-            </div>
-
-            {/* Video Upload */}
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-300 mb-3">🎬 Video Background</h4>
-              <input
-                type="file"
-                accept="video/mp4,video/mov,video/avi"
-                onChange={handleVideoChange}
-                className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-gray-200 text-sm"
-              />
-              <p className="text-xs text-gray-500 mt-1">MP4, MOV, AVI. Tối đa 100MB.</p>
-            </div>
-          </div>
-        )}
-
-        {/* Text Style Dialog */}
-        <TextStyleDialog />
-      </>
-    )
-  }
-
-  return (
-    <>
-      {/* Default gradient background */}
-      <div
-        className="fixed inset-0 z-0"
-        style={{
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          opacity: 0.3,
-        }}
-      />
-
-      {/* Custom Panel Button */}
-      <button
-        onClick={() => setShowCustomPanel(!showCustomPanel)}
-        className="fixed top-4 right-4 z-50 bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full shadow-lg transition-all duration-300"
-        title="Tùy chỉnh giao diện"
-      >
-        🎨
-      </button>
-
-      {/* Custom Panel */}
-      {showCustomPanel && (
-        <div className="fixed top-16 right-4 z-50 bg-gray-900 bg-opacity-95 backdrop-blur-md border border-gray-700 rounded-lg p-6 w-80 max-h-[80vh] overflow-y-auto">
-          <h3 className="text-lg font-semibold text-white mb-4">🎨 Tùy Chỉnh Giao Diện</h3>
-
-          {/* Text Styling */}
-          <div className="mb-6">
-            <h4 className="text-sm font-medium text-gray-300 mb-3">✨ Hiệu Ứng Chữ</h4>
-            <div className="space-y-2">
-              <button
-                onClick={() => openStyleDialog("title")}
-                className="w-full p-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded border border-gray-600 text-sm"
-              >
-                🎭 Style Tiêu Đề
-              </button>
-              <button
-                onClick={() => openStyleDialog("subtitle")}
-                className="w-full p-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded border border-gray-600 text-sm"
-              >
-                📝 Style Phụ Đề
-              </button>
-            </div>
-          </div>
-
-          {/* YouTube Integration */}
-          <div className="mb-6">
-            <h4 className="text-sm font-medium text-gray-300 mb-3">📺 YouTube Background</h4>
-            <input
-              type="text"
-              value={youtubeUrl}
-              onChange={handleYoutubeUrlChange}
-              placeholder="https://www.youtube.com/watch?v=..."
-              className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-gray-200 text-sm"
-            />
-            <p className="text-xs text-gray-500 mt-1">Sẽ tự động lấy thumbnail từ video YouTube.</p>
-          </div>
-
-          {/* Image Link */}
-          <div className="mb-6">
-            <h4 className="text-sm font-medium text-gray-300 mb-3">🔗 Link Ảnh Background</h4>
-            <input
-              type="text"
-              value={imageLink}
-              onChange={handleImageLinkChange}
-              placeholder="https://example.com/image.jpg"
-              className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-gray-200 text-sm"
-            />
-            <p className="text-xs text-gray-500 mt-1">Link trực tiếp đến file ảnh.</p>
-          </div>
-
-          {/* Video Upload */}
-          <div className="mb-6">
-            <h4 className="text-sm font-medium text-gray-300 mb-3">🎬 Video Background</h4>
-            <input
-              type="file"
-              accept="video/mp4,video/mov,video/avi"
-              onChange={handleVideoChange}
-              className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-gray-200 text-sm"
-            />
-            <p className="text-xs text-gray-500 mt-1">MP4, MOV, AVI. Tối đa 100MB.</p>
-          </div>
-        </div>
+      )}
+      {backgroundSettings.type === "image" && backgroundSettings.imageUrl && (
+        <div
+          className="absolute inset-0 bg-center bg-cover transition-opacity duration-1000"
+          style={{
+            backgroundImage: `url(${backgroundSettings.imageUrl})`,
+            opacity: backgroundSettings.opacity,
+          }}
+        />
       )}
 
-      {/* Text Style Dialog */}
-      <TextStyleDialog />
-    </>
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/40" />
+    </div>
   )
 }

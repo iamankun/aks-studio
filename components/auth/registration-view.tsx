@@ -1,8 +1,8 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, Eye, EyeOff, CheckCircle } from "lucide-react"
 import { DynamicBackground } from "@/components/dynamic-background"
+import Image from "next/image"
+import { AwesomeIcon } from "@/components/ui/awesome-icon"
 
 interface RegistrationViewProps {
   onSwitchToLogin: () => void
@@ -28,6 +30,65 @@ export function RegistrationView({ onSwitchToLogin }: Readonly<RegistrationViewP
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
+
+  const [appSettings, setAppSettings] = useState({
+    appName: "AKs Studio",
+    logoUrl: "/face.png",
+  })
+  const [currentGreeting, setCurrentGreeting] = useState("Chào mừng")
+  const [greetingIndex, setGreetingIndex] = useState(0)
+
+  // Greetings in different languages
+  const greetings = React.useMemo(
+    () => [
+      "Chào mừng",
+      "Welcome",
+      "Bienvenue",
+      "ようこそ",
+      "Bienvenido",
+      "Willkommen",
+      "Benvenuto",
+      "स्वागत",
+      "Добро пожаловать",
+      "환영합니다",
+    ],
+    []
+  )
+
+  // Load app settings
+  useEffect(() => {
+    const savedApp = localStorage.getItem("appSettings_v2")
+    if (savedApp) {
+      try {
+        const parsed = JSON.parse(savedApp)
+        setAppSettings(parsed)
+      } catch (err) {
+        console.error("Failed to load app settings:", err)
+      }
+    }
+  }, [])
+
+  // Cycle through greetings
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGreetingIndex((prev) => (prev + 1) % greetings.length)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [greetings.length])
+
+  // Update greeting with fade effect
+  useEffect(() => {
+    const greetingEl = document.querySelector(".greeting-text")
+    if (greetingEl) {
+      greetingEl.classList.add("opacity-0")
+      setTimeout(() => {
+        setCurrentGreeting(greetings[greetingIndex])
+        greetingEl.classList.remove("opacity-0")
+      }, 200)
+    } else {
+      setCurrentGreeting(greetings[greetingIndex])
+    }
+  }, [greetingIndex, greetings])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -112,20 +173,28 @@ export function RegistrationView({ onSwitchToLogin }: Readonly<RegistrationViewP
         {/* Dynamic Background System */}
         <DynamicBackground />
 
-        {/* Overlay for better readability */}
-        <div className="absolute inset-0 bg-black/30"></div>
-
-        <Card className="w-full max-w-md mx-4 relative z-10 bg-white/95 backdrop-blur-sm">
+        <Card className="w-full max-w-md mx-4 relative z-10 bg-white/85 backdrop-blur-md border border-white/20 shadow-xl">
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
-              <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
-              <h2 className="text-2xl font-bold text-green-600">Đăng ký thành công!</h2>
+              <div className="flex justify-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-teal-500 rounded-full flex items-center justify-center shadow-lg">
+                  <CheckCircle className="h-10 w-10 text-white animate-pulse" />
+                </div>
+              </div>
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-green-500 to-teal-500 bg-clip-text text-transparent">
+                Đăng ký thành công!
+              </h2>
               <p className="text-gray-600">
                 Tài khoản của bạn đã được tạo thành công. Đang chuyển hướng đến trang đăng nhập...
               </p>
             </div>
           </CardContent>
         </Card>
+
+        {/* Floating decorative elements */}
+        <div className="absolute top-20 left-20 w-32 h-32 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-full blur-xl floating"></div>
+        <div className="absolute bottom-20 right-20 w-40 h-40 bg-gradient-to-r from-indigo-400/20 to-purple-400/20 rounded-full blur-xl floating"></div>
+        <div className="absolute top-1/3 right-10 w-12 h-12 bg-gradient-to-br from-cyan-400/40 to-teal-400/40 rounded-full blur-md floating"></div>
       </div>
     )
   }
@@ -135,16 +204,30 @@ export function RegistrationView({ onSwitchToLogin }: Readonly<RegistrationViewP
       {/* Dynamic Background System */}
       <DynamicBackground />
 
-      {/* Overlay for better readability */}
-      <div className="absolute inset-0 bg-black/30"></div>
-
       {/* Registration Form */}
       <Card className="w-full max-w-md mx-4 relative z-10 bg-white/95 backdrop-blur-sm">
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
-            <img src="/Logo An Kun Studio Black Text.png" alt="An Kun Studio" className="h-12" />
+            <div className="relative w-20 h-20 rounded-full overflow-hidden bg-white shadow-xl border-4 border-white/50">
+              <Image
+                src={appSettings.logoUrl}
+                alt={`${appSettings.appName} Logo`}
+                fill
+                className="object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = "/face.png"
+                }}
+              />
+            </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-center">Đăng ký</CardTitle>
+          <div className="mb-2 text-center">
+            <p className="text-lg text-gray-600 greeting-fade">
+              <span className="greeting-text transition-all duration-300">{currentGreeting}</span>
+            </p>
+          </div>
+          <CardTitle className="text-2xl font-bold text-center bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            Đăng ký tài khoản
+          </CardTitle>
           <CardDescription className="text-center">Tạo tài khoản mới để sử dụng hệ thống</CardDescription>
         </CardHeader>
 
@@ -157,7 +240,10 @@ export function RegistrationView({ onSwitchToLogin }: Readonly<RegistrationViewP
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="username">Tên đăng nhập *</Label>
+              <Label htmlFor="username" className="flex items-center">
+                <AwesomeIcon icon="fa-solid fa-user" className="mr-2 text-blue-500" />
+                Tên đăng nhập *
+              </Label>
               <Input
                 id="username"
                 name="username"
@@ -167,11 +253,15 @@ export function RegistrationView({ onSwitchToLogin }: Readonly<RegistrationViewP
                 onChange={handleInputChange}
                 required
                 disabled={isLoading}
+                className="backdrop-blur-sm bg-white/80 border-blue-200 focus:border-blue-400 focus:ring-blue-400 transition-all"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email" className="flex items-center">
+                <AwesomeIcon icon="fa-solid fa-envelope" className="mr-2 text-purple-500" />
+                Email *
+              </Label>
               <Input
                 id="email"
                 name="email"
@@ -181,11 +271,15 @@ export function RegistrationView({ onSwitchToLogin }: Readonly<RegistrationViewP
                 onChange={handleInputChange}
                 required
                 disabled={isLoading}
+                className="backdrop-blur-sm bg-white/80 border-purple-200 focus:border-purple-400 focus:ring-purple-400 transition-all"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="fullName">Họ và tên</Label>
+              <Label htmlFor="fullName" className="flex items-center">
+                <AwesomeIcon icon="fa-solid fa-id-card" className="mr-2 text-indigo-500" />
+                Họ và tên
+              </Label>
               <Input
                 id="fullName"
                 name="fullName"
@@ -194,11 +288,15 @@ export function RegistrationView({ onSwitchToLogin }: Readonly<RegistrationViewP
                 value={formData.fullName}
                 onChange={handleInputChange}
                 disabled={isLoading}
+                className="backdrop-blur-sm bg-white/80 border-indigo-200 focus:border-indigo-400 focus:ring-indigo-400 transition-all"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Mật khẩu *</Label>
+              <Label htmlFor="password" className="flex items-center">
+                <AwesomeIcon icon="fa-solid fa-lock" className="mr-2 text-cyan-500" />
+                Mật khẩu *
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -209,12 +307,13 @@ export function RegistrationView({ onSwitchToLogin }: Readonly<RegistrationViewP
                   onChange={handleInputChange}
                   required
                   disabled={isLoading}
+                  className="backdrop-blur-sm bg-white/80 border-cyan-200 focus:border-cyan-400 focus:ring-cyan-400 transition-all"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-cyan-600"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
                 >
@@ -224,7 +323,10 @@ export function RegistrationView({ onSwitchToLogin }: Readonly<RegistrationViewP
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Xác nhận mật khẩu *</Label>
+              <Label htmlFor="confirmPassword" className="flex items-center">
+                <AwesomeIcon icon="fa-solid fa-lock-open" className="mr-2 text-teal-500" />
+                Xác nhận mật khẩu *
+              </Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -235,12 +337,13 @@ export function RegistrationView({ onSwitchToLogin }: Readonly<RegistrationViewP
                   onChange={handleInputChange}
                   required
                   disabled={isLoading}
+                  className="backdrop-blur-sm bg-white/80 border-teal-200 focus:border-teal-400 focus:ring-teal-400 transition-all"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-teal-600"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   disabled={isLoading}
                 >
@@ -251,14 +354,21 @@ export function RegistrationView({ onSwitchToLogin }: Readonly<RegistrationViewP
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-medium hover:shadow-lg transition-all duration-300"
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Đang đăng ký...
                 </>
               ) : (
-                "Đăng ký"
+                  <>
+                    <AwesomeIcon icon="fa-solid fa-user-plus" className="mr-2" />
+                    Đăng ký
+                  </>
               )}
             </Button>
 
@@ -267,7 +377,7 @@ export function RegistrationView({ onSwitchToLogin }: Readonly<RegistrationViewP
               <button
                 type="button"
                 onClick={onSwitchToLogin}
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200 font-medium"
                 disabled={isLoading}
               >
                 Đăng nhập ngay

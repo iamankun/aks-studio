@@ -3,7 +3,7 @@ export interface User {
   username: string
   password: string
   email: string
-  role: "Label Manager" | "Artist"
+  role: "Label Manager" | "Artist" | "Label Manager & Artist"
   fullName: string
   createdAt: string
   avatar?: string
@@ -47,10 +47,18 @@ export interface DbUser {
   updated_at: string
   avatar_url?: string
   bio?: string
-  social_links?: any
+  social_links?: {
+    facebook?: string
+    youtube?: string
+    spotify?: string
+    appleMusic?: string
+    tiktok?: string
+    instagram?: string
+  }
   isrc_code_prefix?: string
 }
 
-// Legacy compatibility
-export interface Label_Manager extends User { }
-export interface Artist extends User { }
+// Legacy compatibility - these interfaces are deprecated
+// Use the main User interface instead
+export type Label_Manager = User
+export type Artist = User

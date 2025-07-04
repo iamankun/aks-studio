@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { multiDB } from "@/lib/multi-database-service"
-import { databaseService } from "@/lib/database-service"
 import { AuthorizationService } from "@/lib/authorization-service"
 import { authenticateUser } from "@/lib/auth-service"
 import type { User } from "@/types/user"
@@ -10,7 +9,6 @@ import { logger } from "@/lib/logger"
 async function getUserFromRequest(request: NextRequest): Promise<User | null> {
   try {
     // Trong production, bạn sẽ parse JWT token hoặc session
-    // Ở đây tôi dùng basic authentication header cho demo
     const authHeader = request.headers.get('authorization')
     if (!authHeader) return null
 
@@ -48,7 +46,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Lấy tất cả submissions
-    const result = await multiDB.getSubmissions(username ? { username } : {})
+    const result = await multiDB.getSubmissions(username ? { username } : {});
 
     if (result.success) {
       // Filter submissions dựa trên quyền của user
@@ -130,8 +128,8 @@ export async function POST(request: NextRequest) {
       created_at: new Date().toISOString(),
     }
 
-    // Use databaseService 
-    const result = await databaseService.saveSubmission(submission)
+    // Use multiDB (NEON)
+    const result = await multiDB.createSubmission(submission)
 
     if (result.success) {
       logger.info('API Submission POST - success', { id: submission.id });

@@ -4,8 +4,9 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { authenticateUser } from "@/lib/auth-service"
 import type { User } from "@/types/user"
+import { useUser } from "@/lib/hooks/use-user"
+import { logger } from "@/lib/logger"
 
 interface TestLoginProps {
   readonly onLoginSuccess: (user: User) => void
@@ -16,23 +17,37 @@ export function TestLogin({ onLoginSuccess }: TestLoginProps) {
   const [password, setPassword] = useState("admin")
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState("")
+  const { mutate } = useUser()
 
   const handleTestLogin = async () => {
     setIsLoading(true)
-    setMessage("Đang kiểm tra authentication...")
+    setMessage("Đang đăng nhập...")
 
     try {
-      const user = await authenticateUser(username, password)
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
 
-      if (user) {
-        setMessage(`✅ Đăng nhập thành công! Role: ${user.role}`)
-        onLoginSuccess(user)
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setMessage(`✅ Đăng nhập thành công! Role: ${result.data.role}`)
+        logger.info("Test login successful", { userId: result.data.id });
+        
+        // Trigger a re-fetch of the user status, which will update the UserMenu
+        await mutate(); 
+        
+        onLoginSuccess(result.data)
       } else {
-        setMessage("❌ Đăng nhập thất bại! Kiểm tra username/password")
+        setMessage(`❌ Đăng nhập thất bại: ${result.message || 'Kiểm tra lại thông tin'}`)
+        logger.warn("Test login failed", { reason: result.message });
       }
     } catch (error) {
-      console.error("Test login error:", error)
-      setMessage("🚨 Lỗi kết nối database")
+      const errorMessage = error instanceof Error ? error.message : "Lỗi không xác định";
+      setMessage(`🚨 Lỗi kết nối: ${errorMessage}`)
+      logger.error("Test login error:", error);
     } finally {
       setIsLoading(false)
     }
@@ -55,7 +70,7 @@ export function TestLogin({ onLoginSuccess }: TestLoginProps) {
         </div>
 
         <Button onClick={handleTestLogin} disabled={isLoading} className="w-full">
-          {isLoading ? "Đang test..." : "Test Login"}
+          {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
         </Button>
 
         {message && (
@@ -63,7 +78,7 @@ export function TestLogin({ onLoginSuccess }: TestLoginProps) {
             className={`p-3 rounded text-sm ${
               message.includes("✅")
                 ? "bg-green-100 text-green-800"
-                : message.includes("❌")
+                : message.includes("❌") || message.includes("🚨")
                   ? "bg-red-100 text-red-800"
                   : "bg-blue-100 text-blue-800"
             }`}

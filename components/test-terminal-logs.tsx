@@ -1,5 +1,3 @@
---Active: 1751325959747@@ep-mute - rice - a17ojtca - pooler.ap - southeast - 1.aws.neon.tech@5432@aksstudio
---Active: 1751325959747@@ep-mute - rice - a17ojtca - pooler.ap - southeast - 1.aws.neon.tech@5432@aksstudio @public
 "use client"
 
 import { useState, useEffect } from "react"
@@ -24,9 +22,8 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Terminal, AlertCircle, FileText, RefreshCw, Trash2, Database, Info } from "lucide-react"
-import { logger, type LogEntry, type LogLevel } from "@/lib/logger"
-import { databaseService } from "@/lib/database-service"
+import { Terminal, AlertCircle, FileText, RefreshCw, Trash2, Database, Info } from "lucide-react";
+import { logger, type LogEntry, type LogLevel } from "@/lib/logger";
 
 interface CommandError {
     message: string;
@@ -145,12 +142,14 @@ export function TestTerminalLogs() {
 
     // Check database status
     const checkDatabaseStatus = async () => {
-        setStatusMessage("Checking database connection...")
+        setStatusMessage("Đang kiểm tra kết nối database...")
 
         try {
-            const result = await databaseService.checkConnection()
-            setDbStatus(result.success ? "connected" : "disconnected")
-            setStatusMessage(result.message || (result.success ? "Connected" : "Disconnected"))
+            const response = await fetch('/api/database-status');
+            const result = await response.json();
+
+            setDbStatus(result.success ? "connected" : "disconnected");
+            setStatusMessage(result.message || (result.success ? "Đã kết nối" : "Đã ngắt kết nối"));
         } catch (error) {
             setDbStatus("error")
             setStatusMessage(`Error: ${error instanceof Error ? error.message : String(error)}`)

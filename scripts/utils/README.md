@@ -36,7 +36,7 @@ import {
     getTableStructure,
     countRecords,
     listTables
-} from './utils/db-helper.js';
+} from './utils/cap-cuu-du-lieu.js';
 
 // Kết nối database
 const sql = await connectToDatabase();

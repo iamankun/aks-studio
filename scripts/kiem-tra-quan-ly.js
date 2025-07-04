@@ -135,9 +135,9 @@ async function commandLine() {
 
     if (args.length === 0) {
         showMenu();
-        console.log('Usage: node test-manager.js [test-number]');
-        console.log('       node test-manager.js all');
-        console.log('       node test-manager.js interactive');
+        console.log('Usage: node kiem-tra-quan-ly.js [test-number]');
+        console.log('       node kiem-tra-quan-ly.js all');
+        console.log('       node kiem-tra-quan-ly.js interactive');
         return;
     }
 

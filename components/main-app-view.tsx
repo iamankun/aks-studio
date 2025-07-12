@@ -14,14 +14,13 @@ import { DynamicBackground } from "@/components/dynamic-background"
 import { NotificationSystem } from "@/components/notification-system"
 import { SoundSystem } from "@/components/sound-system"
 import { SystemStatusProvider } from "@/components/system-status-provider"
-import { AuthFlowClient } from "@/components/auth-flow-client"
 import { useState, useEffect, useCallback } from "react"
 import type { Submission, SubmissionStatus } from "@/types/submission"
 import { LogsView } from "@/components/views/logs-view"
 import { logger } from "@/lib/logger"
 
 export default function MainAppView() {
-  const { user, loading, login } = useAuth()
+  const { user } = useAuth()
   const [currentView, setCurrentView] = useState("dashboard")
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [notifications, setNotifications] = useState<Array<{
@@ -31,7 +30,6 @@ export default function MainAppView() {
     type: "success" | "error";
     timestamp: Date;
   }>>([])
-  const [isInitialized, setIsInitialized] = useState(false)
 
   const loadSubmissions = useCallback(async () => {
     if (!user) return
@@ -69,10 +67,6 @@ export default function MainAppView() {
       component: 'MainAppView',
       action: 'mount'
     })
-
-    setTimeout(() => {
-      setIsInitialized(true)
-    }, 100)
 
     if (user) {
       logger.info('MainAppView: User logged in', {
@@ -149,38 +143,8 @@ export default function MainAppView() {
     setNotifications(prev => prev.filter(n => n.id !== id))
   }
 
-  let overlay: React.ReactNode = null;
-
-  if (!isInitialized || loading) {
-    overlay = (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-blue-900/90 to-purple-900/90 backdrop-blur-sm">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-          <div className="text-white text-xl font-medium">Đang tải...</div>
-          <div className="text-white/70 text-sm mt-2">AKs Studio Digital Music</div>
-        </div>
-      </div>
-    );
-  } else if (!user && isInitialized) {
-    const handleLogin = async (username: string, password: string) => {
-      const success = await login(username, password)
-      return {
-        success,
-        message: success ? "Đăng nhập thành công" : "Đăng nhập thất bại"
-      }
-    }
-    overlay = (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-sm">
-        <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-white/20">
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-white mb-2">AKs Studio</h1>
-            <p className="text-white/70">Digital Music Distribution</p>
-          </div>
-          <AuthFlowClient onLogin={handleLogin} />
-        </div>
-      </div>
-    );
-  }
+  // Logic hiển thị overlay và form đăng nhập đã được chuyển qua AuthProvider
+  // MainAppView giờ chỉ cần render khi có user
 
   return (
     <SystemStatusProvider>
@@ -235,7 +199,6 @@ export default function MainAppView() {
         </div>
         <NotificationSystem notifications={notifications} onRemove={removeNotification} />
         <SoundSystem />
-        {overlay}
       </div>
     </SystemStatusProvider>
   )

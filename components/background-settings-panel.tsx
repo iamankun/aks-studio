@@ -59,7 +59,8 @@ export function BackgroundSettingsPanel({ onClose }: Readonly<BackgroundSettings
             }
             localStorage.setItem(BACKGROUND_SETTINGS_KEY, JSON.stringify(newSettings))
             setBackgroundSettings(newSettings)
-            window.dispatchEvent(new Event("backgroundSettingsUpdated"))
+            // Gửi sự kiện với tên và dữ liệu chính xác
+            window.dispatchEvent(new CustomEvent("backgroundUpdate", { detail: newSettings }))
         } catch (error) {
             console.error("Failed to save background settings:", error)
         }
@@ -106,6 +107,14 @@ export function BackgroundSettingsPanel({ onClose }: Readonly<BackgroundSettings
         setBackgroundSettings(prev => ({
             ...prev,
             enableSound
+        }))
+    }
+
+    // Hàm xóa video khỏi danh sách
+    const removeVideo = (idToRemove: string) => {
+        setBackgroundSettings(prev => ({
+            ...prev,
+            videoList: prev.videoList.filter(id => id !== idToRemove)
         }))
     }
 

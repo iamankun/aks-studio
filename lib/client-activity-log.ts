@@ -8,9 +8,9 @@ interface LogActivityParams {
     description?: string;
     entityType?: string;
     entityId?: string | number;
-    status?: 'success' | 'error' | 'pending' | 'info';
+    status?: 'success' | 'error' | 'pending' | 'info' | 'failed';
     result?: string;
-    details?: Record<string, any>;
+    details?: Record<string, unknown>;
 }
 
 interface LogActivityResult {
@@ -51,7 +51,7 @@ export async function logActivity(params: LogActivityParams): Promise<LogActivit
                 // Now, try to parse the text as JSON.
                 const errorData = JSON.parse(responseText);
                 errorMsg = errorData.error || errorMsg;
-            } catch (e) {
+            } catch {
                 // If JSON parsing fails, the response was not JSON.
                 // Use the raw text as the error message, if it's not empty.
                 errorMsg = responseText || errorMsg;
@@ -73,7 +73,7 @@ export async function logActivity(params: LogActivityParams): Promise<LogActivit
 export function logLogin(
     method: 'password' | 'sso' | 'token',
     status: 'success' | 'failed' | 'error',
-    details: { username: string; [key: string]: any }
+    details: { username: string; [key: string]: unknown }
 ): Promise<LogActivityResult> {
     return logActivity({
         action: 'login_attempt',
@@ -84,16 +84,46 @@ export function logLogin(
     });
 }
 
+export function logRegistration(
+    method: 'email' | 'sso',
+    status: 'success' | 'failed' | 'error',
+    details: { username: string; [key: string]: unknown }
+): Promise<LogActivityResult> {
+    return logActivity({
+        action: 'registration_attempt',
+        entityType: 'auth',
+        status,
+        description: `User '${details.username}' registration attempt via ${method} was ${status}.`,
+        details,
+    });
+}
+
 export function logUIInteraction(
     elementType: 'button' | 'link' | 'form' | 'tab',
     elementId: string,
-    details?: Record<string, any>
+    details?: Record<string, unknown>
 ): Promise<LogActivityResult> {
     return logActivity({
         action: 'ui_interaction',
         entityType: 'ui_element',
         entityId: elementId,
         description: `User interacted with ${elementType} '${elementId}'.`,
+        details,
+    });
+}
+
+export function logSubmissionActivity(
+    submissionId: string,
+    activity: 'create' | 'update' | 'delete' | 'view',
+    status: 'success' | 'failed' | 'error',
+    details?: Record<string, unknown>
+): Promise<LogActivityResult> {
+    return logActivity({
+        action: `${activity}_submission`,
+        entityType: 'submission',
+        entityId: submissionId,
+        status,
+        description: `Submission '${submissionId}' activity: ${activity} ${status}.`,
         details,
     });
 }

@@ -56,17 +56,12 @@ export function LoginView({ onLogin, onSwitchToRegister, onSwitchToForgot }: Rea
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validate all fields first
-    validateUsername(username)
-    validatePassword(password)
+    // Validate all fields first and check the result directly
+    const isUsernameValid = validateUsername(username)
+    const isPasswordValid = validatePassword(password)
 
-    if (!username || !password) {
-      setError("Vui lòng nhập đầy đủ thông tin")
-      return
-    }
-
-    if (usernameError || passwordError) {
-      setError("Vui lòng sửa các lỗi trước khi đăng nhập")
+    if (!isUsernameValid || !isPasswordValid) {
+      setError("Vui lòng sửa các lỗi được hiển thị.")
       return
     }
 
@@ -141,27 +136,26 @@ export function LoginView({ onLogin, onSwitchToRegister, onSwitchToForgot }: Rea
     setUserRole(role)
   }, [username, recognizeUser])
 
-  // Validate username and password
-  useEffect(() => {
-    validateUsername(username)
-    validatePassword(password)
-  }, [username, password])
-
-  const validateUsername = (value: string) => {
+  const validateUsername = (value: string): boolean => {
     if (value.length < 3) {
       setUsernameError("Username must be at least 3 characters")
+      return false
     } else if (value.length > 20) {
       setUsernameError("Username must be less than 20 characters")
+      return false
     } else {
       setUsernameError("")
+      return true
     }
   }
 
-  const validatePassword = (value: string) => {
+  const validatePassword = (value: string): boolean => {
     if (value.length < 6) {
       setPasswordError("Password must be at least 6 characters")
+      return false
     } else {
       setPasswordError("")
+      return true
     }
   }
 
@@ -219,7 +213,7 @@ export function LoginView({ onLogin, onSwitchToRegister, onSwitchToForgot }: Rea
                   disabled={loading}
                 />
                 <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/50 transition-transform duration-300 group-focus-within/username:scale-110 group-focus-within/username:text-primary/70" />
-                <div className="absolute inset-0 rounded-md bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 opacity-0 group-hover/username:opacity-100 group-focus-within/username:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                {/* <div className="absolute inset-0 rounded-md bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 opacity-0 group-hover/username:opacity-100 group-focus-within/username:opacity-100 transition-opacity duration-500 pointer-events-none"></div> */}
               </div>
               {usernameError && (
                 <div id="username-error" className="text-xs text-destructive mt-1 ml-1 animate-fade-in flex items-center gap-1">
@@ -253,7 +247,7 @@ export function LoginView({ onLogin, onSwitchToRegister, onSwitchToForgot }: Rea
                   disabled={loading}
                 />
                 <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/50 transition-transform duration-300 group-focus-within/password:scale-110 group-focus-within/password:text-primary/70" />
-                <div className="absolute inset-0 rounded-md bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 opacity-0 group-hover/password:opacity-100 group-focus-within/password:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                {/* <div className="absolute inset-0 rounded-md bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 opacity-0 group-hover/password:opacity-100 group-focus-within/password:opacity-100 transition-opacity duration-500 pointer-events-none"></div> */}
               </div>
               {passwordError && (
                 <div id="password-error" className="text-xs text-destructive mt-1 ml-1 animate-fade-in flex items-center gap-1">
@@ -289,8 +283,8 @@ export function LoginView({ onLogin, onSwitchToRegister, onSwitchToForgot }: Rea
               ) : (
                   <>
                     <span className="relative z-10">Login</span>
-                    <span className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0 
-                    translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                    {/* <span className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0
+                    translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" /> */}
                   </>
               )}
             </Button>

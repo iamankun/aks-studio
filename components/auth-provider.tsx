@@ -69,9 +69,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       })
 
       const data = await response.json()
+      console.log('DEBUG [AuthProvider]: API Response Data:', data);
 
-      if (response.ok && data.user) {
-        setUser(data.user)
+      if (response.ok && data.data) {
+        setUser(data.data)
         localStorage.setItem('currentUser', JSON.stringify(data.user))
         setShowLogin(false)
         return true
@@ -101,7 +102,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }), [user, login, logout, loading])
 
   if (loading) {
-    return null // Hoặc loading spinner
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-sm">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="text-white text-xl font-medium">Đang xác thực...</div>
+          <div className="text-white/70 text-sm mt-2">AKs Studio Digital Music</div>
+        </div>
+      </div>
+    )
   }
 
   return (

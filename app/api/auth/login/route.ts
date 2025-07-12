@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
 
     const result = await multiDB.authenticateUser(username, password)
 
+    console.log('DEBUG [Login Route]: Authentication result:', result);
     if (result.success && result.data) {
       logger.info("Login successful", { userId: result.data.id, source: result.source }, { component: "LoginAPI" })
 

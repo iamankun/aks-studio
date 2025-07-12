@@ -22,6 +22,7 @@ export function BackgroundSystem() {
     type: "gradient",
     gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
     videoUrl: "",
+    imageUrl: "", // Thêm thuộc tính imageUrl
     opacity: 0.3,
     randomVideo: true,
     videoList: DEFAULT_VIDEOS,
@@ -69,15 +70,10 @@ export function BackgroundSystem() {
       const randomIndex = Math.floor(Math.random() * backgroundSettings.videoList.length)
       setCurrentVideo(backgroundSettings.videoList[randomIndex])
     } else if (backgroundSettings.type === "video" && backgroundSettings.videoUrl) {
-      const videoId = extractYouTubeId(backgroundSettings.videoUrl)
+      const videoId = extractYoutubeId(backgroundSettings.videoUrl)
       setCurrentVideo(videoId || "")
     }
   }, [backgroundSettings])
-
-  const extractYouTubeId = (url: string) => {
-    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)
-    return match ? match[1] : null
-  }
 
   const extractYoutubeId = (url: string) => {
     const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/

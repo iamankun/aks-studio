@@ -3,21 +3,24 @@
 // Hỗ trợ dự án, Copilot, Gemini
 // Tác giả kiêm xuất bản bởi An Kun Studio Digital Music
 
-import { neon } from "@neondatabase/serverless"
+import { neon, NeonQueryFunction } from "@neondatabase/serverless"
 import type { User } from "@/types/user"
+import bcrypt from "bcryptjs"
 
 
 // Database priority: Neon -> WordPress -> Demo Mode (Supabase disabled per user request)
 
 
 export class MultiDatabaseService {
-  private neonSql: any = null;
+  private neonSql: NeonQueryFunction<false, false> | null = null;
   private neonAvailable = true;
   private wordpressAvailable = false;
 
   // Helper function để chuẩn hóa submissions với file mặc định
-  private normalizeSubmissions(submissions: any[]): any[] {
-    return submissions.map(submission => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private normalizeSubmissions(submissions: unknown[]): any[] {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (submissions as any[]).map((submission: any) => {
       // Xử lý tên nghệ sĩ với logic Various Artist
       let processedArtistName = submission.artist_name ?? submission.artists ?? '';
 
@@ -66,7 +69,9 @@ export class MultiDatabaseService {
             this.neonSql = neon(DATABASE_URL);
             await this.neonSql`SELECT 1`;
             this.neonAvailable = true;
+            console.log("✅ Neon DB connection successful.");
         } catch (error) {
+            console.error("❌ Neon DB Initialization Failed:", error);
             this.neonAvailable = false;
             this.neonSql = null;
         }
@@ -82,11 +87,14 @@ export class MultiDatabaseService {
                     UNION ALL
                     SELECT *, 'Artist' as role FROM artist WHERE username = ${username}
                 `;
+                console.log('DEBUG [MultiDB Service]: Users found:', users);
 
                 if (users.length > 0) {
                     const user = users[0];
-                    // In a real app, you'd use bcrypt.compare(password, user.password)
-                    if (password === user.password) {
+                    console.log('DEBUG [MultiDB Service]: User object from DB:', user);
+                    // So sánh mật khẩu đã hash
+                    const passwordMatch = await bcrypt.compare(password, user.password);
+                    if (passwordMatch) {
                         console.log(`✅ Neon authentication successful for ${user.role}`);
                         const userData: User = {
                             id: user.id,
@@ -113,7 +121,71 @@ export class MultiDatabaseService {
         return { success: false, message: "Authentication service unavailable or invalid credentials." };
     }
 
-    public async getSubmissions(username?: string): Promise<{ success: boolean; data?: any[]; message?: string, source?: string }> {
+    public async createUser(userData: Partial<User>): Promise<{ success: boolean; data?: User; message?: string, source?: string }> {
+        await this.initialize();
+
+        if (!this.neonAvailable || !this.neonSql) {
+            return { success: false, message: "Database service is not available." };
+        }
+
+        const { username, email, password, fullName } = userData;
+
+        if (!username || !email || !password || !fullName) {
+            return { success: false, message: "Missing required fields for user creation." };
+        }
+
+        try {
+            // Kiểm tra xem username hoặc email đã tồn tại chưa
+            const existingUsers = await this.neonSql`
+                SELECT username, email FROM artist WHERE username = ${username} OR email = ${email}
+                UNION ALL
+                SELECT username, email FROM label_manager WHERE username = ${username} OR email = ${email}
+            `;
+
+            if (existingUsers.length > 0) {
+                const existing = existingUsers[0];
+                if (existing.username === username) {
+                    return { success: false, message: "Username already exists." };
+                }
+                if (existing.email === email) {
+                    return { success: false, message: "Email already exists." };
+                }
+            }
+
+            // Mã hóa mật khẩu
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            // Thêm người dùng mới vào bảng artist
+            const newUserResult = await this.neonSql`
+                INSERT INTO artist (username, email, password, fullname, role, created_at, updated_at)
+                VALUES (${username}, ${email}, ${hashedPassword}, ${fullName}, 'Artist', NOW(), NOW())
+                RETURNING id, username, email, fullname, role, created_at, avatar, bio, isrc_code_prefix;
+            `;
+
+            if (newUserResult.length > 0) {
+                const newUser = newUserResult[0];
+                const createdUser: User = {
+                    id: newUser.id,
+                    username: newUser.username,
+                    email: newUser.email,
+                    fullName: newUser.fullname,
+                    role: 'Artist',
+                    createdAt: newUser.created_at,
+                    avatar: newUser.avatar ?? "/face.png",
+                    bio: newUser.bio,
+                    isrcCodePrefix: newUser.isrc_code_prefix,
+                };
+                return { success: true, data: createdUser, source: "Neon" };
+            } else {
+                return { success: false, message: "Failed to create user." };
+            }
+        } catch (error) {
+            console.error("Neon createUser failed:", error.message);
+            return { success: false, message: "Database error during user creation." };
+        }
+    }
+
+    public async getSubmissions(username?: string): Promise<{ success: boolean; data?: unknown[]; message?: string, source?: string }> {
         await this.initialize();
 
         if (this.neonAvailable && this.neonSql) {

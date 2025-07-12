@@ -1,7 +1,7 @@
 export interface User {
   id: string
   username: string
-  password: string
+  password?: string
   email: string
   role: "Label Manager" | "Artist" | "Label Manager & Artist"
   fullName: string

@@ -217,6 +217,10 @@ export class MultiDatabaseService {
             supabase: false, // As per user request
         };
     }
+
+    async updateSubmission(id: string, updateData: any) {
+        
+    }
 }
 
 

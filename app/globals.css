@@ -54,12 +54,12 @@
 @layer base {
   * {
     @apply border-border;
-      font-family: var(--font-dosis), "Dosis", system-ui, sans-serif;
+      font-family: var(font-dosis), "Dosis", system-ui, sans-serif;
   }
 
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-dosis), "Dosis", system-ui, sans-serif;
+    font-family: var(font-dosis), "Dosis", system-ui, sans-serif;
     overflow-x: hidden;
       overflow-y: auto;
       height: 100%;

@@ -12,6 +12,7 @@ import bcrypt from "bcryptjs"
 
 
 export class MultiDatabaseService {
+    [x: string]: any;
   private neonSql: NeonQueryFunction<false, false> | null = null;
   private neonAvailable = true;
   private wordpressAvailable = false;

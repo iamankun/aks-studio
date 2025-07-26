@@ -24,7 +24,7 @@ export class DatabaseService {
     console.log('DatabaseService: Initialized', {
       isClient: this.isClient,
       useRealDB: this.useRealDB,
-      mode: this.useRealDB ? 'production' : 'demo'
+      mode: this.useRealDB ? 'production' : 'Development'
     })
   }
 

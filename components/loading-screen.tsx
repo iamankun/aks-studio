@@ -18,7 +18,7 @@ export function LoadingScreen({
     onComplete,
     title = "An Kun Studio",
     subtitle = "Đang chuyển hướng ...",
-    logoUrl = "@public/loading.webm",
+    logoUrl = "@public/movies.png",
     isAnimation = true
 }: Readonly<LoadingScreenProps>) {
     const [progress, setProgress] = useState(0)

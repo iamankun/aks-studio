@@ -6,7 +6,7 @@ export default function Loading() {
             title="An Kun Studio"
             subtitle="Chào mừng bạn đến với An Kun Studio"
             duration={3000}
-            logoUrl="@public/loading.webp"
+            logoUrl="@public/movies.png"
         />
     )
 }

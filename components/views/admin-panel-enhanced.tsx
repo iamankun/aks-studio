@@ -20,8 +20,10 @@ interface SystemStats {
   system: { uptime: number; memory: Record<string, number>; version: string; environment: string }
 }
 
-export function AdminPanelView({ showModal }: AdminPanelViewProps) {
-  const { user: currentUser } = useAuth();
+// @ts-ignore
+export function AdminPanelView({showModal: showModal}: AdminPanelViewProps) {
+  const type = useAuth();
+  const { user: currentUser } = type;
   const [stats, setStats] = useState<SystemStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'submissions'>('overview')

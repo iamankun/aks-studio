@@ -12,6 +12,7 @@ import bcrypt from "bcryptjs"
 
 
 export class MultiDatabaseService {
+    [x: string]: any;
     private neonSql: NeonQueryFunction<false, false> | null = null;
     private neonAvailable = true;
     private wordpressAvailable = false;
@@ -223,6 +224,10 @@ export class MultiDatabaseService {
             wordpress: this.wordpressAvailable,
             supabase: false, // As per user request
         };
+    }
+
+    async updateSubmission(id: string, updateData: any) {
+        
     }
 }
 

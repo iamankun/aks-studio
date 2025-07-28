@@ -143,8 +143,8 @@ export function AuthFlowClient({
 
       const data = await response.json()
 
-      if (response.ok && data.user) {
-        onLoginSuccess(data.user)
+      if (response.ok && data.success && data.data) {
+        onLoginSuccess(data.data)
         return { success: true }
       }
 
@@ -165,8 +165,8 @@ export function AuthFlowClient({
 
       const data = await response.json()
 
-      if (response.ok && data.user) {
-        onRegisterSuccess(data.user)
+      if (response.ok && data.success && data.data) {
+        onRegisterSuccess(data.data)
         return { success: true }
       }
 

@@ -13,52 +13,52 @@ import bcrypt from "bcryptjs"
 
 export class MultiDatabaseService {
     [x: string]: any;
-  private neonSql: NeonQueryFunction<false, false> | null = null;
-  private neonAvailable = true;
-  private wordpressAvailable = false;
+    private neonSql: NeonQueryFunction<false, false> | null = null;
+    private neonAvailable = true;
+    private wordpressAvailable = false;
 
-  // Helper function để chuẩn hóa submissions với file mặc định
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private normalizeSubmissions(submissions: unknown[]): any[] {
+    // Helper function để chuẩn hóa submissions với file mặc định
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (submissions as any[]).map((submission: any) => {
-      // Xử lý tên nghệ sĩ với logic Various Artist
-      let processedArtistName = submission.artist_name ?? submission.artists ?? '';
+    private normalizeSubmissions(submissions: unknown[]): any[] {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (submissions as any[]).map((submission: any) => {
+            // Xử lý tên nghệ sĩ với logic Various Artist
+            let processedArtistName = submission.artist_name ?? submission.artists ?? '';
 
-      // Nếu không có tên nghệ sĩ hoặc rỗng
-      if (!processedArtistName || processedArtistName.trim() === '') {
-        processedArtistName = 'Various Artist';
-      } else {
-        // Kiểm tra nếu có nhiều hơn 3 nghệ sĩ (phân cách bằng dấu phẩy, &, hoặc feat)
-        const artistSeparators = /[,&]|feat\.|featuring|ft\./gi;
-        const artistCount = processedArtistName.split(artistSeparators).length;
+            // Nếu không có tên nghệ sĩ hoặc rỗng
+            if (!processedArtistName || processedArtistName.trim() === '') {
+                processedArtistName = 'Various Artist';
+            } else {
+                // Kiểm tra nếu có nhiều hơn 3 nghệ sĩ (phân cách bằng dấu phẩy, &, hoặc feat)
+                const artistSeparators = /[,&]|feat\.|featuring|ft\./gi;
+                const artistCount = processedArtistName.split(artistSeparators).length;
 
-        if (artistCount > 3) {
-          processedArtistName = 'Various Artist';
-        }
-      }
+                if (artistCount > 3) {
+                    processedArtistName = 'Various Artist';
+                }
+            }
 
-      return {
-        ...submission,
-        // Nếu không có ảnh cover hoặc artwork, sử dụng ảnh mặc định
-        cover_art_url: submission.cover_art_url ?? submission.artwork_path ?? '/dianhac.jpg',
-        artwork_path: submission.artwork_path ?? submission.cover_art_url ?? '/dianhac.jpg',
-        imageUrl: submission.imageUrl ?? submission.cover_art_url ?? submission.artwork_path ?? '/dianhac.jpg',
+            return {
+                ...submission,
+                // Nếu không có ảnh cover hoặc artwork, sử dụng ảnh mặc định
+                cover_art_url: submission.cover_art_url ?? submission.artwork_path ?? '/dianhac.jpg',
+                artwork_path: submission.artwork_path ?? submission.cover_art_url ?? '/dianhac.jpg',
+                imageUrl: submission.imageUrl ?? submission.cover_art_url ?? submission.artwork_path ?? '/dianhac.jpg',
 
-        // Nếu không có file audio, sử dụng file mặc định
-        audio_file_url: submission.audio_file_url ?? submission.file_path ?? '/VNA2P25XXXXX.wav',
-        file_path: submission.file_path ?? submission.audio_file_url ?? '/VNA2P25XXXXX.wav',
-        audioUrl: submission.audioUrl ?? submission.audio_file_url ?? submission.file_path ?? '/VNA2P25XXXXX.wav',
+                // Nếu không có file audio, sử dụng file mặc định
+                audio_file_url: submission.audio_file_url ?? submission.file_path ?? '/VNA2P25XXXXX.wav',
+                file_path: submission.file_path ?? submission.audio_file_url ?? '/VNA2P25XXXXX.wav',
+                audioUrl: submission.audioUrl ?? submission.audio_file_url ?? submission.file_path ?? '/VNA2P25XXXXX.wav',
 
-        // Đảm bảo các trường bắt buộc với logic Various Artist
-        track_title: submission.track_title ?? submission.title ?? 'Untitled Track',
-        artist_name: processedArtistName,
-        status: submission.status ?? 'pending',
-        genre: submission.genre ?? 'Unknown',
-        submission_date: submission.submission_date ?? submission.created_at ?? new Date().toISOString()
-      }
-    })
-  }
+                // Đảm bảo các trường bắt buộc với logic Various Artist
+                track_title: submission.track_title ?? submission.title ?? 'Untitled Track',
+                artist_name: processedArtistName,
+                status: submission.status ?? 'pending',
+                genre: submission.genre ?? 'Unknown',
+                submission_date: submission.submission_date ?? submission.created_at ?? new Date().toISOString()
+            }
+        })
+    }
 
     public async initialize() {
         if (this.neonSql) return;
@@ -83,18 +83,25 @@ export class MultiDatabaseService {
 
         if (this.neonAvailable && this.neonSql) {
             try {
-                const users = await this.neonSql`
+                // Check label_manager table first
+                const labelManagers = await this.neonSql`
                     SELECT *, 'Label Manager' as role FROM label_manager WHERE username = ${username}
-                    UNION ALL
+                `;
+
+                // Check artist table
+                const artists = await this.neonSql`
                     SELECT *, 'Artist' as role FROM artist WHERE username = ${username}
                 `;
-                console.log('DEBUG [MultiDB Service]: Users found:', users);
+
+                // Combine results
+                const users = [...labelManagers, ...artists];
+                console.log('DEBUG [MultiDB Service]: Users found:', users.length);
 
                 if (users.length > 0) {
                     const user = users[0];
                     console.log('DEBUG [MultiDB Service]: User object from DB:', user);
                     // So sánh mật khẩu đã hash
-                    const passwordMatch = await bcrypt.compare(password, user.password);
+                    const passwordMatch = await bcrypt.compare(password || '', user.password_hash);
                     if (passwordMatch) {
                         console.log(`✅ Neon authentication successful for ${user.role}`);
                         const userData: User = {
@@ -205,7 +212,7 @@ export class MultiDatabaseService {
                 return { success: false, data: [], message: "Failed to retrieve submissions from database." };
             }
         }
-        
+
         // If Neon is not available
         return { success: false, data: [], message: "Database service is not available." };
     }
